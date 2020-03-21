@@ -1,0 +1,7 @@
+{
+  "name": "Lazy Export",
+  "id": "823188639372650395",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html"
+}
