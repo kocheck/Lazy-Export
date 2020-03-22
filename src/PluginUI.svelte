@@ -4,7 +4,14 @@
   import { GlobalCSS } from "figma-plugin-ds-svelte";
 
   //import some Svelte Figma UI components
-  import { Button, Input, Label, SelectMenu } from "figma-plugin-ds-svelte";
+  import {
+    Button,
+    Input,
+    Label,
+    Disclosure,
+    Section,
+    SelectMenu
+  } from "figma-plugin-ds-svelte";
 
   //menu items, this is an array of objects to populate to our select menus
   let menuItems = [
@@ -52,8 +59,7 @@
 
 <style>
   /* Add additional global or scoped styles here */
-  html,
-  body {
+  .main {
     width: 100%;
     height: 100%;
     margin: 0;
@@ -61,8 +67,7 @@
     font-family: Inter, sans-serif;
     overflow: hidden;
     text-align: center;
-  }
-  .main {
+    background-color: whitesmoke;
   }
 
   .pluginTitle {
@@ -72,6 +77,22 @@
     margin-right: 12px;
   }
   .sectionWrapper {
+    background-color: white;
+    border-radius: 5px;
+    border: 1px solid lightgray;
+    padding: 4px 8px 8px 8px;
+    margin: 6px;
+  }
+  .buttonExport {
+    width: 100%;
+    display: flex;
+    padding: 12px 0 4px 0;
+  }
+  .flex-container-align {
+    flex-wrap: wrap;
+    display: flex;
+    align-content: center;
+    justify-content: center;
   }
 </style>
 
@@ -101,24 +122,37 @@
 
   <div class="wrapper p-xxsmall">
     <div class="sectionWrapper">
-      <Label>Export Type</Label>
+      <div class="descriptorTitle">
+        <Label>Export Type</Label>
+      </div>
+
       <SelectMenu
         bind:menuItems
-        bind:value={selectedPlatform}
-        class="mb-xxsmall" />
-    </div>
-    <div class="flex p-xxsmall mb-xsmall">
-
-      <Button on:click={applySettings} bind:disabled>
-        Apply Export Settings
-      </Button>
+        placeholder="Select Platform"
+        bind:value={selectedPlatform} />
+      <div class="buttonExport">
+        <Button on:click={applySettings} bind:disabled>
+          Apply Export Settings
+        </Button>
+      </div>
     </div>
     <!-- ========= Destructive ========= -->
-    <div class="flex p-xxsmall mb-xsmall">
-      <Button on:click={clearSettings} destructive class="mr-xsmall">
-        Clear
+    <div class="flex p-xxsmall mb-xsmall flex-container-align">
+      <Button on:click={clearSettings} destructive>
+        Clear Export Selection
       </Button>
-      <Button on:click={cancel} class="mr-xsmall">Cancel</Button>
+      <!-- <div class="closeButton">
+        <Button on:click={cancel}>Close</Button>
+      </div> -->
     </div>
+    <Section>
+      <div style="text-align: Left;">
+        <p style="font-weight: 400; color:slategray; ">
+          Select Platform to apply default export settings to your figma
+          selection.
+        </p>
+      </div>
+    </Section>
+
   </div>
 </div>

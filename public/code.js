@@ -30,7 +30,7 @@ function __awaiter(thisArg, _arguments, P, generator) {
 // You can access browser APIs in the <script> tag inside "ui.html" which has a
 // full browser enviroment (see documentation).
 // This shows the HTML page in "ui.html".
-figma.showUI(__html__, { width: 200, height: 408 });
+figma.showUI(__html__, { width: 200, height: 340 });
 // Calls to "parent.postMessage" from within the HTML page will trigger this
 // callback. The callback will be passed the "pluginMessage" property of the
 // posted message.
