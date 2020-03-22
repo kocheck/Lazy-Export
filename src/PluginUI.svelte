@@ -1,6 +1,7 @@
 <script>
   //import Global CSS from the svelte boilerplate
   //contains Figma color vars, spacing vars, utility classes and more
+
   import { GlobalCSS } from "figma-plugin-ds-svelte";
 
   //import some Svelte Figma UI components
@@ -74,7 +75,7 @@
     margin: 8px 0 0 12px;
   }
   .pluginTitle svg {
-    margin-right: 12px;
+    margin-left: 12px;
   }
   .sectionWrapper {
     background-color: white;
@@ -98,6 +99,8 @@
 
 <div class="main">
   <div class="flex pluginTitle">
+
+    <h3 class="title">Lazy Export</h3>
     <svg
       role="img"
       xmlns="http://www.w3.org/2000/svg"
@@ -117,13 +120,14 @@
         16h112a16 16 0 0 0 16-16v-16a16 16 0 0 0-16-16h-58.13l82.21-93.94A32 32
         0 0 0 448 253v-13a16 16 0 0 0-16-16z" />
     </svg>
-    <h3 class="title">Lazy Export</h3>
   </div>
 
   <div class="wrapper p-xxsmall">
     <div class="sectionWrapper">
       <div class="descriptorTitle">
-        <Label>Export Type</Label>
+        <Label>
+          <p style="font-weight: 400; color:black; ">Export Type</p>
+        </Label>
       </div>
 
       <SelectMenu
