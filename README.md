@@ -6,7 +6,7 @@ Lazy export is inspired by a feature that was apart of my workflow in sketch. I 
 
 **Lazy Export** allows the user to apply default export settings to selected objects in Figma.
 
-# Built with Figsvelte
+## Built with Figsvelte
 
 A boilerplate for creating Figma plugins using Svelte.
 
@@ -16,7 +16,7 @@ Additionally, this package comes preconfigured with [Figma Plugin DS Svelte](htt
 
 Only what you import/use will be included in the final build for small bundle size.
 
-## To get started
+### To get started
 
 ```bash
 npx degit thomas-lowry/figsvelte figma-plugin
@@ -26,7 +26,7 @@ npm install
 
 _Note that you will need to have [Node.js](https://nodejs.org/) installed._
 
-## Development
+### Development
 
 During development, watch your project for changes with the following command.
 
@@ -36,7 +36,7 @@ npm run dev
 
 Start building your plugin UI in `'src/Plugin.svelte'`.
 
-## Build
+### Build
 
 When ready to package up your final Figma Plugin:
 
@@ -44,7 +44,7 @@ When ready to package up your final Figma Plugin:
 npm run build
 ```
 
-## Useful info
+### Useful info
 
 To include an external CSS file:
 
