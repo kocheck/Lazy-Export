@@ -5,7 +5,7 @@ Lazy export is inspired by a feature that was apart of my workflow in sketch. I 
 ## What does it do?
 
 **Lazy Export** allows the user to apply default export settings to selected objects in Figma.
-![Lazy Export Demo][./assets/readmeimg.gif]
+![Lazy Export Demo][assets/readmeimg.gif]
 
 # Built with Figsvelte
 
