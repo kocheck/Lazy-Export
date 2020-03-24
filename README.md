@@ -6,6 +6,11 @@ Lazy export is inspired by a feature that was apart of my workflow in sketch. I 
 
 **Lazy Export** allows the user to apply default export settings to selected objects in Figma.
 
+## How does it work?
+
+There are two ways to trigger your export settings to be applied. The first is a window giving you UI access to run the plugin commands. (Set Platform, Apply Settings, Clear Settings)
+The second is via the plugin menu; this makes the actions searchable in Figma with the `⌘+/` command.
+
 ## Built with Figsvelte
 
 A boilerplate for creating Figma plugins using Svelte.
