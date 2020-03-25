@@ -5,6 +5,13 @@
 // You can access browser APIs in the <script> tag inside "ui.html" which has a
 // full browser enviroment (see documentation).
 
+// TODO This code doesnt work
+// figma.showUI(__html__, { visible: false });
+// if (figma.command == "applyIOS") {
+//   console.log(`1 Fire Apply IOS Menu`);
+//   figma.closePlugin("Done!");
+// }
+
 // This shows the HTML page in "ui.html".
 figma.showUI(__html__, { width: 200, height: 340 });
 

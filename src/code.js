@@ -12,6 +12,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 // This file holds the main code for the plugins. It has access to the *document*.
 // You can access browser APIs in the <script> tag inside "ui.html" which has a
 // full browser enviroment (see documentation).
+// TODO This code doesnt work
+// figma.showUI(__html__, { visible: false });
+// if (figma.command == "applyIOS") {
+//   console.log(`1 Fire Apply IOS Menu`);
+//   figma.closePlugin("Done!");
+// }
 // This shows the HTML page in "ui.html".
 figma.showUI(__html__, { width: 200, height: 340 });
 // Calls to "parent.postMessage" from within the HTML page will trigger this
