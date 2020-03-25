@@ -11,6 +11,12 @@ Lazy export is inspired by a feature that was apart of my workflow in sketch. I 
 There are two ways to trigger your export settings to be applied. The first is a window giving you UI access to run the plugin commands. (Set Platform, Apply Settings, Clear Settings)
 The second is via the plugin menu; this makes the actions searchable in Figma with the `⌘+/` command.
 
+## Plugin Development Tips
+
+### Tip 1:
+
+to see the list of available JavaScript/Browser APIs on the main thread, run `console.log(this)` as the first line of your plugin.
+
 ## Built with Figsvelte
 
 A boilerplate for creating Figma plugins using Svelte.

@@ -3,5 +3,10 @@
   "id": "795096273369409539",
   "api": "1.0.0",
   "main": "code.js",
-  "ui": "index.html"
+  "ui": "index.html",
+  "menu": [
+    { "name": "Lazy IOS Apply", "command": "applyIOS" },
+    { "name": "Lazy Android Apply", "command": "applyAndroid" },
+    { "name": "Lazy Web Apply", "command": "applyWeb" }
+  ]
 }
