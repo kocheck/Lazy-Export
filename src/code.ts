@@ -50,32 +50,32 @@ figma.ui.onmessage = msg => {
     const settingsAndroid = [
       {
         format: "PNG",
-        suffix: "/drawable-XXXHDPI/" + UserEnteredString,
+        suffix: "/drawable-xxxhdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 4 }
       },
       {
         format: "PNG",
-        suffix: "/drawable-XXHDPI/" + UserEnteredString,
+        suffix: "/drawable-xxhdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 3 }
       },
       {
         format: "PNG",
-        suffix: "/drawable-XHDPI/" + UserEnteredString,
+        suffix: "/drawable-xhdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 2 }
       },
       {
         format: "PNG",
-        suffix: "/drawable-HDPI/" + UserEnteredString,
+        suffix: "/drawable-hdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 1.5 }
       },
       {
         format: "PNG",
-        suffix: "/drawable-LDPI/" + UserEnteredString,
+        suffix: "/drawable-ldpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 0.75 }
       },
       {
         format: "PNG",
-        suffix: "/drawable-MDPI/" + UserEnteredString,
+        suffix: "/drawable-mdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 1 }
       }
     ];
