@@ -6,7 +6,7 @@
 // full browser enviroment (see documentation).
 
 // This shows the HTML page in "ui.html".
-figma.showUI(__html__, { width: 200, height: 340 });
+figma.showUI(__html__, { width: 200, height: 364 });
 
 // Calls to "parent.postMessage" from within the HTML page will trigger this
 // callback. The callback will be passed the "pluginMessage" property of the
@@ -21,6 +21,13 @@ figma.ui.onmessage = msg => {
       return nodes || nodes.length === 0;
     }
     let settings = [];
+    // Importing the User entered string and biding a default value to null
+    let UserEnteredString = msg.name;
+    if (UserEnteredString === null) {
+      UserEnteredString = "default-asset";
+    }
+    // console.log(msg);
+
     // IOS Settings ======
     const settingsIOS = [
       {
@@ -43,32 +50,32 @@ figma.ui.onmessage = msg => {
     const settingsAndroid = [
       {
         format: "PNG",
-        suffix: "/drawable-XXXHDPI/UserEnteredString",
+        suffix: "/drawable-XXXHDPI/" + UserEnteredString,
         constraint: { type: "SCALE", value: 4 }
       },
       {
         format: "PNG",
-        suffix: "/drawable-XXHDPI/UserEnteredString",
+        suffix: "/drawable-XXHDPI/" + UserEnteredString,
         constraint: { type: "SCALE", value: 3 }
       },
       {
         format: "PNG",
-        suffix: "/drawable-XHDPI/UserEnteredString",
+        suffix: "/drawable-XHDPI/" + UserEnteredString,
         constraint: { type: "SCALE", value: 2 }
       },
       {
         format: "PNG",
-        suffix: "/drawable-HDPI/UserEnteredString",
+        suffix: "/drawable-HDPI/" + UserEnteredString,
         constraint: { type: "SCALE", value: 1.5 }
       },
       {
         format: "PNG",
-        suffix: "/drawable-LDPI/UserEnteredString",
+        suffix: "/drawable-LDPI/" + UserEnteredString,
         constraint: { type: "SCALE", value: 0.75 }
       },
       {
         format: "PNG",
-        suffix: "/drawable-MDPI/UserEnteredString",
+        suffix: "/drawable-MDPI/" + UserEnteredString,
         constraint: { type: "SCALE", value: 1 }
       }
     ];
