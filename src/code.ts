@@ -157,6 +157,11 @@ figma.ui.onmessage = msg => {
   // } else {
   //   shape = figma.createEllipse();
   // }
+  if (msg.platform === undefined) {
+    figma.notify("Export Settings Cleared");
+  } else {
+    figma.notify(msg.platform + " Export Settings Applied");
+  }
 };
 
 // Make sure to close the plugin when you're done. Otherwise the plugin will
