@@ -21,8 +21,9 @@
     { value: "Web", label: "Web Assets", group: null, selected: false }
   ];
 
-  var disabled = true;
-  var selectedPlatform;
+  let disabled = true;
+  let selectedPlatform;
+  let UserEnteredString;
 
   //this is a reactive variable that will return false when a value is selected from
   //the select menu, its value is bound to the primary buttons disabled prop
@@ -30,11 +31,13 @@
 
   function applySettings() {
     console.log(`1 Fire Apply Settings`);
+
     parent.postMessage(
       {
         pluginMessage: {
           type: "applySettings",
-          platform: selectedPlatform.value
+          platform: selectedPlatform.value,
+          name: UserEnteredString
         }
       },
       "*"
@@ -134,6 +137,7 @@
         bind:menuItems
         placeholder="Select Platform"
         bind:value={selectedPlatform} />
+      <Input placeholder="Custom Asset Name" bind:value={UserEnteredString} />
       <div class="buttonExport">
         <Button on:click={applySettings} bind:disabled>
           Apply Export Settings
