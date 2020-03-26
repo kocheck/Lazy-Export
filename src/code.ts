@@ -6,7 +6,7 @@
 // full browser enviroment (see documentation).
 
 // This shows the HTML page in "ui.html".
-figma.showUI(__html__, { width: 200, height: 340 });
+figma.showUI(__html__, { width: 200, height: 364 });
 
 // Calls to "parent.postMessage" from within the HTML page will trigger this
 // callback. The callback will be passed the "pluginMessage" property of the
@@ -21,6 +21,13 @@ figma.ui.onmessage = msg => {
       return nodes || nodes.length === 0;
     }
     let settings = [];
+    // Importing the User entered string and biding a default value to null
+    let UserEnteredString = msg.name;
+    if (UserEnteredString === null) {
+      UserEnteredString = "default-asset";
+    }
+    // console.log(msg);
+
     // IOS Settings ======
     const settingsIOS = [
       {
@@ -43,32 +50,32 @@ figma.ui.onmessage = msg => {
     const settingsAndroid = [
       {
         format: "PNG",
-        suffix: "/XXXHDPI",
+        suffix: "/drawable-xxxhdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 4 }
       },
       {
         format: "PNG",
-        suffix: "/XXHDPI",
+        suffix: "/drawable-xxhdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 3 }
       },
       {
         format: "PNG",
-        suffix: "/XHDPI",
+        suffix: "/drawable-xhdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 2 }
       },
       {
         format: "PNG",
-        suffix: "/HDPI",
+        suffix: "/drawable-hdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 1.5 }
       },
       {
         format: "PNG",
-        suffix: "/LDPI",
+        suffix: "/drawable-ldpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 0.75 }
       },
       {
         format: "PNG",
-        suffix: "/MDPI",
+        suffix: "/drawable-mdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 1 }
       }
     ];
@@ -150,6 +157,11 @@ figma.ui.onmessage = msg => {
   // } else {
   //   shape = figma.createEllipse();
   // }
+  if (msg.platform === undefined) {
+    figma.notify("Export Settings Cleared");
+  } else {
+    figma.notify(msg.platform + " Export Settings Applied");
+  }
 };
 
 // Make sure to close the plugin when you're done. Otherwise the plugin will
