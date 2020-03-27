@@ -32,17 +32,37 @@ figma.ui.onmessage = msg => {
     const settingsIOS = [
       {
         format: "PNG",
-        suffix: "@3x",
+        suffix: "/" + UserEnteredString + "@3x",
         constraint: { type: "SCALE", value: 3 }
       },
       {
         format: "PNG",
-        suffix: "@2x",
+        suffix: "/" + UserEnteredString + "@2x",
         constraint: { type: "SCALE", value: 2 }
       },
       {
         format: "PNG",
-        suffix: "@1x",
+        suffix: "/" + UserEnteredString + "@1x",
+        constraint: { type: "SCALE", value: 1 }
+      }
+    ];
+    const settingsIOSadv = [
+      {
+        format: "PNG",
+        suffix:
+          "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@3x",
+        constraint: { type: "SCALE", value: 3 }
+      },
+      {
+        format: "PNG",
+        suffix:
+          "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@2x",
+        constraint: { type: "SCALE", value: 2 }
+      },
+      {
+        format: "PNG",
+        suffix:
+          "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@1x",
         constraint: { type: "SCALE", value: 1 }
       }
     ];
@@ -98,6 +118,10 @@ figma.ui.onmessage = msg => {
     if (msg.platform === "IOS") {
       settings = settingsIOS;
       console.log(`2 Fire IOS Settings`);
+    }
+    if (msg.platform === "IOSadvance") {
+      settings = settingsIOSadv;
+      console.log(`2 Fire IOS Adv Settings`);
     }
     // Sets Android Export
     if (msg.platform === "Android") {
