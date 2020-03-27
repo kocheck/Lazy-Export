@@ -17,6 +17,12 @@
   //menu items, this is an array of objects to populate to our select menus
   let menuItems = [
     { value: "IOS", label: "IOS Assets", group: null, selected: false },
+    {
+      value: "IOSadvance",
+      label: "IOS Adv. Assets",
+      group: null,
+      selected: false
+    },
     { value: "Android", label: "Android Assets", group: null, selected: false },
     { value: "Web", label: "Web Assets", group: null, selected: false }
   ];
