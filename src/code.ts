@@ -32,17 +32,20 @@ figma.ui.onmessage = msg => {
     const settingsIOS = [
       {
         format: "PNG",
-        suffix: "@3x",
+        suffix:
+          "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@3x",
         constraint: { type: "SCALE", value: 3 }
       },
       {
         format: "PNG",
-        suffix: "@2x",
+        suffix:
+          "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@2x",
         constraint: { type: "SCALE", value: 2 }
       },
       {
         format: "PNG",
-        suffix: "@1x",
+        suffix:
+          "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@1x",
         constraint: { type: "SCALE", value: 1 }
       }
     ];
