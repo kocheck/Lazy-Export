@@ -1,3 +1,6 @@
+const { command } = figma;
+const menuTrigger = command;
+console.log("Firing " + menuTrigger + " from menu");
 // This plugin will open a modal to prompt the user to enter a number, and
 // it will then create that many rectangles on the screen.
 
@@ -11,6 +14,121 @@
 //   console.log(`1 Fire Apply IOS Menu`);
 //   figma.closePlugin("Done!");
 // }
+
+if (menuTrigger !== "openPlugin") {
+  let menuSettings = [];
+  // IOS Settings ======
+  const menuSettingsIOS = [
+    {
+      format: "PNG",
+      suffix: " @3x",
+      constraint: { type: "SCALE", value: 3 }
+    },
+    {
+      format: "PNG",
+      suffix: " @2x",
+      constraint: { type: "SCALE", value: 2 }
+    },
+    {
+      format: "PNG",
+      suffix: " @1x",
+      constraint: { type: "SCALE", value: 1 }
+    }
+  ];
+  // Android Settings ======
+  const MenuSettingsAndroid = [
+    {
+      format: "PNG",
+      suffix: " drawable-xxxhdpi",
+      constraint: { type: "SCALE", value: 4 }
+    },
+    {
+      format: "PNG",
+      suffix: " drawable-xxhdpi",
+      constraint: { type: "SCALE", value: 3 }
+    },
+    {
+      format: "PNG",
+      suffix: " drawable-xhdpi",
+      constraint: { type: "SCALE", value: 2 }
+    },
+    {
+      format: "PNG",
+      suffix: " drawable-hdpi",
+      constraint: { type: "SCALE", value: 1.5 }
+    },
+    {
+      format: "PNG",
+      suffix: " drawable-ldpi",
+      constraint: { type: "SCALE", value: 0.75 }
+    },
+    {
+      format: "PNG",
+      suffix: " drawable-mdpi",
+      constraint: { type: "SCALE", value: 1 }
+    }
+  ];
+  // Web Settings ======
+  const MenuSettingsWeb = [
+    {
+      format: "SVG",
+      suffix: "",
+      svgOutlineText: true,
+      svgIdAttribute: false,
+      svgSimplifyStroke: true
+    },
+    { format: "PNG", suffix: " @3x", constraint: { type: "SCALE", value: 3 } },
+    { format: "PNG", suffix: " @2x", constraint: { type: "SCALE", value: 2 } },
+    { format: "PNG", suffix: " @1x", constraint: { type: "SCALE", value: 1 } }
+  ];
+  const { selection } = figma.currentPage;
+  function hasValidSelectionMenu(nodes) {
+    return nodes || nodes.length === 0;
+  }
+  let closingType = "";
+  if (menuTrigger === "applyIOS") {
+    menuSettings = menuSettingsIOS;
+    console.log(`2 Fire Menu IOS Settings`);
+    closingType = "IOS";
+  }
+  // Sets Android Export
+  if (menuTrigger === "applyAndroid") {
+    menuSettings = MenuSettingsAndroid;
+    console.log(`2 Fire Menu Android Settings`);
+    closingType = "Android";
+  }
+  // Sets Web Export
+  if (menuTrigger === "applyWeb") {
+    menuSettings = MenuSettingsWeb;
+    console.log(`2 Fire Menu Web Settings`);
+    closingType = "Web";
+  }
+  if (menuTrigger === "clearExport") {
+    menuSettings = [];
+    console.log(`2 Clear Settings`);
+    closingType = "Cleared";
+  }
+
+  // Applies Settings to Figma Element =================
+  async function main(nodes): Promise<string> {
+    if (!hasValidSelectionMenu(nodes))
+      return Promise.resolve("No valid selection");
+
+    for (let node of nodes) {
+      node.exportSettings = menuSettings;
+    }
+
+    return Promise.resolve("Done!");
+  }
+
+  main(selection);
+  let closingMsg = "Settings Applied";
+  if (menuTrigger === "clearExport") {
+    closingMsg = " Export Settings";
+  }
+
+  figma.closePlugin(closingType + closingMsg);
+}
 
 // This shows the HTML page in "ui.html".
 figma.showUI(__html__, { width: 200, height: 364 });
@@ -74,7 +192,7 @@ figma.ui.onmessage = msg => {
       }
     ];
     // Android Settings ======
-    const settingsAndroid = [
+    const settingsAndroidAdv = [
       {
         format: "PNG",
         suffix: "/drawable-xxxhdpi/" + UserEnteredString,
@@ -106,6 +224,38 @@ figma.ui.onmessage = msg => {
         constraint: { type: "SCALE", value: 1 }
       }
     ];
+    const settingsAndroid = [
+      {
+        format: "PNG",
+        suffix: "drawable-xxxhdpi" + UserEnteredString,
+        constraint: { type: "SCALE", value: 4 }
+      },
+      {
+        format: "PNG",
+        suffix: "drawable-xxhdpi",
+        constraint: { type: "SCALE", value: 3 }
+      },
+      {
+        format: "PNG",
+        suffix: "drawable-xhdpi",
+        constraint: { type: "SCALE", value: 2 }
+      },
+      {
+        format: "PNG",
+        suffix: "drawable-hdpi",
+        constraint: { type: "SCALE", value: 1.5 }
+      },
+      {
+        format: "PNG",
+        suffix: "drawable-ldpi",
+        constraint: { type: "SCALE", value: 0.75 }
+      },
+      {
+        format: "PNG",
+        suffix: "drawable-mdpi",
+        constraint: { type: "SCALE", value: 1 }
+      }
+    ];
     // Web Settings ======
     const settingsWeb = [
       {
@@ -133,6 +283,10 @@ figma.ui.onmessage = msg => {
     // Sets Android Export
     if (msg.platform === "Android") {
       settings = settingsAndroid;
+      console.log(`2 Fire Android Settings`);
+    }
+    if (msg.platform === "AndroidAdvance") {
+      settings = settingsAndroidAdv;
       console.log(`2 Fire Android Settings`);
     }
     // Sets Web Export
@@ -189,7 +343,7 @@ figma.ui.onmessage = msg => {
   //   shape = figma.createEllipse();
   // }
   if (msg.platform === undefined) {
-    figma.notify("Export Settings Cleared");
+    figma.notify("Cleared Export Settings");
   } else {
     figma.notify(msg.platform + " Export Settings Applied");
   }
