@@ -13,7 +13,7 @@
 // }
 
 // This shows the HTML page in "ui.html".
-figma.showUI(__html__, { width: 200, height: 340 });
+figma.showUI(__html__, { width: 200, height: 364 });
 
 // Calls to "parent.postMessage" from within the HTML page will trigger this
 // callback. The callback will be passed the "pluginMessage" property of the
@@ -28,21 +28,48 @@ figma.ui.onmessage = msg => {
       return nodes || nodes.length === 0;
     }
     let settings = [];
+    // Importing the User entered string and biding a default value to null
+    let UserEnteredString = msg.name;
+    if (UserEnteredString === null) {
+      UserEnteredString = "default-asset";
+    }
+    // console.log(msg);
+
     // IOS Settings ======
     const settingsIOS = [
       {
         format: "PNG",
-        suffix: "@3x",
+        suffix: "/" + UserEnteredString + "@3x",
         constraint: { type: "SCALE", value: 3 }
       },
       {
         format: "PNG",
-        suffix: "@2x",
+        suffix: "/" + UserEnteredString + "@2x",
         constraint: { type: "SCALE", value: 2 }
       },
       {
         format: "PNG",
-        suffix: "@1x",
+        suffix: "/" + UserEnteredString + "@1x",
+        constraint: { type: "SCALE", value: 1 }
+      }
+    ];
+    const settingsIOSadv = [
+      {
+        format: "PNG",
+        suffix:
+          "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@3x",
+        constraint: { type: "SCALE", value: 3 }
+      },
+      {
+        format: "PNG",
+        suffix:
+          "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@2x",
+        constraint: { type: "SCALE", value: 2 }
+      },
+      {
+        format: "PNG",
+        suffix:
+          "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@1x",
         constraint: { type: "SCALE", value: 1 }
       }
     ];
@@ -50,32 +77,32 @@ figma.ui.onmessage = msg => {
     const settingsAndroid = [
       {
         format: "PNG",
-        suffix: "/XXXHDPI",
+        suffix: "/drawable-xxxhdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 4 }
       },
       {
         format: "PNG",
-        suffix: "/XXHDPI",
+        suffix: "/drawable-xxhdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 3 }
       },
       {
         format: "PNG",
-        suffix: "/XHDPI",
+        suffix: "/drawable-xhdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 2 }
       },
       {
         format: "PNG",
-        suffix: "/HDPI",
+        suffix: "/drawable-hdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 1.5 }
       },
       {
         format: "PNG",
-        suffix: "/LDPI",
+        suffix: "/drawable-ldpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 0.75 }
       },
       {
         format: "PNG",
-        suffix: "/MDPI",
+        suffix: "/drawable-mdpi/" + UserEnteredString,
         constraint: { type: "SCALE", value: 1 }
       }
     ];
@@ -98,6 +125,10 @@ figma.ui.onmessage = msg => {
     if (msg.platform === "IOS") {
       settings = settingsIOS;
       console.log(`2 Fire IOS Settings`);
+    }
+    if (msg.platform === "IOSadvance") {
+      settings = settingsIOSadv;
+      console.log(`2 Fire IOS Adv Settings`);
     }
     // Sets Android Export
     if (msg.platform === "Android") {
@@ -157,6 +188,11 @@ figma.ui.onmessage = msg => {
   // } else {
   //   shape = figma.createEllipse();
   // }
+  if (msg.platform === undefined) {
+    figma.notify("Export Settings Cleared");
+  } else {
+    figma.notify(msg.platform + " Export Settings Applied");
+  }
 };
 
 // Make sure to close the plugin when you're done. Otherwise the plugin will
