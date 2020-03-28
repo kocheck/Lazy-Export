@@ -127,7 +127,7 @@ if (menuTrigger !== "openPlugin") {
     closingMsg = " Export Settings";
   }
 
-  figma.closePlugin(closingType + closingMsg);
+  figma.closePlugin(closingType + " " + closingMsg);
 }
 
 // This shows the HTML page in "ui.html".
