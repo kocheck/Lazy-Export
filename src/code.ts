@@ -276,7 +276,7 @@ figma.ui.onmessage = msg => {
       settings = settingsIOS;
       console.log(`2 Fire IOS Settings`);
     }
-    if (msg.platform === "IOSadvance") {
+    if (msg.platform === "IOS Advanced") {
       settings = settingsIOSadv;
       console.log(`2 Fire IOS Adv Settings`);
     }
@@ -285,7 +285,7 @@ figma.ui.onmessage = msg => {
       settings = settingsAndroid;
       console.log(`2 Fire Android Settings`);
     }
-    if (msg.platform === "AndroidAdvance") {
+    if (msg.platform === "Android Advanced") {
       settings = settingsAndroidAdv;
       console.log(`2 Fire Android Settings`);
     }
