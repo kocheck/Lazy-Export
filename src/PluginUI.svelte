@@ -18,14 +18,14 @@
   let menuItems = [
     { value: "IOS", label: "IOS", group: null, selected: false },
     {
-      value: "IOSadvance",
+      value: "IOS Advanced",
       label: "IOS Adv.",
       group: null,
       selected: false
     },
     { value: "Android", label: "Android", group: null, selected: false },
     {
-      value: "AndroidAdvance",
+      value: "Android Advanced",
       label: "Android Adv.",
       group: null,
       selected: false
