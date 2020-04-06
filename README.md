@@ -2,6 +2,13 @@
 
 Lazy export is inspired by a feature that was apart of my workflow in sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
 
+
+Lazy export is inspired by a feature that was apart of my workflow in sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
+
+### Have a feature request or bug? Please feel free to add an issue!
+A PR would work perfectly as well. You may noticed in this repo I am talking to my self alot as I use this space to keep learning. PR would get it done faster, I just may ask alot of questions. 🤓 
+
+
 ## What does it do?
 
 **Lazy Export** allows the user to apply default export settings to selected objects in Figma.
