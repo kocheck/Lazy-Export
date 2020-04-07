@@ -1,13 +1,14 @@
+![Lazy Export](./assets/version1.jpg)
+
 # Lazy Export
 
 Lazy export is inspired by a feature that was apart of my workflow in Sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
 
-
 Lazy export is inspired by a feature that was apart of my workflow in sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
 
 ### Have a feature request or bug? Please feel free to add an issue!
-A Pull request would work perfectly, as well. You may have noticed in this repo I am talking to my self a lot as I use this space to keep learning. PR would get it done faster; I just may ask a lot of questions. 🤓 
 
+A Pull request would work perfectly, as well. You may have noticed in this repo I am talking to my self a lot as I use this space to keep learning. PR would get it done faster; I just may ask a lot of questions. 🤓
 
 ## What does it do?
 
@@ -18,14 +19,32 @@ A Pull request would work perfectly, as well. You may have noticed in this repo 
 There are two ways to trigger your export settings to be applied. The first is a window giving you UI access to run the plugin commands. (Set Platform, Apply Settings, Clear Settings)
 The second is via the plugin menu; this makes the actions searchable in Figma with the `⌘+/` command.
 
+### Advanced Export Settings.
 
-### Advanced Export Settings. 
-With Lazy export, you have two mobile options on how you can apply export settings. 
+With Lazy export, you have two mobile options on how you can apply export settings.
+
 - Default Export
-- Advanced Export 
+- Advanced Export
 
-With the default export, this follows the trends for exporting assets for mobile at the different screen densities. Advanced is still being worked on for a smooth workflow, but the end goal would be for a developer to hit apply, and Figma exports a folder of assets the developer can just drop into Android Studio, or Xcode. 
+With the default export, this follows the trends for exporting assets for mobile at the different screen densities. Advanced is still being worked on for a smooth workflow.
 
+> The end goal for Advanced Export Options, would be for a developer to hit apply, and Figma exports a folder of assets the developer can just drop into Android Studio, or Xcode.
+
+**Android Suffix**
+`/drawable-mdpi/default-asset`
+
+**IOS Suffix**
+`/default-asset.imageset/default-asset@1x`
+
+### Custom Asset Naming
+
+Right now if you do not apply a custom name to each asset a default one will be used. _I have plans on the roadmap to adjust this._
+
+**Android Suffix**
+`drawable-mdpi`
+
+**IOS Suffix**
+`/default-asset@1x`
 
 ## Plugin Development Tips
 
