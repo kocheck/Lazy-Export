@@ -46,8 +46,11 @@ Right now if you do not apply a custom name to each asset a default one will be 
 **IOS Suffix**
 `/default-asset@1x`
 
+</br >
+
 ---
 
+</br >
 # Plugin Development Tips
 
 ### Tip 1:
