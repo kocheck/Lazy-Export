@@ -1,13 +1,14 @@
+![Lazy Export](./assets/version1.jpg)
+
 # Lazy Export
 
-Lazy export is inspired by a feature that was apart of my workflow in sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
-
+Lazy export is inspired by a feature that was apart of my workflow in Sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
 
 Lazy export is inspired by a feature that was apart of my workflow in sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
 
 ### Have a feature request or bug? Please feel free to add an issue!
-A PR would work perfectly as well. You may noticed in this repo I am talking to my self alot as I use this space to keep learning. PR would get it done faster, I just may ask alot of questions. 🤓 
 
+A Pull request would work perfectly, as well. You may have noticed in this repo I am talking to my self a lot as I use this space to keep learning. PR would get it done faster; I just may ask a lot of questions. 🤓
 
 ## What does it do?
 
@@ -18,7 +19,39 @@ A PR would work perfectly as well. You may noticed in this repo I am talking to 
 There are two ways to trigger your export settings to be applied. The first is a window giving you UI access to run the plugin commands. (Set Platform, Apply Settings, Clear Settings)
 The second is via the plugin menu; this makes the actions searchable in Figma with the `⌘+/` command.
 
-## Plugin Development Tips
+### Advanced Export Settings.
+
+With Lazy export, you have two mobile options on how you can apply export settings.
+
+- Default Export
+- Advanced Export
+
+With the default export, this follows the trends for exporting assets for mobile at the different screen densities. Advanced is still being worked on for a smooth workflow.
+
+> The end goal for Advanced Export Options, would be for a developer to hit apply, and Figma exports a folder of assets the developer can just drop into Android Studio, or Xcode.
+
+**Android Suffix**
+`/drawable-mdpi/default-asset`
+
+**IOS Suffix**
+`/default-asset.imageset/default-asset@1x`
+
+### Custom Asset Naming
+
+Right now if you do not apply a custom name to each asset a default one will be used. _I have plans on the roadmap to adjust this._
+
+**Android Suffix**
+`drawable-mdpi`
+
+**IOS Suffix**
+`/default-asset@1x`
+
+</br >
+
+---
+
+</br >
+# Plugin Development Tips
 
 ### Tip 1:
 
@@ -28,9 +61,9 @@ to see the list of available JavaScript/Browser APIs on the main thread, run `co
 
 A boilerplate for creating Figma plugins using Svelte.
 
-This starter project has everything you need to start developing a Figma plugin usign Svelte. Your JS, CSS, SVG and image assets can be bundled on build. The package will take care of compiling your typescript + app on save during development, and also minify on build.
+This starter project has everything you need to start developing a Figma plugin using Svelte. Your JS, CSS, SVG, and image assets can be bundled on build. The package will take care of compiling your typescript + app on save during development, and also minify on the build.
 
-Additionally, this package comes preconfigured with [Figma Plugin DS Svelte](https://github.com/thomas-lowry/figma-plugin-ds-svelte) where you have access to a large range of components and icons that match the Figma UI, to get you up and running quickly. Note: installing this boilerplate will install the component library as a dependency.
+Additionally, this package comes preconfigured with [Figma Plugin DS Svelte](https://github.com/thomas-lowry/figma-plugin-ds-svelte) where you have access to an extensive range of components and icons that match the Figma UI, to get you up and running quickly. Note: installing this boilerplate will install the component library as a dependency.
 
 Only what you import/use will be included in the final build for small bundle size.
 
