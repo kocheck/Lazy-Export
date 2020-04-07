@@ -18,6 +18,15 @@ A Pull request would work perfectly, as well. You may have noticed in this repo 
 There are two ways to trigger your export settings to be applied. The first is a window giving you UI access to run the plugin commands. (Set Platform, Apply Settings, Clear Settings)
 The second is via the plugin menu; this makes the actions searchable in Figma with the `⌘+/` command.
 
+
+### Advanced Export Settings. 
+With Lazy export, you have two mobile options on how you can apply export settings. 
+- Default Export
+- Advanced Export 
+
+With the default export, this follows the trends for exporting assets for mobile at the different screen densities. Advanced is still being worked on for a smooth workflow, but the end goal would be for a developer to hit apply, and Figma exports a folder of assets the developer can just drop into Android Studio, or Xcode. 
+
+
 ## Plugin Development Tips
 
 ### Tip 1:
