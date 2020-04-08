@@ -1,19 +1,10 @@
 const { command } = figma;
 const menuTrigger = command;
 console.log("Firing " + menuTrigger + " from menu");
-// This plugin will open a modal to prompt the user to enter a number, and
-// it will then create that many rectangles on the screen.
 
 // This file holds the main code for the plugins. It has access to the *document*.
 // You can access browser APIs in the <script> tag inside "ui.html" which has a
 // full browser environment (see documentation).
-
-// TODO This code 'doesn't work
-// figma.showUI(__html__, { visible: false });
-// if (figma.command == "applyIOS") {
-//   console.log(`1 Fire Apply IOS Menu`);
-//   figma.closePlugin("Done!");
-// }
 
 if (menuTrigger !== "openPlugin") {
   let menuSettings = [];
@@ -337,11 +328,6 @@ figma.ui.onmessage = msg => {
     figma.closePlugin();
   }
 
-  // else if (msg.shape === "triangle") {
-  //   shape = figma.createPolygon();
-  // } else {
-  //   shape = figma.createEllipse();
-  // }
   if (msg.platform === undefined) {
     figma.notify("Cleared Export Settings");
   } else {
@@ -349,6 +335,3 @@ figma.ui.onmessage = msg => {
   }
 };
 
-// Make sure to close the plugin when you're done. Otherwise the plugin will
-// keep running, which shows the cancel button at the bottom of the screen.
-//   figma.closePlugin();
