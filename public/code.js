@@ -144,7 +144,7 @@ if (menuTrigger !== "openPlugin") {
     figma.closePlugin(closingType + " " + closingMsg);
 }
 // This shows the HTML page in "ui.html".
-figma.showUI(__html__, { width: 200, height: 364 });
+figma.showUI(__html__, { width: 200, height: 396 });
 // Calls to "parent.postMessage" from within the HTML page will trigger this
 // callback. The callback will be passed the "pluginMessage" property of the
 // posted message.
@@ -278,22 +278,22 @@ figma.ui.onmessage = (msg) => {
         ];
         // if statments to apply export settings ===========
         // Sets IOS Export
-        if (msg.platform === "IOS") {
+        if (msg.platform === "IOS" && msg.isAdvanced === false) {
             settings = settingsIOS;
             console.log(`2 Fire IOS Settings`);
         }
-        if (msg.platform === "IOS Advanced") {
+        if (msg.platform === "IOS" && msg.isAdvanced === true) {
             settings = settingsIOSadv;
             console.log(`2 Fire IOS Adv Settings`);
         }
         // Sets Android Export
-        if (msg.platform === "Android") {
+        if (msg.platform === "Android" && msg.isAdvanced === false) {
             settings = settingsAndroid;
             console.log(`2 Fire Android Settings`);
         }
-        if (msg.platform === "Android Advanced") {
+        if (msg.platform === "Android" && msg.isAdvanced === true) {
             settings = settingsAndroidAdv;
-            console.log(`2 Fire Android Settings`);
+            console.log(`2 Fire Android Adv Settings`);
         }
         // Sets Web Export
         if (msg.platform === "Web") {
