@@ -2,54 +2,49 @@
   //import Global CSS from the svelte boilerplate
   //contains Figma color vars, spacing vars, utility classes and more
 
-  import { GlobalCSS } from "figma-plugin-ds-svelte";
+  //Global CSS
+  import GlobalCSS from "./components/Styles/global.css";
 
-  //import some Svelte Figma UI components
-  import {
-    Button,
-    Input,
-    Label,
-    Disclosure,
-    Section,
-    SelectMenu
-  } from "figma-plugin-ds-svelte";
+  //Components
+  import Button from "./components/UI/Button/index.svelte";
+  import Disclosure from "./components/UI/Disclosure/index.svelte";
+  import Input from "./components/UI/Input/index.svelte";
+  import Label from "./components/UI/Label/index.svelte";
+  import Section from "./components/UI/Section/index.svelte";
+  import SelectMenu from "./components/UI/SelectMenu/index.svelte";
+  import Icon from "./components/UI/Icon/index.svelte";
+  import Switch from "./components/UI/Switch/index.svelte";
 
-  //menu items, this is an array of objects to populate to our select menus
+  //Icons
+  import LazyLogo from "./components/icons/lazyExportIcon.svg";
+
+  //Menu items, this is an array of objects to populate to our select menus
   let menuItems = [
     { value: "IOS", label: "IOS", group: null, selected: false },
-    {
-      value: "IOS Advanced",
-      label: "IOS Adv.",
-      group: null,
-      selected: false
-    },
     { value: "Android", label: "Android", group: null, selected: false },
-    {
-      value: "Android Advanced",
-      label: "Android Adv.",
-      group: null,
-      selected: false
-    },
     { value: "Web", label: "Web", group: null, selected: false }
   ];
 
   let disabled = true;
   let selectedPlatform;
   let UserEnteredString;
+  let isAdvancedExportChecked;
 
   //this is a reactive variable that will return false when a value is selected from
   //the select menu, its value is bound to the primary buttons disabled prop
   $: disabled = selectedPlatform === null;
+  // $: disabled = isAdvancedExportChecked === null;
 
   function applySettings() {
     console.log(`1 Fire Apply Settings`);
-
+    console.log(isAdvancedExportChecked);
     parent.postMessage(
       {
         pluginMessage: {
           type: "applySettings",
           platform: selectedPlatform.value,
-          name: UserEnteredString
+          name: UserEnteredString,
+          isAdvanced: isAdvancedExportChecked
         }
       },
       "*"
@@ -73,68 +68,11 @@
   }
 </script>
 
-<style>
-  /* Add additional global or scoped styles here */
-  .main {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: Inter, sans-serif;
-    overflow: hidden;
-    text-align: center;
-    background-color: whitesmoke;
-  }
-
-  .pluginTitle {
-    margin: 8px 0 0 12px;
-  }
-  .pluginTitle svg {
-    margin-left: 12px;
-  }
-  .sectionWrapper {
-    background-color: white;
-    border-radius: 5px;
-    border: 1px solid lightgray;
-    padding: 4px 8px 8px 8px;
-    margin: 6px;
-  }
-  .buttonExport {
-    width: 100%;
-    display: flex;
-    padding: 12px 0 4px 0;
-  }
-  .flex-container-align {
-    flex-wrap: wrap;
-    display: flex;
-    align-content: center;
-    justify-content: center;
-  }
-</style>
-
 <div class="main">
   <div class="flex pluginTitle">
 
     <h3 class="title">Lazy Export</h3>
-    <svg
-      role="img"
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 448 512"
-      width="20px"
-      class="icon">
-      <path
-        fill="currentColor"
-        d="M288 29V16a16 16 0 0 0-16-16H160a16 16 0 0 0-16 16v16a16 16 0 0 0 16
-        16h58.12l-82.2 93.94A32 32 0 0 0 128 163v13a16 16 0 0 0 16 16h112a16 16
-        0 0 0 16-16v-16a16 16 0 0 0-16-16h-58.13l82.21-93.94A32 32 0 0 0 288
-        29zm-88 227H32a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h99.34L9.53
-        440.06A32.09 32.09 0 0 0 0 462.86V488a24 24 0 0 0 24 24h184a16 16 0 0 0
-        16-16v-32a16 16 0 0 0-16-16H92.66l121.81-120.06a32.09 32.09 0 0 0
-        9.53-22.8V280a24 24 0 0 0-24-24zm232-32H320a16 16 0 0 0-16 16v16a16 16 0
-        0 0 16 16h58.12l-82.2 93.94A32 32 0 0 0 288 387v13a16 16 0 0 0 16
-        16h112a16 16 0 0 0 16-16v-16a16 16 0 0 0-16-16h-58.13l82.21-93.94A32 32
-        0 0 0 448 253v-13a16 16 0 0 0-16-16z" />
-    </svg>
+    <Icon iconName={LazyLogo} />
   </div>
 
   <div class="wrapper p-xxsmall">
@@ -156,14 +94,16 @@
         </Button>
       </div>
     </div>
+    <section>
+      <Switch bind:checked={isAdvancedExportChecked} bind:disabled>
+        Advanced Export
+      </Switch>
+    </section>
     <!-- ========= Destructive ========= -->
     <div class="flex p-xxsmall mb-xsmall flex-container-align">
       <Button on:click={clearSettings} destructive>
         Clear Export Selection
       </Button>
-      <!-- <div class="closeButton">
-        <Button on:click={cancel}>Close</Button>
-      </div> -->
     </div>
     <Section>
       <div style="text-align: Left;">
