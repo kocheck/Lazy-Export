@@ -1,7 +1,7 @@
 const { command } = figma;
 const menuTrigger = command;
 console.log("Firing " + menuTrigger + " from menu");
-
+//Everywhere in the ap launchUrl is 'foo'
 // This file holds the main code for the plugins. It has access to the *document*.
 // You can access browser APIs in the <script> tag inside "ui.html" which has a
 // full browser environment (see documentation).
@@ -13,51 +13,51 @@ if (menuTrigger !== "openPlugin") {
     {
       format: "PNG",
       suffix: " @3x",
-      constraint: { type: "SCALE", value: 3 }
+      constraint: { type: "SCALE", value: 3 },
     },
     {
       format: "PNG",
       suffix: " @2x",
-      constraint: { type: "SCALE", value: 2 }
+      constraint: { type: "SCALE", value: 2 },
     },
     {
       format: "PNG",
       suffix: " @1x",
-      constraint: { type: "SCALE", value: 1 }
-    }
+      constraint: { type: "SCALE", value: 1 },
+    },
   ];
   // Android Settings ======
   const MenuSettingsAndroid = [
     {
       format: "PNG",
       suffix: " drawable-xxxhdpi",
-      constraint: { type: "SCALE", value: 4 }
+      constraint: { type: "SCALE", value: 4 },
     },
     {
       format: "PNG",
       suffix: " drawable-xxhdpi",
-      constraint: { type: "SCALE", value: 3 }
+      constraint: { type: "SCALE", value: 3 },
     },
     {
       format: "PNG",
       suffix: " drawable-xhdpi",
-      constraint: { type: "SCALE", value: 2 }
+      constraint: { type: "SCALE", value: 2 },
     },
     {
       format: "PNG",
       suffix: " drawable-hdpi",
-      constraint: { type: "SCALE", value: 1.5 }
+      constraint: { type: "SCALE", value: 1.5 },
     },
     {
       format: "PNG",
       suffix: " drawable-ldpi",
-      constraint: { type: "SCALE", value: 0.75 }
+      constraint: { type: "SCALE", value: 0.75 },
     },
     {
       format: "PNG",
       suffix: " drawable-mdpi",
-      constraint: { type: "SCALE", value: 1 }
-    }
+      constraint: { type: "SCALE", value: 1 },
+    },
   ];
   // Web Settings ======
   const MenuSettingsWeb = [
@@ -66,11 +66,11 @@ if (menuTrigger !== "openPlugin") {
       suffix: "",
       svgOutlineText: true,
       svgIdAttribute: false,
-      svgSimplifyStroke: true
+      svgSimplifyStroke: true,
     },
     { format: "PNG", suffix: " @3x", constraint: { type: "SCALE", value: 3 } },
     { format: "PNG", suffix: " @2x", constraint: { type: "SCALE", value: 2 } },
-    { format: "PNG", suffix: " @1x", constraint: { type: "SCALE", value: 1 } }
+    { format: "PNG", suffix: " @1x", constraint: { type: "SCALE", value: 1 } },
   ];
   const { selection } = figma.currentPage;
   function hasValidSelectionMenu(nodes) {
@@ -127,7 +127,7 @@ figma.showUI(__html__, { width: 200, height: 364 });
 // Calls to "parent.postMessage" from within the HTML page will trigger this
 // callback. The callback will be passed the "pluginMessage" property of the
 // posted message.
-figma.ui.onmessage = msg => {
+figma.ui.onmessage = (msg) => {
   // One way of distinguishing between different types of messages sent from
   // your HTML page is to use an object with a "type" property like this.
   if (msg.type === "applySettings") {
@@ -149,103 +149,103 @@ figma.ui.onmessage = msg => {
       {
         format: "PNG",
         suffix: "/" + UserEnteredString + "@3x",
-        constraint: { type: "SCALE", value: 3 }
+        constraint: { type: "SCALE", value: 3 },
       },
       {
         format: "PNG",
         suffix: "/" + UserEnteredString + "@2x",
-        constraint: { type: "SCALE", value: 2 }
+        constraint: { type: "SCALE", value: 2 },
       },
       {
         format: "PNG",
         suffix: "/" + UserEnteredString + "@1x",
-        constraint: { type: "SCALE", value: 1 }
-      }
+        constraint: { type: "SCALE", value: 1 },
+      },
     ];
     const settingsIOSadv = [
       {
         format: "PNG",
         suffix:
           "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@3x",
-        constraint: { type: "SCALE", value: 3 }
+        constraint: { type: "SCALE", value: 3 },
       },
       {
         format: "PNG",
         suffix:
           "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@2x",
-        constraint: { type: "SCALE", value: 2 }
+        constraint: { type: "SCALE", value: 2 },
       },
       {
         format: "PNG",
         suffix:
           "/" + UserEnteredString + ".imageset/" + UserEnteredString + "@1x",
-        constraint: { type: "SCALE", value: 1 }
-      }
+        constraint: { type: "SCALE", value: 1 },
+      },
     ];
     // Android Settings ======
     const settingsAndroidAdv = [
       {
         format: "PNG",
         suffix: "/drawable-xxxhdpi/" + UserEnteredString,
-        constraint: { type: "SCALE", value: 4 }
+        constraint: { type: "SCALE", value: 4 },
       },
       {
         format: "PNG",
         suffix: "/drawable-xxhdpi/" + UserEnteredString,
-        constraint: { type: "SCALE", value: 3 }
+        constraint: { type: "SCALE", value: 3 },
       },
       {
         format: "PNG",
         suffix: "/drawable-xhdpi/" + UserEnteredString,
-        constraint: { type: "SCALE", value: 2 }
+        constraint: { type: "SCALE", value: 2 },
       },
       {
         format: "PNG",
         suffix: "/drawable-hdpi/" + UserEnteredString,
-        constraint: { type: "SCALE", value: 1.5 }
+        constraint: { type: "SCALE", value: 1.5 },
       },
       {
         format: "PNG",
         suffix: "/drawable-ldpi/" + UserEnteredString,
-        constraint: { type: "SCALE", value: 0.75 }
+        constraint: { type: "SCALE", value: 0.75 },
       },
       {
         format: "PNG",
         suffix: "/drawable-mdpi/" + UserEnteredString,
-        constraint: { type: "SCALE", value: 1 }
-      }
+        constraint: { type: "SCALE", value: 1 },
+      },
     ];
     const settingsAndroid = [
       {
         format: "PNG",
         suffix: "drawable-xxxhdpi" + UserEnteredString,
-        constraint: { type: "SCALE", value: 4 }
+        constraint: { type: "SCALE", value: 4 },
       },
       {
         format: "PNG",
         suffix: "drawable-xxhdpi",
-        constraint: { type: "SCALE", value: 3 }
+        constraint: { type: "SCALE", value: 3 },
       },
       {
         format: "PNG",
         suffix: "drawable-xhdpi",
-        constraint: { type: "SCALE", value: 2 }
+        constraint: { type: "SCALE", value: 2 },
       },
       {
         format: "PNG",
         suffix: "drawable-hdpi",
-        constraint: { type: "SCALE", value: 1.5 }
+        constraint: { type: "SCALE", value: 1.5 },
       },
       {
         format: "PNG",
         suffix: "drawable-ldpi",
-        constraint: { type: "SCALE", value: 0.75 }
+        constraint: { type: "SCALE", value: 0.75 },
       },
       {
         format: "PNG",
         suffix: "drawable-mdpi",
-        constraint: { type: "SCALE", value: 1 }
-      }
+        constraint: { type: "SCALE", value: 1 },
+      },
     ];
     // Web Settings ======
     const settingsWeb = [
@@ -254,11 +254,11 @@ figma.ui.onmessage = msg => {
         suffix: "",
         svgOutlineText: true,
         svgIdAttribute: false,
-        svgSimplifyStroke: true
+        svgSimplifyStroke: true,
       },
       { format: "PNG", suffix: "@3x", constraint: { type: "SCALE", value: 3 } },
       { format: "PNG", suffix: "@2x", constraint: { type: "SCALE", value: 2 } },
-      { format: "PNG", suffix: "@1x", constraint: { type: "SCALE", value: 1 } }
+      { format: "PNG", suffix: "@1x", constraint: { type: "SCALE", value: 1 } },
     ];
 
     // if statments to apply export settings ===========
@@ -334,4 +334,3 @@ figma.ui.onmessage = msg => {
     figma.notify(msg.platform + " Export Settings Applied");
   }
 };
-
