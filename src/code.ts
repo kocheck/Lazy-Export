@@ -256,9 +256,21 @@ figma.ui.onmessage = (msg) => {
         svgIdAttribute: false,
         svgSimplifyStroke: true,
       },
-      { format: "PNG", suffix: "@3x", constraint: { type: "SCALE", value: 3 } },
-      { format: "PNG", suffix: "@2x", constraint: { type: "SCALE", value: 2 } },
-      { format: "PNG", suffix: "@1x", constraint: { type: "SCALE", value: 1 } },
+      {
+        format: "PNG",
+        suffix: "/" + UserEnteredString + "@3x",
+        constraint: { type: "SCALE", value: 3 },
+      },
+      {
+        format: "PNG",
+        suffix: "/" + UserEnteredString + "@2x",
+        constraint: { type: "SCALE", value: 2 },
+      },
+      {
+        format: "PNG",
+        suffix: "/" + UserEnteredString + "@1x",
+        constraint: { type: "SCALE", value: 1 },
+      },
     ];
 
     // if statments to apply export settings ===========
