@@ -1,7 +1,6 @@
 ![Lazy Export](./assets/version1.jpg)
 
 # Lazy Export
-![Labeler](https://github.com/kocheck/Lazy-Export/workflows/Labeler/badge.svg?branch=master&event=milestone)
 
 Lazy export is inspired by a feature that was apart of my workflow in Sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
 
