@@ -9,7 +9,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^11.1.0",
     "@rollup/plugin-image": "^2.0.6",
-    "@rollup/plugin-node-resolve": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^11.2.0",
     "cssnano": "^4.1.10",
     "figma-plugin-ds-svelte": "^1.0.4",
     "rollup": "^1.32.1",
@@ -18,13 +18,13 @@
     "rollup-plugin-postcss": "^3.1.8",
     "rollup-plugin-svelte": "^6.1.1",
     "rollup-plugin-svg": "^2.0.0",
-    "rollup-plugin-terser": "^5.3.0",
+    "rollup-plugin-terser": "^5.3.1",
     "rollup-plugin-typescript": "^1.0.1",
     "svelte": "^3.35.0",
-    "tslib": "^1.13.0",
+    "tslib": "^2.1.0",
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "sirv-cli": "^0.4.6"
+    "sirv-cli": "^1.0.11"
   }
 }
