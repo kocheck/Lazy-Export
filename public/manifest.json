@@ -3,6 +3,10 @@
   "id": "824059814042167296",
   "api": "1.0.0",
   "main": "code.js",
+  "enableProposedApi": false,
+  "editorType": [
+    "figma"
+  ],
   "ui": "index.html",
   "menu": [
     { "separator": true },
