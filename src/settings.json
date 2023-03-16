@@ -1,0 +1,75 @@
+{
+  "menuSettingsIOS": {
+    {
+      "format": "PNG",
+      "suffix": " @3x",
+      "constraint": { "type": "SCALE", "value": 3 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " @2x",
+      "constraint": { "type": "SCALE", "value": 2 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " @1x",
+      "constraint": { "type": "SCALE", "value": 1 }
+    }
+  },
+  "MenuSettingsAndroid": [
+    {
+      "format": "PNG",
+      "suffix": " drawable-xxxhdpi",
+      "constraint": { "type": "SCALE", "value": 4 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " drawable-xxhdpi",
+      "constraint": { "type": "SCALE", "value": 3 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " drawable-xhdpi",
+      "constraint": { "type": "SCALE", "value": 2 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " drawable-hdpi",
+      "constraint": { "type": "SCALE", "value": 1.5 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " drawable-ldpi",
+      "constraint": { "type": "SCALE", "value": 0.75 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " drawable-mdpi",
+      "constraint": { "type": "SCALE", "value": 1 }
+    }
+  ],
+  "MenuSettingsWeb": [
+    {
+      "format": "SVG",
+      "suffix": "",
+      "svgOutlineText": true,
+      "svgIdAttribute": false,
+      "svgSimplifyStroke": true
+    },
+    {
+      "format": "PNG",
+      "suffix": " @3x",
+      "constraint": { "type": "SCALE", "value": 3 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " @2x",
+      "constraint": { "type": "SCALE", "value": 2 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " @1x",
+      "constraint": { "type": "SCALE", "value": 1 }
+    }
+  ]
+}
