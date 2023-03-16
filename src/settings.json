@@ -2,49 +2,49 @@
   "menuSettingsIOS": {
     {
       "format": "PNG",
-      "suffix": " @3x",
+      "suffix": "/<UserEnteredString>@3x",
       "constraint": { "type": "SCALE", "value": 3 }
     },
     {
       "format": "PNG",
-      "suffix": " @2x",
+      "suffix": "/<UserEnteredString>@2x",
       "constraint": { "type": "SCALE", "value": 2 }
     },
     {
       "format": "PNG",
-      "suffix": " @1x",
+      "suffix": "/<UserEnteredString>@1x",
       "constraint": { "type": "SCALE", "value": 1 }
     }
   },
   "MenuSettingsAndroid": [
     {
       "format": "PNG",
-      "suffix": " drawable-xxxhdpi",
+      "suffix": " drawable-xxxhdpi/<UserEnteredString>",
       "constraint": { "type": "SCALE", "value": 4 }
     },
     {
       "format": "PNG",
-      "suffix": " drawable-xxhdpi",
+      "suffix": " drawable-xxhdpi/<UserEnteredString>",
       "constraint": { "type": "SCALE", "value": 3 }
     },
     {
       "format": "PNG",
-      "suffix": " drawable-xhdpi",
+      "suffix": " drawable-xhdpi/<UserEnteredString>",
       "constraint": { "type": "SCALE", "value": 2 }
     },
     {
       "format": "PNG",
-      "suffix": " drawable-hdpi",
+      "suffix": " drawable-hdpi/<UserEnteredString>",
       "constraint": { "type": "SCALE", "value": 1.5 }
     },
     {
       "format": "PNG",
-      "suffix": " drawable-ldpi",
+      "suffix": " drawable-ldpi/<UserEnteredString>",
       "constraint": { "type": "SCALE", "value": 0.75 }
     },
     {
       "format": "PNG",
-      "suffix": " drawable-mdpi",
+      "suffix": " drawable-mdpi/<UserEnteredString>",
       "constraint": { "type": "SCALE", "value": 1 }
     }
   ],
@@ -58,17 +58,17 @@
     },
     {
       "format": "PNG",
-      "suffix": " @3x",
+      "suffix": " /<UserEnteredString>@3x",
       "constraint": { "type": "SCALE", "value": 3 }
     },
     {
       "format": "PNG",
-      "suffix": " @2x",
+      "suffix": " /<UserEnteredString>@2x",
       "constraint": { "type": "SCALE", "value": 2 }
     },
     {
       "format": "PNG",
-      "suffix": " @1x",
+      "suffix": " /<UserEnteredString>@1x",
       "constraint": { "type": "SCALE", "value": 1 }
     }
   ]

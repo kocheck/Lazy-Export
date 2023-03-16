@@ -92,146 +92,50 @@ figma.ui.onmessage = (msg) => {
     }
     // console.log(msg);
 
-    // IOS Settings ======
-    const settingsIOS = [
-      {
-        format: 'PNG',
-        suffix: '/' + UserEnteredString + '@3x',
-        constraint: { type: 'SCALE', value: 3 },
-      },
-      {
-        format: 'PNG',
-        suffix: '/' + UserEnteredString + '@2x',
-        constraint: { type: 'SCALE', value: 2 },
-      },
-      {
-        format: 'PNG',
-        suffix: '/' + UserEnteredString + '@1x',
-        constraint: { type: 'SCALE', value: 1 },
-      },
-    ];
-    const settingsIOSadv = [
-      {
-        format: 'PNG',
-        suffix:
-          '/' +
-          UserEnteredString +
-          '.imageset/' +
-          UserEnteredString +
-          '@3x',
-        constraint: { type: 'SCALE', value: 3 },
-      },
-      {
-        format: 'PNG',
-        suffix:
-          '/' +
-          UserEnteredString +
-          '.imageset/' +
-          UserEnteredString +
-          '@2x',
-        constraint: { type: 'SCALE', value: 2 },
-      },
-      {
-        format: 'PNG',
-        suffix:
-          '/' +
-          UserEnteredString +
-          '.imageset/' +
-          UserEnteredString +
-          '@1x',
-        constraint: { type: 'SCALE', value: 1 },
-      },
-    ];
-    // Android Settings ======
-    const settingsAndroidAdv = [
-      {
-        format: 'PNG',
-        suffix: '/drawable-xxxhdpi/' + UserEnteredString,
-        constraint: { type: 'SCALE', value: 4 },
-      },
-      {
-        format: 'PNG',
-        suffix: '/drawable-xxhdpi/' + UserEnteredString,
-        constraint: { type: 'SCALE', value: 3 },
-      },
-      {
-        format: 'PNG',
-        suffix: '/drawable-xhdpi/' + UserEnteredString,
-        constraint: { type: 'SCALE', value: 2 },
-      },
-      {
-        format: 'PNG',
-        suffix: '/drawable-hdpi/' + UserEnteredString,
-        constraint: { type: 'SCALE', value: 1.5 },
-      },
-      {
-        format: 'PNG',
-        suffix: '/drawable-ldpi/' + UserEnteredString,
-        constraint: { type: 'SCALE', value: 0.75 },
-      },
-      {
-        format: 'PNG',
-        suffix: '/drawable-mdpi/' + UserEnteredString,
-        constraint: { type: 'SCALE', value: 1 },
-      },
-    ];
-    const settingsAndroid = [
-      {
-        format: 'PNG',
-        suffix: 'drawable-xxxhdpi' + UserEnteredString,
-        constraint: { type: 'SCALE', value: 4 },
-      },
-      {
-        format: 'PNG',
-        suffix: 'drawable-xxhdpi',
-        constraint: { type: 'SCALE', value: 3 },
-      },
-      {
-        format: 'PNG',
-        suffix: 'drawable-xhdpi',
-        constraint: { type: 'SCALE', value: 2 },
-      },
-      {
-        format: 'PNG',
-        suffix: 'drawable-hdpi',
-        constraint: { type: 'SCALE', value: 1.5 },
-      },
-      {
-        format: 'PNG',
-        suffix: 'drawable-ldpi',
-        constraint: { type: 'SCALE', value: 0.75 },
-      },
-      {
-        format: 'PNG',
-        suffix: 'drawable-mdpi',
-        constraint: { type: 'SCALE', value: 1 },
-      },
-    ];
-    // Web Settings ======
-    const settingsWeb = [
-      {
-        format: 'SVG',
-        suffix: '',
-        svgOutlineText: true,
-        svgIdAttribute: false,
-        svgSimplifyStroke: true,
-      },
-      {
-        format: 'PNG',
-        suffix: '/' + UserEnteredString + '@3x',
-        constraint: { type: 'SCALE', value: 3 },
-      },
-      {
-        format: 'PNG',
-        suffix: '/' + UserEnteredString + '@2x',
-        constraint: { type: 'SCALE', value: 2 },
-      },
-      {
-        format: 'PNG',
-        suffix: '/' + UserEnteredString + '@1x',
-        constraint: { type: 'SCALE', value: 1 },
-      },
-    ];
+    // Function to apply the UserEnteredString to the settings
+    function applyUserEnteredStringToSettings(
+      userString,
+      settingsList
+    ) {
+      return settingsList.map((setting) => {
+        if (setting.suffix.includes('<UserEnteredString>')) {
+          setting.suffix = setting.suffix.replace(
+            '<UserEnteredString>',
+            userString
+          );
+        }
+        return setting;
+      });
+    }
+
+    // Import the settings from the settings.json file
+    const baseSettingsIOS = settings.menuSettingsIOS;
+    const baseSettingsIOSadv = settings.MenuSettingsIOSadv;
+    const baseSettingsAndroid = settings.MenuSettingsAndroid;
+    const baseSettingsAndroidAdv = settings.MenuSettingsAndroidAdv;
+    const baseSettingsWeb = settings.MenuSettingsWeb;
+
+    // Apply the UserEnteredString to the settings
+    const settingsIOS = applyUserEnteredStringToSettings(
+      UserEnteredString,
+      baseSettingsIOS
+    );
+    const settingsIOSadv = applyUserEnteredStringToSettings(
+      UserEnteredString,
+      baseSettingsIOSadv
+    );
+    const settingsAndroid = applyUserEnteredStringToSettings(
+      UserEnteredString,
+      baseSettingsAndroid
+    );
+    const settingsAndroidAdv = applyUserEnteredStringToSettings(
+      UserEnteredString,
+      baseSettingsAndroidAdv
+    );
+    const settingsWeb = applyUserEnteredStringToSettings(
+      UserEnteredString,
+      baseSettingsWeb
+    );
 
     // if statments to apply export settings ===========
     // Sets IOS Export
