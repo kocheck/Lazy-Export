@@ -70,7 +70,7 @@ export default [
     },
   },
   {
-    input: 'src/code.ts',
+    input: 'src/index.ts',
     output: {
       file: 'public/code.js',
       format: 'cjs',
