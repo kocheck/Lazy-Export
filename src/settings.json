@@ -1,5 +1,5 @@
 {
-  "menuSettingsIOS": {
+  "menuSettingsIOS": [
     {
       "format": "PNG",
       "suffix": "/<UserEnteredString>@3x",
@@ -15,36 +15,85 @@
       "suffix": "/<UserEnteredString>@1x",
       "constraint": { "type": "SCALE", "value": 1 }
     }
-  },
-  "MenuSettingsAndroid": [
+  ],
+  "MenuSettingsIOSadv": [
     {
       "format": "PNG",
-      "suffix": " drawable-xxxhdpi/<UserEnteredString>",
-      "constraint": { "type": "SCALE", "value": 4 }
-    },
-    {
-      "format": "PNG",
-      "suffix": " drawable-xxhdpi/<UserEnteredString>",
+      "suffix": "/<UserEnteredString>.imageset/<UserEnteredString>@3x",
       "constraint": { "type": "SCALE", "value": 3 }
     },
     {
       "format": "PNG",
-      "suffix": " drawable-xhdpi/<UserEnteredString>",
+      "suffix": "/<UserEnteredString>.imageset/<UserEnteredString>@2x",
       "constraint": { "type": "SCALE", "value": 2 }
     },
     {
       "format": "PNG",
-      "suffix": " drawable-hdpi/<UserEnteredString>",
+      "suffix": "/<UserEnteredString>.imageset/<UserEnteredString>@1x",
+      "constraint": { "type": "SCALE", "value": 1 }
+    }
+  ],
+  "MenuSettingsAndroid": [
+    {
+      "format": "PNG",
+      "suffix": " drawable-xxxhdpi<UserEnteredString>",
+      "constraint": { "type": "SCALE", "value": 4 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " drawable-xxhdpi<UserEnteredString>",
+      "constraint": { "type": "SCALE", "value": 3 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " drawable-xhdpi<UserEnteredString>",
+      "constraint": { "type": "SCALE", "value": 2 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " drawable-hdpi<UserEnteredString>",
       "constraint": { "type": "SCALE", "value": 1.5 }
     },
     {
       "format": "PNG",
-      "suffix": " drawable-ldpi/<UserEnteredString>",
+      "suffix": " drawable-ldpi<UserEnteredString>",
       "constraint": { "type": "SCALE", "value": 0.75 }
     },
     {
       "format": "PNG",
-      "suffix": " drawable-mdpi/<UserEnteredString>",
+      "suffix": " drawable-mdpi<UserEnteredString>",
+      "constraint": { "type": "SCALE", "value": 1 }
+    }
+  ],
+  "MenuSettingsAndroidAdv": [
+    {
+      "format": "PNG",
+      "suffix": " /drawable-xxxhdpi/<UserEnteredString>",
+      "constraint": { "type": "SCALE", "value": 4 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " /drawable-xxhdpi/<UserEnteredString>",
+      "constraint": { "type": "SCALE", "value": 3 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " /drawable-xhdpi/<UserEnteredString>",
+      "constraint": { "type": "SCALE", "value": 2 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " /drawable-hdpi/<UserEnteredString>",
+      "constraint": { "type": "SCALE", "value": 1.5 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " /drawable-ldpi/<UserEnteredString>",
+      "constraint": { "type": "SCALE", "value": 0.75 }
+    },
+    {
+      "format": "PNG",
+      "suffix": " /drawable-mdpi/<UserEnteredString>",
       "constraint": { "type": "SCALE", "value": 1 }
     }
   ],
@@ -58,17 +107,17 @@
     },
     {
       "format": "PNG",
-      "suffix": " /<UserEnteredString>@3x",
+      "suffix": " <UserEnteredString>@3x",
       "constraint": { "type": "SCALE", "value": 3 }
     },
     {
       "format": "PNG",
-      "suffix": " /<UserEnteredString>@2x",
+      "suffix": " <UserEnteredString>@2x",
       "constraint": { "type": "SCALE", "value": 2 }
     },
     {
       "format": "PNG",
-      "suffix": " /<UserEnteredString>@1x",
+      "suffix": " <UserEnteredString>@1x",
       "constraint": { "type": "SCALE", "value": 1 }
     }
   ]
