@@ -16,7 +16,7 @@
       "constraint": { "type": "SCALE", "value": 1 }
     }
   ],
-  "MenuSettingsIOSadv": [
+  "menuSettingsIOSadv": [
     {
       "format": "PNG",
       "suffix": "/<UserEnteredString>.imageset/<UserEnteredString>@3x",
@@ -33,7 +33,7 @@
       "constraint": { "type": "SCALE", "value": 1 }
     }
   ],
-  "MenuSettingsAndroid": [
+  "menuSettingsAndroid": [
     {
       "format": "PNG",
       "suffix": " drawable-xxxhdpi<UserEnteredString>",
@@ -65,7 +65,7 @@
       "constraint": { "type": "SCALE", "value": 1 }
     }
   ],
-  "MenuSettingsAndroidAdv": [
+  "menuSettingsAndroidAdv": [
     {
       "format": "PNG",
       "suffix": " /drawable-xxxhdpi/<UserEnteredString>",
@@ -97,7 +97,7 @@
       "constraint": { "type": "SCALE", "value": 1 }
     }
   ],
-  "MenuSettingsWeb": [
+  "menuSettingsWeb": [
     {
       "format": "SVG",
       "suffix": "",

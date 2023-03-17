@@ -1,14 +1,32 @@
-import settings from './settings.json';
+import importedSettings from './settings.json';
+
+type ExportSettings = {
+  menuSettingsIOS: any[];
+  menuSettingsIOSadv: any[];
+  menuSettingsAndroid: any[];
+  menuSettingsAndroidAdv: any[];
+  menuSettingsWeb: any[];
+};
+
+const settings: ExportSettings = importedSettings as ExportSettings;
 
 const { command } = figma;
 const menuTrigger = command;
+
+// Replace these lines with the updated code snippet
+const {
+  menuSettingsIOS,
+  menuSettingsIOSadv: settingsIOSadv, // Rename the variable here
+  menuSettingsAndroid,
+  menuSettingsAndroidAdv: settingsAndroidAdv, // Rename the variable here
+  menuSettingsWeb,
+} = settings;
+// End of the updated code snippet
+
 console.log('Firing ' + menuTrigger + ' from menu');
 
 if (menuTrigger !== 'openPlugin') {
   let menuSettings = [];
-  const menuSettingsIOS = settings.menuSettingsIOS;
-  const MenuSettingsAndroid = settings.MenuSettingsAndroid;
-  const MenuSettingsWeb = settings.MenuSettingsWeb;
   const { selection } = figma.currentPage;
 
   function hasValidSelectionMenu(nodes) {
@@ -24,12 +42,12 @@ if (menuTrigger !== 'openPlugin') {
       closingType = 'IOS';
       break;
     case 'applyAndroid':
-      menuSettings = MenuSettingsAndroid;
+      menuSettings = menuSettingsAndroid;
       console.log('2 Fire Menu Android Settings');
       closingType = 'Android';
       break;
     case 'applyWeb':
-      menuSettings = MenuSettingsWeb;
+      menuSettings = menuSettingsWeb;
       console.log('2 Fire Menu Web Settings');
       closingType = 'Web';
       break;
@@ -85,18 +103,20 @@ figma.ui.onmessage = (msg) => {
       return nodes && nodes.length > 0;
     }
     let settings = [];
-    // Importing the User entered string and biding a default value to null
     let UserEnteredString = msg.name;
     if (UserEnteredString === null) {
       UserEnteredString = 'default-asset';
     }
-    // console.log(msg);
 
-    // Function to apply the UserEnteredString to the settings
     function applyUserEnteredStringToSettings(
       userString,
       settingsList
     ) {
+      if (!settingsList) {
+        console.error('Settings list is undefined');
+        return [];
+      }
+
       return settingsList.map((setting) => {
         if (setting.suffix.includes('<UserEnteredString>')) {
           setting.suffix = setting.suffix.replace(
@@ -108,12 +128,12 @@ figma.ui.onmessage = (msg) => {
       });
     }
 
-    // Import the settings from the settings.json file
-    const baseSettingsIOS = settings.menuSettingsIOS;
-    const baseSettingsIOSadv = settings.MenuSettingsIOSadv;
-    const baseSettingsAndroid = settings.MenuSettingsAndroid;
-    const baseSettingsAndroidAdv = settings.MenuSettingsAndroidAdv;
-    const baseSettingsWeb = settings.MenuSettingsWeb;
+    // Use destructured properties directly
+    const baseSettingsIOS = menuSettingsIOS;
+    const baseSettingsIOSadv = settingsIOSadv; // Corrected variable name
+    const baseSettingsAndroid = menuSettingsAndroid;
+    const baseSettingsAndroidAdv = settingsAndroidAdv; // Corrected variable name
+    const baseSettingsWeb = menuSettingsWeb;
 
     // Apply the UserEnteredString to the settings
     const settingsIOS = applyUserEnteredStringToSettings(
