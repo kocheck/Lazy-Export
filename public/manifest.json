@@ -1,7 +1,7 @@
 {
   "name": "Lazy Export",
   "id": "824059814042167296",
-  "api": "1.0.0",
+  "api": "1.1.0",
   "main": "code.js",
   "enableProposedApi": false,
   "editorType": [

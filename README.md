@@ -1,115 +1,39 @@
-![Lazy Export](./assets/version1.jpg)
-
 # Lazy Export
 
-Lazy export is inspired by a feature that was apart of my workflow in Sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
+Lazy Export is a powerful Figma plugin designed to streamline the export process for different platforms (iOS, Android, Web) by providing preset options and advanced export settings. With Lazy Export, users can easily manage and apply export settings to selected elements on the artboard, saving time and effort during the design-to-development workflow.
 
-Lazy export is inspired by a feature that was apart of my workflow in sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
+## Key Features
 
-### Have a feature request or bug? Please feel free to add an issue!
+*   **Export Type Presets**: Lazy Export allows users to set export type presets for iOS, Android, and Web. By selecting a preset, users can quickly define the export format, resolutions, and other relevant settings tailored to each platform.
 
-A Pull request would work perfectly, as well. You may have noticed in this repo I am talking to my self a lot as I use this space to keep learning. PR would get it done faster; I just may ask a lot of questions. 🤓
+*   **Advanced Export**: For iOS and Android exports, Lazy Export includes an advanced export option. When enabled, it automatically generates a nested file path for the export settings prefix. This feature assists in organizing artwork within a folder structure, enhancing overall design asset management for complex projects.
 
-## What does it do?
+*   **Custom Presets**: Users have the flexibility to create and save their own export presets. These custom presets are conveniently stored and can be easily accessed later, providing a personalized and efficient export experience.
 
-**Lazy Export** allows the user to apply default export settings to selected objects in Figma.
+*   **Artboard Element Settings**: Lazy Export simplifies the process of applying export settings to selected elements on the artboard. By specifying the desired presets or custom settings, users can instantly update the export parameters for the selected elements, reducing repetitive actions and improving productivity.
 
-## How does it work?
+*   **Searchable Preset Path**: All default presets in Lazy Export are labeled with searchable paths within Figma. This unique feature allows users to quickly access presets by using the search functionality. For example, searching for "Lazy Export / iOS" will automatically apply the iOS preset to the selected elements, ensuring effortless and rapid customization.
 
-There are two ways to trigger your export settings to be applied. The first is a window giving you UI access to run the plugin commands. (Set Platform, Apply Settings, Clear Settings)
-The second is via the plugin menu; this makes the actions searchable in Figma with the `⌘+/` command.
+## How to Use
 
-### Advanced Export Settings.
+1.  **Open the Plugin**: Select the elements you want to export, then open the Lazy Export plugin.
+2.  **Select a Platform**: Choose between iOS, Android, or Web presets.
+3.  **Apply Settings**: Click "Apply Export Settings" to apply the preset to your selection.
+4.  **Advanced Export**: Toggle the "Advanced Export" switch to enable nested folder paths for iOS and Android.
+5.  **Custom Presets**: Save your current settings as a custom preset by giving it a name and clicking "Save Preset".
+6.  **Search Presets**: Quickly find your custom presets using the search bar.
 
-With Lazy export, you have two mobile options on how you can apply export settings.
+## Development
 
-- Default Export
-- Advanced Export
-
-With the default export, this follows the trends for exporting assets for mobile at the different screen densities. Advanced is still being worked on for a smooth workflow.
-
-> The end goal for Advanced Export Options, would be for a developer to hit apply, and Figma exports a folder of assets the developer can just drop into Android Studio, or Xcode.
-
-**Android Suffix**
-`/drawable-mdpi/default-asset`
-
-**IOS Suffix**
-`/default-asset.imageset/default-asset@1x`
-
-### Custom Asset Naming
-
-Right now if you do not apply a custom name to each asset a default one will be used. _I have plans on the roadmap to adjust this._
-
-**Android Suffix**
-`drawable-mdpi`
-
-**IOS Suffix**
-`/default-asset@1x`
-
-</br >
-
----
-
-</br >
-# Plugin Development Tips
-
-### Tip 1:
-
-to see the list of available JavaScript/Browser APIs on the main thread, run `console.log(this)` as the first line of your plugin.
-
-## Built with Figsvelte
-
-A boilerplate for creating Figma plugins using Svelte.
-
-This starter project has everything you need to start developing a Figma plugin using Svelte. Your JS, CSS, SVG, and image assets can be bundled on build. The package will take care of compiling your typescript + app on save during development, and also minify on the build.
-
-Additionally, this package comes preconfigured with [Figma Plugin DS Svelte](https://github.com/thomas-lowry/figma-plugin-ds-svelte) where you have access to an extensive range of components and icons that match the Figma UI, to get you up and running quickly. Note: installing this boilerplate will install the component library as a dependency.
-
-Only what you import/use will be included in the final build for small bundle size.
-
-### To get started
+This plugin is built with Svelte and TypeScript. To get started with development:
 
 ```bash
-npx degit thomas-lowry/figsvelte figma-plugin
-cd figma-plugin
 npm install
-```
-
-_Note that you will need to have [Node.js](https://nodejs.org/) installed._
-
-### Development
-
-During development, watch your project for changes with the following command.
-
-```bash
 npm run dev
 ```
 
-Start building your plugin UI in `'src/Plugin.svelte'`.
-
-### Build
-
-When ready to package up your final Figma Plugin:
+To build the plugin:
 
 ```bash
 npm run build
 ```
-
-### Useful info
-
-To include an external CSS file:
-
-```javascript
-import styles from "./styles.css";
-```
-
-To include an SVG:
-
-```javascript
-import SvgName from './image.svg';
-
-//use in your markup
-{@html SvgName}
-```
-
-_For more info on using the Icon component system with SVGs from [Figma Plugin DS Svelte](https://github.com/thomas-lowry/figma-plugin-ds-svelte), refer to the repo._

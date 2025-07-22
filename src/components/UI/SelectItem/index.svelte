@@ -8,7 +8,7 @@
 
 </script>
 
-<li {itemId} tabindex={itemId+1} class:highlight={selected} class={className} on:mouseenter on:click>
+<li {itemId} class:highlight={selected} class={className} on:mouseenter on:click on:keydown>
     <div class="icon" class:selected={selected}>
     </div>
     <div class="label"><slot /></div>

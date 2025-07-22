@@ -1,118 +1,157 @@
 <script>
-  //import Global CSS from the svelte boilerplate
-  //contains Figma color vars, spacing vars, utility classes and more
+  import { onMount } from 'svelte';
 
-  //Global CSS
-  import GlobalCSS from "./components/Styles/global.css";
+  // Components
+  import Button from './components/UI/Button/index.svelte';
+  import Input from './components/UI/Input/index.svelte';
+  import SelectMenu from './components/UI/SelectMenu/index.svelte';
+  import Switch from './components/UI/Switch/index.svelte';
+  import Icon from './components/UI/Icon/index.svelte';
 
-  //Components
-  import Button from "./components/UI/Button/index.svelte";
-  import Disclosure from "./components/UI/Disclosure/index.svelte";
-  import Input from "./components/UI/Input/index.svelte";
-  import Label from "./components/UI/Label/index.svelte";
-  import Section from "./components/UI/Section/index.svelte";
-  import SelectMenu from "./components/UI/SelectMenu/index.svelte";
-  import Icon from "./components/UI/Icon/index.svelte";
-  import Switch from "./components/UI/Switch/index.svelte";
+  // Icons
+  import LazyLogo from './components/icons/lazyExportIcon.svg';
 
-  //Icons
-  import LazyLogo from "./components/icons/lazyExportIcon.svg";
-
-  //Menu items, this is an array of objects to populate to our select menus
   let menuItems = [
-    { value: "IOS", label: "IOS", group: null, selected: false },
-    { value: "Android", label: "Android", group: null, selected: false },
-    { value: "Web", label: "Web", group: null, selected: false }
+    { value: 'IOS', label: 'iOS' },
+    { value: 'Android', label: 'Android' },
+    { value: 'Web', label: 'Web' },
   ];
 
-  let disabled = true;
-  let selectedPlatform;
-  let UserEnteredString;
-  let isAdvancedExportChecked;
+  let selectedPlatform = null;
+  let userEnteredString = '';
+  let isAdvancedExportChecked = false;
+  let customPresets = [];
+  let newPresetName = '';
+  let searchQuery = '';
 
-  //this is a reactive variable that will return false when a value is selected from
-  //the select menu, its value is bound to the primary buttons disabled prop
-  $: disabled = selectedPlatform === null;
-  // $: disabled = isAdvancedExportChecked === null;
+  onMount(() => {
+    // Load custom presets from storage
+    parent.postMessage({ pluginMessage: { type: 'loadCustomPresets' } }, '*');
+  });
 
   function applySettings() {
-    console.log(`1 Fire Apply Settings`);
-    console.log(isAdvancedExportChecked);
     parent.postMessage(
       {
         pluginMessage: {
-          type: "applySettings",
+          type: 'applySettings',
           platform: selectedPlatform.value,
-          name: UserEnteredString,
-          isAdvanced: isAdvancedExportChecked
-        }
+          name: userEnteredString,
+          isAdvanced: isAdvancedExportChecked,
+        },
       },
-      "*"
+      '*'
     );
-  }
-
-  function cancel() {
-    parent.postMessage({ pluginMessage: { type: "cancel" } }, "*");
   }
 
   function clearSettings() {
-    console.log(`1 Fire Clear Settings`);
-    parent.postMessage(
-      {
-        pluginMessage: {
-          type: "clearSettings"
-        }
-      },
-      "*"
-    );
+    parent.postMessage({ pluginMessage: { type: 'clearSettings' } }, '*');
   }
+
+  function savePreset() {
+    if (!newPresetName) return;
+    const newPreset = {
+      name: newPresetName,
+      platform: selectedPlatform.value,
+      isAdvanced: isAdvancedExportChecked,
+    };
+    parent.postMessage({ pluginMessage: { type: 'saveCustomPreset', preset: newPreset } }, '*');
+    newPresetName = '';
+  }
+
+  function applyPreset(preset) {
+    selectedPlatform = menuItems.find(item => item.value === preset.platform);
+    isAdvancedExportChecked = preset.isAdvanced;
+    applySettings();
+  }
+
+  window.onmessage = (event) => {
+    const msg = event.data.pluginMessage;
+    if (msg.type === 'customPresetsLoaded') {
+      customPresets = msg.presets;
+    }
+  };
+
+  $: filteredPresets = customPresets.filter(preset =>
+    preset.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 </script>
 
-<div class="main">
-  <div class="flex pluginTitle">
-
-    <h3 class="title">Lazy Export</h3>
+<div class="container">
+  <header class="header">
     <Icon iconName={LazyLogo} />
-  </div>
+    <h1 class="title">Lazy Export</h1>
+  </header>
 
-  <div class="wrapper p-xxsmall">
-    <div class="sectionWrapper">
-      <div class="descriptorTitle">
-        <Label>
-          <p style="font-weight: 400; color:black; ">Export Type</p>
-        </Label>
-      </div>
-
-      <SelectMenu
-        bind:menuItems
-        placeholder="Select Platform"
-        bind:value={selectedPlatform} />
-      <Input placeholder="Custom Asset Name" bind:value={UserEnteredString} />
-      <div class="buttonExport">
-        <Button on:click={applySettings} bind:disabled>
-          Apply Export Settings
-        </Button>
-      </div>
-    </div>
-    <section>
-      <Switch bind:checked={isAdvancedExportChecked} bind:disabled>
-        Advanced Export
-      </Switch>
+  <main class="main-content">
+    <section class="card">
+      <h2 class="section-title">Export Settings</h2>
+      <SelectMenu bind:menuItems placeholder="Select Platform" bind:value={selectedPlatform} />
+      <Input placeholder="Custom Asset Name" bind:value={userEnteredString} />
+      <Switch bind:checked={isAdvancedExportChecked}>Advanced Export</Switch>
+      <Button on:click={applySettings} disabled={!selectedPlatform}>Apply Export Settings</Button>
+      <Button on:click={clearSettings} destructive>Clear Export Selection</Button>
     </section>
-    <!-- ========= Destructive ========= -->
-    <div class="flex p-xxsmall mb-xsmall flex-container-align">
-      <Button on:click={clearSettings} destructive>
-        Clear Export Selection
-      </Button>
-    </div>
-    <Section>
-      <div style="text-align: Left;">
-        <p style="font-weight: 400; color:slategray; ">
-          Select Platform to apply default export settings to your figma
-          selection.
-        </p>
-      </div>
-    </Section>
 
-  </div>
+    <section class="card">
+      <h2 class="section-title">Custom Presets</h2>
+      <div class="preset-form">
+        <Input placeholder="New Preset Name" bind:value={newPresetName} />
+        <Button on:click={savePreset} disabled={!newPresetName || !selectedPlatform}>Save Preset</Button>
+      </div>
+      <Input placeholder="Search Presets" bind:value={searchQuery} />
+      <ul class="preset-list">
+        {#each filteredPresets as preset}
+          <li class="preset-item" on:click={() => applyPreset(preset)} on:keydown={(e) => { if (e.key === 'Enter') applyPreset(preset); }}>{preset.name}</li>
+        {/each}
+      </ul>
+    </section>
+  </main>
 </div>
+
+<style>
+  .container {
+    padding: 16px;
+    background-color: #f5f5f5;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .title {
+    margin: 0 0 0 8px;
+    font-size: 18px;
+  }
+  .main-content {
+    display: grid;
+    gap: 16px;
+  }
+  .card {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  .section-title {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+  }
+  .preset-form {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .preset-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .preset-item {
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .preset-item:hover {
+    background-color: #eee;
+  }
+</style>
