@@ -111,13 +111,24 @@ Enter a custom name (e.g., `icon-home`) and it will be applied to all export suf
 - Basic Mode: `/icon-home@2x.png`
 - Advanced Mode (iOS): `/icon-home.imageset/icon-home@2x.png`
 
-### 💾 Save Custom Presets *(Coming Soon)*
+### 💾 Custom Presets
 
-Create your own export presets with custom:
-- Formats (PNG, JPG, SVG, PDF, WebP)
-- Scales and constraints
-- Naming conventions
-- Directory structures
+Create, save, and manage your own export presets:
+
+**Features:**
+- Click **"+ Create Custom Preset"** to open the preset builder
+- Mix and match formats (PNG, JPG, SVG, PDF, WebP)
+- Set custom scales and constraints for each format
+- Add custom suffixes and naming conventions
+- Edit existing custom presets
+- Delete presets you no longer need
+- Presets persist across Figma sessions
+
+**Example Use Cases:**
+- Create a "Retina Web" preset with just @2x PNG + SVG
+- Build a "High-Res Print" preset with PDF + PNG @4x
+- Make a "Quick WebP" preset for modern web workflows
+- Design team-specific presets for your organization
 
 ---
 
