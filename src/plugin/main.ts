@@ -1,9 +1,30 @@
+/**
+ * Lazy Export - Figma Plugin Main Entry Point
+ *
+ * This file runs in the Figma plugin sandbox (no DOM access).
+ * It handles:
+ * - Applying export settings to selected nodes
+ * - Persisting custom presets via clientStorage
+ * - Generating metadata files (iOS Contents.json)
+ * - Communication with the UI via postMessage
+ *
+ * @see ARCHITECTURE.md for detailed technical documentation
+ */
+
 import { UIMessage, PluginMessage, SavedPreferences, ExportSetting } from '../shared/types';
 
-// Show the UI
+// Initialize UI with theme support
+// themeColors: true enables automatic Dark Mode support
 figma.showUI(__html__, { width: 320, height: 520, themeColors: true });
 
-// Load saved preferences
+/**
+ * Load saved preferences from Figma's clientStorage
+ *
+ * clientStorage is scoped per plugin, per user, per file.
+ * Data persists across plugin runs but is local to this file.
+ *
+ * @returns Saved preferences or default empty state
+ */
 async function loadPreferences(): Promise<SavedPreferences> {
   const saved = await figma.clientStorage.getAsync('preferences');
   return (
@@ -14,12 +35,36 @@ async function loadPreferences(): Promise<SavedPreferences> {
   );
 }
 
-// Save preferences
+/**
+ * Save preferences to Figma's clientStorage
+ *
+ * @param preferences - Preferences object to persist
+ */
 async function savePreferences(preferences: SavedPreferences): Promise<void> {
   await figma.clientStorage.setAsync('preferences', preferences);
 }
 
-// Generate iOS Contents.json metadata
+/**
+ * Generate iOS Contents.json metadata file content
+ *
+ * iOS requires a Contents.json file in each .imageset folder
+ * that describes the image assets and their scale factors.
+ *
+ * Example output structure:
+ * ```json
+ * {
+ *   "images": [
+ *     { "filename": "icon@1x.png", "idiom": "universal", "scale": "1x" },
+ *     { "filename": "icon@2x.png", "idiom": "universal", "scale": "2x" },
+ *     { "filename": "icon@3x.png", "idiom": "universal", "scale": "3x" }
+ *   ],
+ *   "info": { "author": "Lazy Export", "version": 1 }
+ * }
+ * ```
+ *
+ * @param assetName - Base name for the asset (e.g., "icon-home")
+ * @returns Formatted JSON string for Contents.json
+ */
 function generateiOSContentsJSON(assetName: string): string {
   return JSON.stringify(
     {
@@ -50,7 +95,25 @@ function generateiOSContentsJSON(assetName: string): string {
   );
 }
 
-// Apply export settings with advanced directory structure
+/**
+ * Apply export settings to selected Figma nodes
+ *
+ * This is the core function that maps our preset configurations to
+ * Figma's exportSettings API. It handles both basic and advanced modes.
+ *
+ * Basic Mode:
+ * - Simple suffix applied (e.g., "/icon@2x.png")
+ *
+ * Advanced Mode:
+ * - iOS: /asset.imageset/asset@2x.png
+ * - Android: /drawable-xhdpi/asset.png
+ *
+ * @param nodes - Figma nodes to apply settings to (from selection)
+ * @param settings - Export settings from preset configuration
+ * @param customName - Optional custom asset name (defaults to "asset")
+ * @param advancedMode - Whether to use production folder structures
+ * @param platform - Platform identifier for advanced mode logic
+ */
 function applyExportSettings(
   nodes: readonly SceneNode[],
   settings: ExportSetting[],
