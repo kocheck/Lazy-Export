@@ -1,0 +1,69 @@
+.figma-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 16px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.figma-button--full {
+  width: 100%;
+}
+
+.figma-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Primary (Brand) */
+.figma-button--primary {
+  background-color: var(--figma-color-bg-brand);
+  color: var(--figma-color-text-onbrand);
+}
+
+.figma-button--primary:hover:not(:disabled) {
+  background-color: var(--figma-color-bg-brand-hover);
+}
+
+.figma-button--primary:active:not(:disabled) {
+  background-color: var(--figma-color-bg-brand-pressed);
+}
+
+/* Secondary */
+.figma-button--secondary {
+  background-color: var(--figma-color-bg);
+  color: var(--figma-color-text);
+  border-color: var(--figma-color-border);
+}
+
+.figma-button--secondary:hover:not(:disabled) {
+  background-color: var(--figma-color-bg-hover);
+  border-color: var(--figma-color-border-strong);
+}
+
+.figma-button--secondary:active:not(:disabled) {
+  background-color: var(--figma-color-bg-pressed);
+}
+
+/* Destructive */
+.figma-button--destructive {
+  background-color: var(--figma-color-bg-danger);
+  color: var(--figma-color-text-ondanger);
+}
+
+.figma-button--destructive:hover:not(:disabled) {
+  background-color: var(--figma-color-bg-danger-hover);
+}
+
+.figma-button--destructive:active:not(:disabled) {
+  background-color: var(--figma-color-bg-danger-pressed);
+}

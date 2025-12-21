@@ -1,0 +1,50 @@
+.preset-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background-color: var(--figma-color-bg);
+  border: 1px solid var(--figma-color-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  color: var(--figma-color-text);
+  min-width: 80px;
+}
+
+.preset-card:hover:not(:disabled) {
+  background-color: var(--figma-color-bg-hover);
+  border-color: var(--figma-color-border-strong);
+}
+
+.preset-card:active:not(:disabled) {
+  background-color: var(--figma-color-bg-pressed);
+  transform: scale(0.98);
+}
+
+.preset-card--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.preset-card__icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.preset-card__name {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--figma-color-text);
+}
+
+.preset-card__count {
+  font-size: 9px;
+  line-height: 12px;
+  color: var(--figma-color-text-secondary);
+  font-weight: 400;
+}

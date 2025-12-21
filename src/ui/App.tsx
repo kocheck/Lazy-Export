@@ -1,0 +1,144 @@
+import React, { useState, useEffect } from 'react';
+import { PresetCard } from './components/PresetCard';
+import { Input } from './components/Input';
+import { Toggle } from './components/Toggle';
+import { Button } from './components/Button';
+import { DEFAULT_PRESETS } from '../shared/presets';
+import { PresetConfig, PluginMessage, UIMessage, SavedPreferences } from '../shared/types';
+import './App.css';
+
+const App: React.FC = () => {
+  const [customName, setCustomName] = useState('');
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [selectionCount, setSelectionCount] = useState(0);
+  const [preferences, setPreferences] = useState<SavedPreferences | null>(null);
+
+  // All presets (default + custom)
+  const allPresets = preferences
+    ? [...DEFAULT_PRESETS, ...preferences.customPresets]
+    : DEFAULT_PRESETS;
+
+  const hasSelection = selectionCount > 0;
+
+  // Listen for messages from plugin
+  useEffect(() => {
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage as PluginMessage;
+
+      switch (msg.type) {
+        case 'selection-changed':
+          setSelectionCount(msg.count);
+          break;
+
+        case 'preferences-loaded':
+          setPreferences(msg.preferences);
+          setAdvancedMode(msg.preferences.advancedModeEnabled);
+          break;
+
+        case 'success':
+          console.log('✅', msg.message);
+          break;
+
+        case 'error':
+          console.error('❌', msg.message);
+          break;
+      }
+    };
+  }, []);
+
+  const applyPreset = (preset: PresetConfig) => {
+    const message: UIMessage = {
+      type: 'apply-preset',
+      preset,
+      customName: customName.trim() || undefined,
+      advancedMode,
+    };
+    parent.postMessage({ pluginMessage: message }, '*');
+  };
+
+  const clearExport = () => {
+    const message: UIMessage = {
+      type: 'clear-export',
+    };
+    parent.postMessage({ pluginMessage: message }, '*');
+  };
+
+  return (
+    <div className="app">
+      {/* Header */}
+      <header className="app__header">
+        <h3 className="app__title">Lazy Export</h3>
+        <div className="app__selection-count">
+          {selectionCount > 0 ? `${selectionCount} selected` : 'No selection'}
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="app__main">
+        {/* Presets Grid */}
+        <section className="app__section">
+          <label className="app__section-label">Quick Presets</label>
+          <div className="app__presets-grid">
+            {allPresets.map((preset) => (
+              <PresetCard
+                key={preset.id}
+                preset={preset}
+                onClick={() => applyPreset(preset)}
+                disabled={!hasSelection}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Custom Name Input */}
+        <section className="app__section">
+          <label className="app__section-label">Custom Name (optional)</label>
+          <Input
+            value={customName}
+            onChange={setCustomName}
+            placeholder="e.g., icon-home"
+            disabled={!hasSelection}
+          />
+          <p className="app__hint">
+            Leave empty to use default asset name
+          </p>
+        </section>
+
+        {/* Advanced Mode Toggle */}
+        <section className="app__section">
+          <Toggle
+            checked={advancedMode}
+            onChange={setAdvancedMode}
+            label="Advanced Mode"
+            disabled={!hasSelection}
+          />
+          <p className="app__hint">
+            Creates organized folder structure with metadata files
+          </p>
+        </section>
+
+        {/* Clear Button */}
+        <section className="app__section">
+          <Button
+            onClick={clearExport}
+            variant="destructive"
+            fullWidth
+            disabled={!hasSelection}
+          >
+            Clear Export Settings
+          </Button>
+        </section>
+
+        {/* Info Section */}
+        <section className="app__info">
+          <p>
+            Select layers in Figma, then click a preset to apply export settings.
+            Advanced mode generates production-ready folder structures.
+          </p>
+        </section>
+      </main>
+    </div>
+  );
+};
+
+export default App;

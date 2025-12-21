@@ -1,0 +1,32 @@
+.figma-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--figma-color-text);
+  background-color: var(--figma-color-bg);
+  border: 1px solid var(--figma-color-border);
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.figma-input::placeholder {
+  color: var(--figma-color-text-tertiary);
+}
+
+.figma-input:hover:not(:disabled) {
+  border-color: var(--figma-color-border-strong);
+}
+
+.figma-input:focus {
+  border-color: var(--figma-color-border-selected);
+  box-shadow: 0 0 0 1px var(--figma-color-border-selected);
+}
+
+.figma-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

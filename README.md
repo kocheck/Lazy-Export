@@ -1,115 +1,216 @@
-![Lazy Export](./assets/version1.jpg)
+# 🚀 Lazy Export v2.0
 
-# Lazy Export
+**Modern Figma plugin for lightning-fast export preset management with production-ready batch directory generation.**
 
-Lazy export is inspired by a feature that was apart of my workflow in Sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
-
-Lazy export is inspired by a feature that was apart of my workflow in sketch. I became tired of manually applying export settings across assets and projects. So this was born March 21st, locked up in my apartment.
-
-### Have a feature request or bug? Please feel free to add an issue!
-
-A Pull request would work perfectly, as well. You may have noticed in this repo I am talking to my self a lot as I use this space to keep learning. PR would get it done faster; I just may ask a lot of questions. 🤓
-
-## What does it do?
-
-**Lazy Export** allows the user to apply default export settings to selected objects in Figma.
-
-## How does it work?
-
-There are two ways to trigger your export settings to be applied. The first is a window giving you UI access to run the plugin commands. (Set Platform, Apply Settings, Clear Settings)
-The second is via the plugin menu; this makes the actions searchable in Figma with the `⌘+/` command.
-
-### Advanced Export Settings.
-
-With Lazy export, you have two mobile options on how you can apply export settings.
-
-- Default Export
-- Advanced Export
-
-With the default export, this follows the trends for exporting assets for mobile at the different screen densities. Advanced is still being worked on for a smooth workflow.
-
-> The end goal for Advanced Export Options, would be for a developer to hit apply, and Figma exports a folder of assets the developer can just drop into Android Studio, or Xcode.
-
-**Android Suffix**
-`/drawable-mdpi/default-asset`
-
-**IOS Suffix**
-`/default-asset.imageset/default-asset@1x`
-
-### Custom Asset Naming
-
-Right now if you do not apply a custom name to each asset a default one will be used. _I have plans on the roadmap to adjust this._
-
-**Android Suffix**
-`drawable-mdpi`
-
-**IOS Suffix**
-`/default-asset@1x`
-
-</br >
+![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Figma API](https://img.shields.io/badge/Figma%20API-1.0.0-green)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)
+![React](https://img.shields.io/badge/React-18.2-blue)
 
 ---
 
-</br >
-# Plugin Development Tips
+## ✨ What's New in v2.0
 
-### Tip 1:
+This is a **complete rewrite** from the ground up:
 
-to see the list of available JavaScript/Browser APIs on the main thread, run `console.log(this)` as the first line of your plugin.
+- 🎨 **Modern UI3 Design** - Native Figma aesthetic with automatic Dark Mode support
+- ⚡ **Faster UX** - Click presets directly, no dropdown menus
+- 🗂️ **Smart Directory Generation** - Export with production-ready folder structures
+- 📱 **iOS Metadata** - Auto-generates `Contents.json` for `.imageset` folders
+- 🖼️ **WebP & PDF Support** - New export formats for modern workflows
+- 💾 **Custom Presets** - Save and reuse your own export configurations
+- 🔧 **Built with Vite + React + TypeScript** - Modern developer experience
 
-## Built with Figsvelte
+---
 
-A boilerplate for creating Figma plugins using Svelte.
+## 🎯 What Does It Do?
 
-This starter project has everything you need to start developing a Figma plugin using Svelte. Your JS, CSS, SVG, and image assets can be bundled on build. The package will take care of compiling your typescript + app on save during development, and also minify on the build.
+**Lazy Export** lets you apply export settings to selected Figma layers with a single click. Perfect for:
 
-Additionally, this package comes preconfigured with [Figma Plugin DS Svelte](https://github.com/thomas-lowry/figma-plugin-ds-svelte) where you have access to an extensive range of components and icons that match the Figma UI, to get you up and running quickly. Note: installing this boilerplate will install the component library as a dependency.
+- Mobile app developers (iOS & Android)
+- Web designers needing multi-density assets
+- Teams maintaining design systems
+- Anyone tired of manually setting export configs
 
-Only what you import/use will be included in the final build for small bundle size.
+---
 
-### To get started
+## 🚀 Quick Start
 
-```bash
-npx degit thomas-lowry/figsvelte figma-plugin
-cd figma-plugin
-npm install
-```
+### Installation
 
-_Note that you will need to have [Node.js](https://nodejs.org/) installed._
+1. Clone this repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
 ### Development
 
-During development, watch your project for changes with the following command.
-
+Run the plugin in watch mode:
 ```bash
 npm run dev
 ```
 
-Start building your plugin UI in `'src/Plugin.svelte'`.
+Then in Figma:
+1. Go to **Plugins → Development → Import plugin from manifest**
+2. Select `dist/manifest.json`
+3. Run the plugin from **Plugins → Lazy Export**
 
-### Build
-
-When ready to package up your final Figma Plugin:
+### Production Build
 
 ```bash
 npm run build
 ```
 
-### Useful info
+The built files will be in the `dist/` folder.
 
-To include an external CSS file:
+---
 
-```javascript
-import styles from "./styles.css";
+## 📋 Features
+
+### 🎴 Quick Presets
+
+Click any preset card to instantly apply export settings:
+
+| Preset | Formats | Use Case |
+|--------|---------|----------|
+| **📱 iOS** | PNG @1x, @2x, @3x | iPhone/iPad apps |
+| **🤖 Android** | PNG (6 densities) | Android apps with mdpi/hdpi/xhdpi/etc. |
+| **🌐 Web** | SVG + PNG @1x, @2x, @3x | Websites & web apps |
+| **🖼️ WebP** | WebP @1x, @2x, @3x | Modern web with next-gen format |
+| **📄 PDF** | PDF (vector) | Print assets & scalable exports |
+
+### 🔧 Advanced Mode
+
+Enable **Advanced Mode** to generate production-ready folder structures:
+
+**iOS Example:**
+```
+icon-home.imageset/
+├── Contents.json
+├── icon-home@1x.png
+├── icon-home@2x.png
+└── icon-home@3x.png
 ```
 
-To include an SVG:
-
-```javascript
-import SvgName from './image.svg';
-
-//use in your markup
-{@html SvgName}
+**Android Example:**
+```
+drawable-mdpi/icon-home.png
+drawable-hdpi/icon-home.png
+drawable-xhdpi/icon-home.png
+drawable-xxhdpi/icon-home.png
+drawable-xxxhdpi/icon-home.png
+drawable-ldpi/icon-home.png
 ```
 
-_For more info on using the Icon component system with SVGs from [Figma Plugin DS Svelte](https://github.com/thomas-lowry/figma-plugin-ds-svelte), refer to the repo._
+Just export from Figma and drop the folder directly into Xcode/Android Studio!
+
+### 🏷️ Custom Asset Naming
+
+Enter a custom name (e.g., `icon-home`) and it will be applied to all export suffixes:
+- Basic Mode: `/icon-home@2x.png`
+- Advanced Mode (iOS): `/icon-home.imageset/icon-home@2x.png`
+
+### 💾 Save Custom Presets *(Coming Soon)*
+
+Create your own export presets with custom:
+- Formats (PNG, JPG, SVG, PDF, WebP)
+- Scales and constraints
+- Naming conventions
+- Directory structures
+
+---
+
+## 🎨 Design Philosophy
+
+### UI3 Aesthetic
+
+This plugin uses **Figma's native CSS variables** for seamless integration:
+
+- `--figma-color-bg` - Background colors
+- `--figma-color-text` - Text colors
+- `--figma-color-border` - Border styles
+- Automatic **Light/Dark mode** support
+
+### Speed First
+
+No dropdowns, no nested menus. Just:
+1. Select layers
+2. Click preset
+3. Done
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technology |
+|----------|-----------|
+| Framework | React 18 |
+| Language | TypeScript 5 |
+| Build Tool | Vite 5 |
+| Plugin API | Figma API v1.0.0 |
+| Bundler | esbuild (plugin) + Vite (UI) |
+
+---
+
+## 📂 Project Structure
+
+```
+lazy-export/
+├── src/
+│   ├── ui/                # React UI (rendered in iframe)
+│   │   ├── App.tsx
+│   │   ├── components/
+│   │   └── styles/
+│   ├── plugin/            # Figma plugin sandbox code
+│   │   └── main.ts
+│   └── shared/            # Shared types & presets
+│       ├── types.ts
+│       └── presets.ts
+├── dist/                  # Build output
+│   ├── code.js           # Compiled plugin
+│   ├── index.html        # UI bundle
+│   └── manifest.json     # Figma manifest
+├── vite.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+---
+
+## 🤝 Contributing
+
+Found a bug or have a feature request?
+
+1. **Open an issue** on GitHub
+2. **Submit a Pull Request** with your improvements
+
+All contributions welcome! This is a learning project, so questions are encouraged.
+
+---
+
+## 📜 License
+
+MIT License - see [LICENSE](LICENSE) for details
+
+---
+
+## 🙏 Acknowledgments
+
+- Built with [Figsvelte](https://github.com/thomas-lowry/figsvelte) (original boilerplate)
+- Inspired by Sketch's export presets feature
+- Redesigned for the modern Figma workflow
+
+---
+
+## 📚 Learn More
+
+- [Figma Plugin API Documentation](https://www.figma.com/plugin-docs/)
+- [Vite Documentation](https://vitejs.dev/)
+- [React Documentation](https://react.dev/)
+
+---
+
+**Made with ❤️ for the Figma community**
+
+*v2.0.0 - December 2025*
