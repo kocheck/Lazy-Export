@@ -3,8 +3,10 @@ import { PresetCard } from './components/PresetCard';
 import { Input } from './components/Input';
 import { Toggle } from './components/Toggle';
 import { Button } from './components/Button';
+import { Modal } from './components/Modal';
+import { PresetCreator } from './components/PresetCreator';
 import { DEFAULT_PRESETS } from '../shared/presets';
-import { PresetConfig, PluginMessage, UIMessage, SavedPreferences } from '../shared/types';
+import { PresetConfig, PluginMessage, UIMessage, SavedPreferences, CustomPreset } from '../shared/types';
 import './App.css';
 
 const App: React.FC = () => {
@@ -12,11 +14,12 @@ const App: React.FC = () => {
   const [advancedMode, setAdvancedMode] = useState(false);
   const [selectionCount, setSelectionCount] = useState(0);
   const [preferences, setPreferences] = useState<SavedPreferences | null>(null);
+  const [isCreatorOpen, setIsCreatorOpen] = useState(false);
+  const [editingPreset, setEditingPreset] = useState<CustomPreset | undefined>();
 
   // All presets (default + custom)
-  const allPresets = preferences
-    ? [...DEFAULT_PRESETS, ...preferences.customPresets]
-    : DEFAULT_PRESETS;
+  const customPresets = preferences?.customPresets || [];
+  const hasCustomPresets = customPresets.length > 0;
 
   const hasSelection = selectionCount > 0;
 
@@ -63,6 +66,51 @@ const App: React.FC = () => {
     parent.postMessage({ pluginMessage: message }, '*');
   };
 
+  const savePreset = (preset: CustomPreset) => {
+    const message: UIMessage = {
+      type: 'save-preset',
+      preset,
+    };
+    parent.postMessage({ pluginMessage: message }, '*');
+    setIsCreatorOpen(false);
+    setEditingPreset(undefined);
+
+    // Optimistically update UI
+    if (preferences) {
+      const existingIndex = preferences.customPresets.findIndex((p) => p.id === preset.id);
+      const updatedPresets = [...preferences.customPresets];
+      if (existingIndex >= 0) {
+        updatedPresets[existingIndex] = preset;
+      } else {
+        updatedPresets.push(preset);
+      }
+      setPreferences({ ...preferences, customPresets: updatedPresets });
+    }
+  };
+
+  const deletePreset = (presetId: string) => {
+    if (!confirm('Delete this preset?')) return;
+
+    const message: UIMessage = {
+      type: 'delete-preset',
+      presetId,
+    };
+    parent.postMessage({ pluginMessage: message }, '*');
+
+    // Optimistically update UI
+    if (preferences) {
+      setPreferences({
+        ...preferences,
+        customPresets: preferences.customPresets.filter((p) => p.id !== presetId),
+      });
+    }
+  };
+
+  const openCreator = (preset?: CustomPreset) => {
+    setEditingPreset(preset);
+    setIsCreatorOpen(true);
+  };
+
   return (
     <div className="app">
       {/* Header */}
@@ -75,11 +123,11 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="app__main">
-        {/* Presets Grid */}
+        {/* Default Presets Grid */}
         <section className="app__section">
           <label className="app__section-label">Quick Presets</label>
           <div className="app__presets-grid">
-            {allPresets.map((preset) => (
+            {DEFAULT_PRESETS.map((preset) => (
               <PresetCard
                 key={preset.id}
                 preset={preset}
@@ -88,6 +136,49 @@ const App: React.FC = () => {
               />
             ))}
           </div>
+        </section>
+
+        {/* Custom Presets Section */}
+        {hasCustomPresets && (
+          <section className="app__section">
+            <div className="app__section-header">
+              <label className="app__section-label">Custom Presets</label>
+            </div>
+            <div className="app__custom-presets">
+              {customPresets.map((preset) => (
+                <div key={preset.id} className="app__custom-preset">
+                  <PresetCard
+                    preset={preset}
+                    onClick={() => applyPreset(preset)}
+                    disabled={!hasSelection}
+                  />
+                  <div className="app__custom-preset-actions">
+                    <button
+                      className="app__preset-action"
+                      onClick={() => openCreator(preset)}
+                      title="Edit preset"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      className="app__preset-action app__preset-action--danger"
+                      onClick={() => deletePreset(preset.id)}
+                      title="Delete preset"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Create Preset Button */}
+        <section className="app__section">
+          <Button onClick={() => openCreator()} variant="secondary" fullWidth>
+            + Create Custom Preset
+          </Button>
         </section>
 
         {/* Custom Name Input */}
@@ -137,6 +228,25 @@ const App: React.FC = () => {
           </p>
         </section>
       </main>
+
+      {/* Preset Creator Modal */}
+      <Modal
+        isOpen={isCreatorOpen}
+        onClose={() => {
+          setIsCreatorOpen(false);
+          setEditingPreset(undefined);
+        }}
+        title={editingPreset ? 'Edit Preset' : 'Create Custom Preset'}
+      >
+        <PresetCreator
+          onSave={savePreset}
+          onCancel={() => {
+            setIsCreatorOpen(false);
+            setEditingPreset(undefined);
+          }}
+          existingPreset={editingPreset}
+        />
+      </Modal>
     </div>
   );
 };

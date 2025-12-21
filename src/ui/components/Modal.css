@@ -1,0 +1,61 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-content {
+  background-color: var(--figma-color-bg);
+  border: 1px solid var(--figma-color-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--figma-color-border);
+}
+
+.modal-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--figma-color-text);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--figma-color-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.modal-close:hover {
+  background-color: var(--figma-color-bg-hover);
+  color: var(--figma-color-text);
+}
+
+.modal-body {
+  padding: 16px;
+  overflow-y: auto;
+}

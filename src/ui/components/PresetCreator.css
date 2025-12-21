@@ -1,0 +1,108 @@
+.preset-creator {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.preset-creator__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.preset-creator__label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--figma-color-text);
+}
+
+.preset-creator__select {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--figma-color-text);
+  background-color: var(--figma-color-bg);
+  border: 1px solid var(--figma-color-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.preset-creator__select--small {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.preset-creator__select:hover {
+  border-color: var(--figma-color-border-strong);
+}
+
+.preset-creator__select:focus {
+  outline: none;
+  border-color: var(--figma-color-border-selected);
+  box-shadow: 0 0 0 1px var(--figma-color-border-selected);
+}
+
+.preset-creator__settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preset-creator__setting {
+  display: grid;
+  grid-template-columns: 80px 1fr 60px 24px;
+  gap: 6px;
+  align-items: center;
+}
+
+.preset-creator__remove {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--figma-color-text-secondary);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+
+.preset-creator__remove:hover {
+  background-color: var(--figma-color-bg-danger);
+  color: var(--figma-color-text-ondanger);
+}
+
+.preset-creator__add {
+  width: 100%;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--figma-color-text-secondary);
+  background: none;
+  border: 1px dashed var(--figma-color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-creator__add:hover {
+  border-color: var(--figma-color-border-strong);
+  background-color: var(--figma-color-bg-hover);
+  color: var(--figma-color-text);
+}
+
+.preset-creator__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}

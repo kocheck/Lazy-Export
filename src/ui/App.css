@@ -76,3 +76,61 @@
   line-height: 14px;
   color: var(--figma-color-text-secondary);
 }
+
+/* Custom Presets */
+.app__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.app__custom-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.app__custom-preset {
+  position: relative;
+}
+
+.app__custom-preset-actions {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  background-color: var(--figma-color-bg);
+  border-radius: 4px;
+  padding: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.app__custom-preset:hover .app__custom-preset-actions {
+  opacity: 1;
+}
+
+.app__preset-action {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s ease;
+}
+
+.app__preset-action:hover {
+  background-color: var(--figma-color-bg-hover);
+}
+
+.app__preset-action--danger:hover {
+  background-color: var(--figma-color-bg-danger);
+}
