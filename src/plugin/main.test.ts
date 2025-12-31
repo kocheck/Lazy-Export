@@ -2,7 +2,7 @@
  * Tests for Plugin Main Logic
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { installFigmaMock, createMockNode, FigmaMock } from '../test/figma-mock.js';
 import type { SavedPreferences, CustomPreset } from '../shared/types.js';
 
