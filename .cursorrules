@@ -1,0 +1,392 @@
+# Cursor/AI Agent Rules for Lazy Export
+
+This file helps AI coding assistants (Cursor, GitHub Copilot, Claude, etc.) understand this codebase and provide better suggestions.
+
+## Project Context
+
+**Name:** Lazy Export
+**Type:** Figma Plugin
+**Version:** 2.0.0
+**Stack:** React 18 + TypeScript 5 + Vite 5 + Figma Plugin API v1.0.0
+
+**Purpose:**
+A Figma plugin that allows users to quickly apply export settings to selected layers using preset configurations. Supports iOS, Android, Web, WebP, and PDF exports with custom preset creation.
+
+## Architecture Overview
+
+### Dual-Context Plugin
+- **UI Layer**: React app in iframe (`src/ui/`) - has DOM access, no Figma API
+- **Plugin Layer**: Sandbox code (`src/plugin/`) - has Figma API, no DOM access
+- **Communication**: postMessage API between layers
+- **Shared Code**: Types and constants in `src/shared/`
+
+### Critical Constraints
+1. **Never access `figma` object in UI code** - It doesn't exist there
+2. **Never access `window`/`document` in plugin code** - Sandbox has no DOM
+3. **Always use postMessage for communication** - Only way to pass data between layers
+4. **Use Figma CSS variables for all colors** - Required for Dark Mode support
+
+## Code Style Preferences
+
+### TypeScript
+- **Always use strict mode** - No `any`, use `unknown` + type guards
+- **Explicit return types** on all functions
+- **Interface over type** for object shapes
+- **Discriminated unions** for message types
+
+### React
+- **Functional components only** - No class components
+- **TypeScript for all props** - Define interfaces for every component
+- **Hooks** - useState, useEffect, useMemo, useCallback as needed
+- **Controlled components** for forms
+
+### CSS
+- **Use Figma CSS variables** - `var(--figma-color-bg)` not hex codes
+- **BEM naming convention** - `component__element--modifier`
+- **One CSS file per component** - Component.tsx + Component.css
+- **Mobile-first** thinking (though plugin is fixed-width)
+
+### Naming Conventions
+- **Components**: PascalCase (`PresetCard.tsx`)
+- **Functions**: camelCase (`applyPreset()`)
+- **Constants**: SCREAMING_SNAKE_CASE (`DEFAULT_PRESETS`)
+- **CSS classes**: kebab-case with BEM (`preset-card__icon`)
+
+## File Organization
+
+```
+src/
+├── ui/                  # React app (browser context)
+│   ├── App.tsx          # Main component
+│   ├── main.tsx         # React entry point
+│   ├── components/      # Reusable components
+│   └── styles/          # Global CSS
+├── plugin/              # Plugin code (Figma context)
+│   └── main.ts          # Plugin entry point
+└── shared/              # Shared between UI and plugin
+    ├── types.ts         # TypeScript definitions
+    └── presets.ts       # Default preset configs
+```
+
+## Common Patterns
+
+### Adding a New Message Type
+
+1. Define in `src/shared/types.ts`:
+```typescript
+export type UIMessage =
+  | { type: 'new-action'; data: string }
+  | ...existing types;
+```
+
+2. Send from UI (`src/ui/App.tsx`):
+```typescript
+const handleAction = () => {
+  const message: UIMessage = { type: 'new-action', data: 'value' };
+  parent.postMessage({ pluginMessage: message }, '*');
+};
+```
+
+3. Handle in plugin (`src/plugin/main.ts`):
+```typescript
+figma.ui.onmessage = (msg: UIMessage) => {
+  if (msg.type === 'new-action') {
+    // Handle the action
+  }
+};
+```
+
+### Adding a New UI Component
+
+1. Create files:
+   - `src/ui/components/MyComponent.tsx`
+   - `src/ui/components/MyComponent.css`
+
+2. Component template:
+```typescript
+import React from 'react';
+import './MyComponent.css';
+
+interface MyComponentProps {
+  title: string;
+  onClick: () => void;
+}
+
+export const MyComponent: React.FC<MyComponentProps> = ({ title, onClick }) => {
+  return (
+    <button className="my-component" onClick={onClick}>
+      {title}
+    </button>
+  );
+};
+```
+
+3. CSS template:
+```css
+.my-component {
+  background-color: var(--figma-color-bg);
+  border: 1px solid var(--figma-color-border);
+  color: var(--figma-color-text);
+}
+
+.my-component:hover {
+  background-color: var(--figma-color-bg-hover);
+}
+```
+
+### Adding a New Default Preset
+
+Edit `src/shared/presets.ts`:
+```typescript
+export const DEFAULT_PRESETS: PresetConfig[] = [
+  ...existing presets,
+  {
+    id: 'new-preset',
+    name: 'New Preset',
+    platform: 'Web',
+    icon: '🎨',
+    settings: [
+      { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+    ],
+  },
+];
+```
+
+## Important Files and Their Purpose
+
+| File | Purpose | Can Access |
+|------|---------|------------|
+| `src/ui/App.tsx` | Main React component, state management | DOM, React, postMessage |
+| `src/plugin/main.ts` | Plugin logic, Figma API interactions | Figma API, clientStorage |
+| `src/shared/types.ts` | TypeScript definitions for entire project | Both contexts |
+| `src/shared/presets.ts` | Default preset configurations | Both contexts |
+| `vite.config.ts` | UI build configuration | N/A (build time) |
+| `build-plugin.js` | Plugin build configuration (esbuild) | N/A (build time) |
+
+## Available Figma CSS Variables
+
+Use these instead of hardcoded colors:
+
+### Backgrounds
+- `--figma-color-bg` - Main background
+- `--figma-color-bg-hover` - Hover state
+- `--figma-color-bg-pressed` - Active/pressed state
+- `--figma-color-bg-secondary` - Secondary background
+- `--figma-color-bg-brand` - Brand color (blue)
+- `--figma-color-bg-danger` - Destructive actions (red)
+
+### Text
+- `--figma-color-text` - Primary text
+- `--figma-color-text-secondary` - Secondary text
+- `--figma-color-text-tertiary` - Tertiary text
+- `--figma-color-text-onbrand` - Text on brand backgrounds
+- `--figma-color-text-ondanger` - Text on danger backgrounds
+
+### Borders
+- `--figma-color-border` - Default border
+- `--figma-color-border-strong` - Emphasized border
+- `--figma-color-border-selected` - Selected/focused state
+
+## Common Mistakes to Avoid
+
+### ❌ Don't Do This
+```typescript
+// Hardcoded colors
+.button { background: #fff; }
+
+// Accessing figma in UI
+const selection = figma.currentPage.selection; // ❌ figma is undefined
+
+// Accessing DOM in plugin
+const button = document.querySelector('.btn'); // ❌ document is undefined
+
+// Using 'any' type
+function handle(data: any) { } // ❌ Lose type safety
+
+// Missing return type
+function calculate(x: number) { } // ❌ What does it return?
+```
+
+### ✅ Do This Instead
+```typescript
+// Figma CSS variables
+.button { background: var(--figma-color-bg); }
+
+// postMessage to get selection
+parent.postMessage({ pluginMessage: { type: 'get-selection' } }, '*');
+
+// Send message to UI
+figma.ui.postMessage({ type: 'update', data: 'value' });
+
+// Proper typing
+function handle(data: unknown): void {
+  if (typeof data === 'string') { }
+}
+
+// Explicit return type
+function calculate(x: number): number {
+  return x * 2;
+}
+```
+
+## Testing Workflow
+
+1. **Make changes to code**
+2. **Run build**: `npm run build`
+3. **In Figma**:
+   - Plugins → Development → Reload plugin (or re-import if manifest changed)
+4. **Test manually** using checklist in CONTRIBUTING.md
+5. **Check DevTools**:
+   - UI: Right-click → Inspect Element
+   - Plugin: Plugins → Development → Open Console
+
+## Performance Tips
+
+- **Use React.memo** for expensive components
+- **Use useMemo** for derived state
+- **Use useCallback** for event handlers passed to children
+- **Avoid inline object creation** in render (causes re-renders)
+- **Keep bundle size under 200kb** (currently ~165kb)
+
+## Security Reminders
+
+- **No network access** - Plugin has `networkAccess: none` in manifest
+- **Validate all user input** - Never trust data from forms
+- **Use TypeScript** - Catch errors at compile time
+- **No eval()** - Never use eval or Function constructor
+
+## Build Commands
+
+```bash
+npm run build          # Production build (both UI and plugin)
+npm run build:plugin   # Build plugin only
+npm run dev            # Development mode with watch
+```
+
+## When Making Suggestions
+
+### Prefer:
+- Functional React components with hooks
+- TypeScript interfaces over types (for objects)
+- Discriminated unions for message types
+- CSS variables over hardcoded colors
+- Explicit return types
+- Descriptive variable names
+
+### Avoid:
+- Class components
+- `any` type
+- Hardcoded hex colors
+- Abbreviations in names
+- Large components (split into smaller ones)
+- Mixing concerns (UI code in plugin, vice versa)
+
+## Documentation
+
+For more details:
+- **ARCHITECTURE.md** - Deep technical dive
+- **CONTRIBUTING.md** - Developer guidelines
+- **CHANGELOG.md** - Version history
+- **README.md** - User-facing documentation
+
+## Current State (v2.0.0)
+
+### Completed Features
+✅ Modern tech stack (Vite + React + TypeScript)
+✅ Figma UI3 design with Dark Mode
+✅ Default presets (iOS, Android, Web, WebP, PDF)
+✅ Custom preset creation/editing/deletion
+✅ Advanced directory mode with folder structures
+✅ iOS Contents.json generation
+✅ Preset persistence via clientStorage
+✅ Optimistic UI updates
+
+### Future Roadmap
+⏭️ Preset import/export as JSON
+⏭️ Preset templates library
+⏭️ Export history
+⏭️ Keyboard shortcuts
+⏭️ Automated tests
+
+## Questions to Ask Before Suggesting Code
+
+1. **Does this need to run in UI or plugin context?**
+   - If it needs Figma API → plugin
+   - If it needs DOM/React → UI
+   - If both → use postMessage
+
+2. **What type should this be?**
+   - Never `any`
+   - Be specific (string vs. string literal)
+   - Use interfaces for objects
+
+3. **Does this need to be persisted?**
+   - Yes → Use figma.clientStorage
+   - No → Use React state
+
+4. **Is this a breaking change?**
+   - Changes to message types → Yes
+   - Changes to storage format → Yes
+   - UI changes → Usually no
+
+5. **Will this work in Dark Mode?**
+   - Test with CSS variables
+   - Avoid hardcoded colors
+
+## Example: Complete Feature Addition
+
+**Task:** Add export count to preset cards
+
+1. **Update types** (`src/shared/types.ts`):
+```typescript
+interface PresetConfig {
+  // ...existing
+  exportCount?: number; // Track usage
+}
+```
+
+2. **Update plugin** (`src/plugin/main.ts`):
+```typescript
+const applyPreset = (preset: PresetConfig) => {
+  // ...existing logic
+
+  // Increment count
+  preset.exportCount = (preset.exportCount || 0) + 1;
+
+  // Save updated preset
+  savePreferences(preferences);
+};
+```
+
+3. **Update UI** (`src/ui/components/PresetCard.tsx`):
+```typescript
+export const PresetCard: React.FC<PresetCardProps> = ({ preset }) => {
+  return (
+    <button className="preset-card">
+      <div className="preset-card__icon">{preset.icon}</div>
+      <div className="preset-card__name">{preset.name}</div>
+      {preset.exportCount && (
+        <div className="preset-card__count">Used {preset.exportCount}×</div>
+      )}
+    </button>
+  );
+};
+```
+
+4. **Add styles** (`src/ui/components/PresetCard.css`):
+```css
+.preset-card__count {
+  font-size: 9px;
+  color: var(--figma-color-text-tertiary);
+}
+```
+
+5. **Test**:
+   - Build: `npm run build`
+   - Reload plugin in Figma
+   - Apply preset multiple times
+   - Verify count increments
+
+---
+
+**This file helps me understand your codebase. Update me as the project evolves!**

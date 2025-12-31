@@ -1,0 +1,97 @@
+.preset-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background-color: var(--figma-color-bg);
+  border: 1px solid var(--figma-color-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  color: var(--figma-color-text);
+  min-width: 80px;
+}
+
+.preset-card:hover:not(:disabled) {
+  background-color: var(--figma-color-bg-hover);
+  border-color: var(--figma-color-border-strong);
+}
+
+.preset-card:active:not(:disabled) {
+  background-color: var(--figma-color-bg-pressed);
+  transform: scale(0.98);
+}
+
+.preset-card--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.preset-card__icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.preset-card__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.preset-card__name {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--figma-color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.preset-card__badges {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.preset-card__badge {
+  font-size: 8px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background-color: var(--figma-color-bg-tertiary);
+  color: var(--figma-color-text-secondary);
+  font-weight: 500;
+}
+
+/* Format specific coloring (optional polish) */
+.preset-card__badge--png { background-color: var(--figma-color-bg-brand-tertiary); color: var(--figma-color-text-brand); }
+.preset-card__badge--jpg { background-color: var(--figma-color-bg-warning-tertiary); color: var(--figma-color-text-warning); }
+.preset-card__badge--svg { background-color: var(--figma-color-bg-success-tertiary); color: var(--figma-color-text-success); }
+.preset-card__badge--pdf { background-color: var(--figma-color-bg-danger-tertiary); color: var(--figma-color-text-danger); }
+
+/* Animation */
+@keyframes bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes flash {
+  0% { box-shadow: 0 0 0 0 var(--figma-color-border-brand-strong); border-color: var(--figma-color-border-brand); }
+  100% { box-shadow: 0 0 0 4px transparent; border-color: var(--figma-color-border); }
+}
+
+.preset-card--animating {
+  animation: bump 0.2s ease-in-out, flash 0.4s ease-out;
+}
+

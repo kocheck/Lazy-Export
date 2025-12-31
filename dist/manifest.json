@@ -1,0 +1,20 @@
+{
+  "name": "Lazy Export",
+  "id": "824059814042167296",
+  "api": "1.0.0",
+  "main": "code.js",
+  "enableProposedApi": false,
+  "editorType": [
+    "figma"
+  ],
+  "ui": "index.html",
+  "menu": [
+    { "separator": true },
+    { "name": "Apply IOS", "command": "applyIOS" },
+    { "name": "Apply Android", "command": "applyAndroid" },
+    { "name": "Apply Web", "command": "applyWeb" },
+    { "separator": true },
+    { "name": "Open Lazy Export", "command": "openPlugin" },
+    { "name": "Clear Export", "command": "clearExport" }
+  ]
+}
