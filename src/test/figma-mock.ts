@@ -32,12 +32,12 @@ export interface FigmaMock {
  * Call this in beforeEach() to reset state between tests
  */
 export function createFigmaMock(): FigmaMock {
-  const storage = new Map<string, any>();
+  const storage = new Map<string, unknown>();
 
   return {
     clientStorage: {
       getAsync: vi.fn(async (key: string) => storage.get(key)),
-      setAsync: vi.fn(async (key: string, value: any) => {
+      setAsync: vi.fn(async (key: string, value: unknown) => {
         storage.set(key, value);
       }),
     },
@@ -63,6 +63,7 @@ export function createFigmaMock(): FigmaMock {
  */
 export function installFigmaMock(): FigmaMock {
   const mock = createFigmaMock();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (global as any).figma = mock;
   return mock;
 }

@@ -23,7 +23,7 @@ export interface ErrorContext {
   figmaVersion?: string;
   userAgent?: string;
   timestamp: number;
-  additionalContext?: Record<string, any>;
+  additionalContext?: Record<string, unknown>;
 }
 
 export interface SanitizedLog {
@@ -33,7 +33,7 @@ export interface SanitizedLog {
   errorType: string;
   errorMessage: string;
   stackTrace: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 /**
@@ -68,7 +68,7 @@ export function sanitizeLog(context: ErrorContext): SanitizedLog {
     : 'No stack trace available';
 
   // Sanitize additional context if provided
-  const sanitizedContext: Record<string, any> = {};
+  const sanitizedContext: Record<string, unknown> = {};
   if (context.additionalContext) {
     for (const [key, value] of Object.entries(context.additionalContext)) {
       if (typeof value === 'string') {

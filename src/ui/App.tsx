@@ -15,6 +15,7 @@ interface ToastState {
   message: string;
   type: 'error' | 'success' | 'info';
   error?: Error;
+  metadata?: { iosContentsJson?: string };
 }
 
 const App: React.FC = () => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CustomPreset, ExportSetting, Platform } from '../../shared/types';
+import { CustomPreset, ExportFormat, ExportSetting, Platform } from '../../shared/types';
 import { Input } from './Input';
 import { Button } from './Button';
 import './PresetCreator.css';
@@ -10,8 +10,8 @@ interface PresetCreatorProps {
   existingPreset?: CustomPreset;
 }
 
-const PLATFORMS: Platform[] = ['iOS', 'Android', 'Web', 'WebP', 'PDF'];
-const FORMATS = ['PNG', 'JPG', 'SVG', 'PDF', 'WEBP'] as const;
+const PLATFORMS: Platform[] = ['iOS', 'Android', 'Web', 'PDF'];
+const FORMATS: ExportFormat[] = ['PNG', 'JPG', 'SVG', 'PDF'];
 
 export const PresetCreator: React.FC<PresetCreatorProps> = ({
   onSave,
@@ -99,7 +99,7 @@ export const PresetCreator: React.FC<PresetCreatorProps> = ({
                 className="preset-creator__select preset-creator__select--small"
                 value={setting.format}
                 onChange={(e) =>
-                  updateSetting(index, { ...setting, format: e.target.value as any })
+                  updateSetting(index, { ...setting, format: e.target.value as ExportFormat })
                 }
               >
                 {FORMATS.map((f) => (
