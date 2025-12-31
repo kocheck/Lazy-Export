@@ -1,0 +1,112 @@
+/**
+ * Error Boundary Styles
+ */
+
+.error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: var(--figma-color-bg);
+  color: var(--figma-color-text);
+}
+
+.error-boundary__content {
+  max-width: 400px;
+  text-align: center;
+}
+
+.error-boundary__icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.error-boundary__title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--figma-color-text);
+}
+
+.error-boundary__description {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+  color: var(--figma-color-text-secondary);
+}
+
+.error-boundary__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.error-boundary__button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.error-boundary__button--primary {
+  background: var(--figma-color-bg-brand);
+  color: var(--figma-color-text-onbrand);
+}
+
+.error-boundary__button--primary:hover {
+  background: var(--figma-color-bg-brand-hover);
+}
+
+.error-boundary__button--primary:active {
+  background: var(--figma-color-bg-brand-pressed);
+}
+
+.error-boundary__button--secondary {
+  background: var(--figma-color-bg-secondary);
+  color: var(--figma-color-text);
+}
+
+.error-boundary__button--secondary:hover {
+  background: var(--figma-color-bg-hover);
+}
+
+.error-boundary__button--secondary:active {
+  background: var(--figma-color-bg-pressed);
+}
+
+.error-boundary__details {
+  margin-top: 16px;
+  text-align: left;
+}
+
+.error-boundary__details summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px;
+  background: var(--figma-color-bg-secondary);
+  border-radius: 4px;
+  user-select: none;
+}
+
+.error-boundary__details summary:hover {
+  background: var(--figma-color-bg-hover);
+}
+
+.error-boundary__stack {
+  margin-top: 8px;
+  padding: 12px;
+  background: var(--figma-color-bg-secondary);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

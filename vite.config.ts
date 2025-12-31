@@ -27,4 +27,23 @@ export default defineConfig(({ mode }) => ({
       '@shared': path.resolve(__dirname, 'src/shared'),
     },
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './test/setup.ts',
+    root: path.resolve(__dirname, 'src'),
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'test/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/dist/**',
+        'ui/main.tsx', // Entry point
+        'ui/index.html',
+      ],
+    },
+  },
 }));

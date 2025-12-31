@@ -7,15 +7,41 @@
  * - Persisting custom presets via clientStorage
  * - Generating metadata files (iOS Contents.json)
  * - Communication with the UI via postMessage
+ * - Global error handling and reporting
  *
  * @see ARCHITECTURE.md for detailed technical documentation
  */
 
 import { UIMessage, PluginMessage, SavedPreferences, ExportSetting } from '../shared/types';
 
-// Initialize UI with theme support
-// themeColors: true enables automatic Dark Mode support
-figma.showUI(__html__, { width: 320, height: 520, themeColors: true });
+/**
+ * Global error handler
+ * Catches unhandled errors and sends them to the UI for user reporting
+ */
+function handlePluginError(error: Error): void {
+  console.error('Plugin error:', error);
+  
+  const errorMessage: PluginMessage = {
+    type: 'error',
+    message: error.message,
+    stack: error.stack,
+  };
+  
+  try {
+    figma.ui.postMessage(errorMessage);
+  } catch (e) {
+    console.error('Failed to send error message to UI:', e);
+  }
+}
+
+// Wrap initialization in try-catch
+try {
+  // Initialize UI with theme support
+  // themeColors: true enables automatic Dark Mode support
+  figma.showUI(__html__, { width: 320, height: 520, themeColors: true });
+} catch (error) {
+  handlePluginError(error as Error);
+}
 
 /**
  * Load saved preferences from Figma's clientStorage
@@ -217,21 +243,29 @@ function updateSelectionCount(): void {
 
 // Initialize
 (async () => {
-  // Load and send preferences to UI
-  const preferences = await loadPreferences();
-  const message: PluginMessage = {
-    type: 'preferences-loaded',
-    preferences,
-  };
-  figma.ui.postMessage(message);
+  try {
+    // Load and send preferences to UI
+    const preferences = await loadPreferences();
+    const message: PluginMessage = {
+      type: 'preferences-loaded',
+      preferences,
+    };
+    figma.ui.postMessage(message);
 
-  // Send initial selection count
-  updateSelectionCount();
+    // Send initial selection count
+    updateSelectionCount();
+  } catch (error) {
+    handlePluginError(error as Error);
+  }
 })();
 
 // Listen for selection changes
 figma.on('selectionchange', () => {
-  updateSelectionCount();
+  try {
+    updateSelectionCount();
+  } catch (error) {
+    handlePluginError(error as Error);
+  }
 });
 
 // Handle messages from UI
