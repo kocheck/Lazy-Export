@@ -1,12 +1,13 @@
 /**
  * Error Boundary Component
- * 
+ *
  * Catches React errors and provides a user-friendly interface
  * for reporting bugs with sanitized debug information.
  */
 
 import React, { Component, ReactNode } from 'react';
 import { sanitizeLog, formatLogForGitHub } from '../../shared/sanitizeLog';
+import { copyToClipboard } from '../utils/clipboard';
 import './ErrorBoundary.css';
 
 interface Props {
@@ -60,7 +61,7 @@ export class ErrorBoundary extends Component<Props, State> {
     const markdown = formatLogForGitHub(sanitized);
 
     // Copy to clipboard
-    navigator.clipboard.writeText(markdown).then(() => {
+    copyToClipboard(markdown).then(() => {
       alert('Debug info copied to clipboard! You can now paste it into a GitHub issue.');
     }).catch((err) => {
       console.error('Failed to copy:', err);
@@ -94,7 +95,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="error-boundary__description">
               The plugin encountered an unexpected error. You can help us fix this by reporting it.
             </p>
-            
+
             <div className="error-boundary__actions">
               <button
                 className="error-boundary__button error-boundary__button--primary"

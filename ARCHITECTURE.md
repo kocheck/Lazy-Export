@@ -150,6 +150,10 @@ Figma loads plugin
     ↓
 dist/code.js executes
     ↓
+Check figma.command?
+    ↓ (Yes: Quick Action)
+    Apply Preset & Close (skip UI)
+    ↓ (No: Open Plugin)
 figma.showUI(__html__)     ← Points to dist/index.html
     ↓
 UI iframe loads

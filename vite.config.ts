@@ -6,9 +6,10 @@ import path from 'path';
 export default defineConfig(({ mode }) => ({
   plugins: [react(), viteSingleFile()],
   root: path.resolve(__dirname, 'src/ui'),
+  publicDir: path.resolve(__dirname, 'public'), // Ensure manifest.json is copied
   build: {
     outDir: path.resolve(__dirname, 'dist'),
-    emptyOutDir: true,
+    emptyOutDir: false, // Don't delete code.js from previous build step
     rollupOptions: {
       input: {
         ui: path.resolve(__dirname, 'src/ui/index.html'),

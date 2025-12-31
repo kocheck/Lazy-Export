@@ -35,16 +35,63 @@
   line-height: 1;
 }
 
+.preset-card__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}
+
 .preset-card__name {
   font-size: 11px;
   font-weight: 500;
   line-height: 16px;
   color: var(--figma-color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.preset-card__count {
-  font-size: 9px;
-  line-height: 12px;
-  color: var(--figma-color-text-secondary);
-  font-weight: 400;
+.preset-card__badges {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 2px;
 }
+
+.preset-card__badge {
+  font-size: 8px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 3px;
+  background-color: var(--figma-color-bg-tertiary);
+  color: var(--figma-color-text-secondary);
+  font-weight: 500;
+}
+
+/* Format specific coloring (optional polish) */
+.preset-card__badge--png { background-color: var(--figma-color-bg-brand-tertiary); color: var(--figma-color-text-brand); }
+.preset-card__badge--jpg { background-color: var(--figma-color-bg-warning-tertiary); color: var(--figma-color-text-warning); }
+.preset-card__badge--svg { background-color: var(--figma-color-bg-success-tertiary); color: var(--figma-color-text-success); }
+.preset-card__badge--pdf { background-color: var(--figma-color-bg-danger-tertiary); color: var(--figma-color-text-danger); }
+
+/* Animation */
+@keyframes bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes flash {
+  0% { box-shadow: 0 0 0 0 var(--figma-color-border-brand-strong); border-color: var(--figma-color-border-brand); }
+  100% { box-shadow: 0 0 0 4px transparent; border-color: var(--figma-color-border); }
+}
+
+.preset-card--animating {
+  animation: bump 0.2s ease-in-out, flash 0.4s ease-out;
+}
+

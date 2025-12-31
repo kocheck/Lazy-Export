@@ -6,6 +6,7 @@ import { Button } from './components/Button';
 import { Modal } from './components/Modal';
 import { PresetCreator } from './components/PresetCreator';
 import { Toast } from './components/Toast';
+import { ZeroState } from './components/ZeroState';
 import { DEFAULT_PRESETS } from '../shared/presets';
 import { PresetConfig, PluginMessage, UIMessage, SavedPreferences, CustomPreset } from '../shared/types';
 import './App.css';
@@ -50,6 +51,16 @@ const App: React.FC = () => {
           console.log('✅', msg.message);
           setToast({ message: msg.message, type: 'success' });
           setTimeout(() => setToast(null), 3000);
+          break;
+
+        case 'export-success':
+          setToast({
+            message: msg.message,
+            type: 'success',
+            metadata: msg.metadata,
+          });
+          // Clear toast after 5 seconds
+          setTimeout(() => setToast(null), 5000);
           break;
 
         case 'error':
@@ -138,110 +149,116 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="app__main">
-        {/* Default Presets Grid */}
-        <section className="app__section">
-          <label className="app__section-label">Quick Presets</label>
-          <div className="app__presets-grid">
-            {DEFAULT_PRESETS.map((preset) => (
-              <PresetCard
-                key={preset.id}
-                preset={preset}
-                onClick={() => applyPreset(preset)}
-                disabled={!hasSelection}
-              />
-            ))}
-          </div>
-        </section>
-
-        {/* Custom Presets Section */}
-        {hasCustomPresets && (
-          <section className="app__section">
-            <div className="app__section-header">
-              <label className="app__section-label">Custom Presets</label>
-            </div>
-            <div className="app__custom-presets">
-              {customPresets.map((preset) => (
-                <div key={preset.id} className="app__custom-preset">
+        {!hasSelection ? (
+          <ZeroState />
+        ) : (
+          <>
+            {/* Default Presets Grid */}
+            <section className="app__section">
+              <label className="app__section-label">Quick Presets</label>
+              <div className="app__presets-grid">
+                {DEFAULT_PRESETS.map((preset) => (
                   <PresetCard
+                    key={preset.id}
                     preset={preset}
                     onClick={() => applyPreset(preset)}
                     disabled={!hasSelection}
                   />
-                  <div className="app__custom-preset-actions">
-                    <button
-                      className="app__preset-action"
-                      onClick={() => openCreator(preset)}
-                      title="Edit preset"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      className="app__preset-action app__preset-action--danger"
-                      onClick={() => deletePreset(preset.id)}
-                      title="Delete preset"
-                    >
-                      🗑️
-                    </button>
-                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Custom Presets Section */}
+            {hasCustomPresets && (
+              <section className="app__section">
+                <div className="app__section-header">
+                  <label className="app__section-label">Custom Presets</label>
                 </div>
-              ))}
-            </div>
-          </section>
+                <div className="app__custom-presets">
+                  {customPresets.map((preset) => (
+                    <div key={preset.id} className="app__custom-preset">
+                      <PresetCard
+                        preset={preset}
+                        onClick={() => applyPreset(preset)}
+                        disabled={!hasSelection}
+                      />
+                      <div className="app__custom-preset-actions">
+                        <button
+                          className="app__preset-action"
+                          onClick={() => openCreator(preset)}
+                          title="Edit preset"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className="app__preset-action app__preset-action--danger"
+                          onClick={() => deletePreset(preset.id)}
+                          title="Delete preset"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Create Preset Button */}
+            <section className="app__section">
+              <Button onClick={() => openCreator()} variant="secondary" fullWidth>
+                + Create Custom Preset
+              </Button>
+            </section>
+
+            {/* Custom Name Input */}
+            <section className="app__section">
+              <label className="app__section-label">Custom Name (optional)</label>
+              <Input
+                value={customName}
+                onChange={setCustomName}
+                placeholder="e.g., icon-home"
+                disabled={!hasSelection}
+              />
+              <p className="app__hint">
+                Leave empty to use default asset name
+              </p>
+            </section>
+
+            {/* Advanced Mode Toggle */}
+            <section className="app__section">
+              <Toggle
+                checked={advancedMode}
+                onChange={setAdvancedMode}
+                label="Advanced Mode"
+                disabled={!hasSelection}
+              />
+              <p className="app__hint">
+                Creates organized folder structure with metadata files
+              </p>
+            </section>
+
+            {/* Clear Button */}
+            <section className="app__section">
+              <Button
+                onClick={clearExport}
+                variant="destructive"
+                fullWidth
+                disabled={!hasSelection}
+              >
+                Clear Export Settings
+              </Button>
+            </section>
+
+            {/* Info Section */}
+            <section className="app__info">
+              <p>
+                Select layers in Figma, then click a preset to apply export settings.
+                Advanced mode generates production-ready folder structures.
+              </p>
+            </section>
+          </>
         )}
-
-        {/* Create Preset Button */}
-        <section className="app__section">
-          <Button onClick={() => openCreator()} variant="secondary" fullWidth>
-            + Create Custom Preset
-          </Button>
-        </section>
-
-        {/* Custom Name Input */}
-        <section className="app__section">
-          <label className="app__section-label">Custom Name (optional)</label>
-          <Input
-            value={customName}
-            onChange={setCustomName}
-            placeholder="e.g., icon-home"
-            disabled={!hasSelection}
-          />
-          <p className="app__hint">
-            Leave empty to use default asset name
-          </p>
-        </section>
-
-        {/* Advanced Mode Toggle */}
-        <section className="app__section">
-          <Toggle
-            checked={advancedMode}
-            onChange={setAdvancedMode}
-            label="Advanced Mode"
-            disabled={!hasSelection}
-          />
-          <p className="app__hint">
-            Creates organized folder structure with metadata files
-          </p>
-        </section>
-
-        {/* Clear Button */}
-        <section className="app__section">
-          <Button
-            onClick={clearExport}
-            variant="destructive"
-            fullWidth
-            disabled={!hasSelection}
-          >
-            Clear Export Settings
-          </Button>
-        </section>
-
-        {/* Info Section */}
-        <section className="app__info">
-          <p>
-            Select layers in Figma, then click a preset to apply export settings.
-            Advanced mode generates production-ready folder structures.
-          </p>
-        </section>
       </main>
 
       {/* Preset Creator Modal */}

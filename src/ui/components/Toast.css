@@ -79,6 +79,30 @@
   color: var(--figma-color-text);
 }
 
+.toast__action-btn {
+  margin-top: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.toast__action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.toast--success .toast__action-btn {
+  background-color: var(--figma-color-bg-success-tertiary);
+  color: var(--figma-color-text-success);
+  border-color: transparent;
+}
+
 .toast__actions {
   display: flex;
   gap: 8px;

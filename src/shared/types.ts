@@ -1,8 +1,8 @@
 // Shared types between UI and Plugin
 
-export type Platform = 'iOS' | 'Android' | 'Web' | 'WebP' | 'PDF';
+export type Platform = 'iOS' | 'Android' | 'Web' | 'PDF';
 
-export type ExportFormat = 'PNG' | 'JPG' | 'SVG' | 'PDF' | 'WEBP';
+export type ExportFormat = 'PNG' | 'JPG' | 'SVG' | 'PDF';
 
 export interface ExportSetting {
   format: ExportFormat;
@@ -69,6 +69,11 @@ export type PluginMessage =
   | {
       type: 'preferences-loaded';
       preferences: SavedPreferences;
+    }
+  | {
+      type: 'export-success';
+      message: string;
+      metadata?: { iosContentsJson?: string };
     }
   | {
       type: 'error';

@@ -1,264 +1,93 @@
-# 🚀 Lazy Export v2.0
+# ⚡ Lazy Export v2.0
 
-**Modern Figma plugin for lightning-fast export preset management with production-ready batch directory generation.**
+**For the designer who has better things to do than click "Export" 50 times.**
 
 ![Version](https://img.shields.io/badge/version-2.0.0-blue)
-![Figma API](https://img.shields.io/badge/Figma%20API-1.0.0-green)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)
-![React](https://img.shields.io/badge/React-18.2-blue)
+![Vibe](https://img.shields.io/badge/vibe-impeccable-purple)
+![React](https://img.shields.io/badge/built%20with-React-61dafb)
 
 ---
 
-## ✨ What's New in v2.0
+## 💅 What is this?
 
-This is a **complete rewrite** from the ground up:
+You know that feeling when you have to export assets for iOS, Android, and Web, and you have to manually configure the suffixes, scales, and folders for **every single layer**?
 
-- 🎨 **Modern UI3 Design** - Native Figma aesthetic with automatic Dark Mode support
-- ⚡ **Faster UX** - Click presets directly, no dropdown menus
-- 🗂️ **Smart Directory Generation** - Export with production-ready folder structures
-- 📱 **iOS Metadata** - Auto-generates `Contents.json` for `.imageset` folders
-- 🖼️ **WebP & PDF Support** - New export formats for modern workflows
-- 💾 **Custom Presets** - Save and reuse your own export configurations
-- 🔧 **Built with Vite + React + TypeScript** - Modern developer experience
+Yeah, we hate that too.
+
+**Lazy Export** does it for you. One click. Boom. Done. Go get a coffee. ☕
 
 ---
 
-## 🎯 What Does It Do?
+## ✨ Features (The Good Stuff)
 
-**Lazy Export** lets you apply export settings to selected Figma layers with a single click. Perfect for:
+### 🎴 One-Click Presets
+Click a card, get your settings. No dropdowns, no "Advanced Settings" modals (unless you want them).
 
-- Mobile app developers (iOS & Android)
-- Web designers needing multi-density assets
-- Teams maintaining design systems
-- Anyone tired of manually setting export configs
+| Preset | Vibe | What it does |
+|:-------|:-----|:-------------|
+| **📱 iOS** | Clean | @1x, @2x, @3x PNGs. Standard. |
+| **🤖 Android** | Thorough | All the drawables (mdpi to xxxhdpi). |
+| **🌐 Web** | Sharp | SVG + PNGs. Crisp edges. |
+| **📄 PDF** | Vector | For when pixels aren't enough. |
+
+### ⚡ Quick Actions (Speed Mode)
+Don't even open the plugin window. Just hit `Cmd + /` (or `Cmd + P`) and type:
+- `Lazy Export: Apply iOS`
+- `Lazy Export: Apply Android`
+- `Lazy Export: Apply Web`
+
+It applies the settings instantly. It’s almost *too* fast.
+
+### 🧠 Advanced Mode (Production Ready)
+Turn this switch on to generate **actual folder structures** for your developers. They will love you for this.
+
+- **iOS**: Generates `.imageset` folders with `Contents.json` (you can copy the JSON from the success toast!).
+- **Android**: Generates `drawable-mdpi`, `drawable-hdpi` folders etc.
+
+### 💾 Custom Presets
+Make your own. Save them. usage them.
+Create that specific "Marketing Header @2x JPG" preset you always need.
 
 ---
 
-## 🚀 Quick Start
+## 🛠️ For Developers (The Techy Stuff)
+
+We rebuilt this entire thing in **React 18 + Vite**. No more legacy code. It's fast, modular, and actually pleasant to work on.
 
 ### Installation
 
-1. Clone this repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+1. Clone this repo.
+2. `npm install`
+3. `npm run dev` (watches for changes, hot reloads UI)
 
-### Development
+### ⚠️ IMPORTANT: Loading the Plugin
 
-Run the plugin in watch mode:
-```bash
-npm run dev
-```
+When importing into Figma, point to:
+👉 **`dist/manifest.json`** 👈
 
-Then in Figma:
-1. Go to **Plugins → Development → Import plugin from manifest**
-2. Select `dist/manifest.json`
-3. Run the plugin from **Plugins → Lazy Export**
+(Not the public folder. We moved it. It's better this way.)
 
-### Production Build
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist/` folder.
-
----
-
-## 📋 Features
-
-### 🎴 Quick Presets
-
-Click any preset card to instantly apply export settings:
-
-| Preset | Formats | Use Case |
-|--------|---------|----------|
-| **📱 iOS** | PNG @1x, @2x, @3x | iPhone/iPad apps |
-| **🤖 Android** | PNG (6 densities) | Android apps with mdpi/hdpi/xhdpi/etc. |
-| **🌐 Web** | SVG + PNG @1x, @2x, @3x | Websites & web apps |
-| **🖼️ WebP** | WebP @1x, @2x, @3x | Modern web with next-gen format |
-| **📄 PDF** | PDF (vector) | Print assets & scalable exports |
-
-### 🔧 Advanced Mode
-
-Enable **Advanced Mode** to generate production-ready folder structures:
-
-**iOS Example:**
-```
-icon-home.imageset/
-├── Contents.json
-├── icon-home@1x.png
-├── icon-home@2x.png
-└── icon-home@3x.png
-```
-
-**Android Example:**
-```
-drawable-mdpi/icon-home.png
-drawable-hdpi/icon-home.png
-drawable-xhdpi/icon-home.png
-drawable-xxhdpi/icon-home.png
-drawable-xxxhdpi/icon-home.png
-drawable-ldpi/icon-home.png
-```
-
-Just export from Figma and drop the folder directly into Xcode/Android Studio!
-
-### 🏷️ Custom Asset Naming
-
-Enter a custom name (e.g., `icon-home`) and it will be applied to all export suffixes:
-- Basic Mode: `/icon-home@2x.png`
-- Advanced Mode (iOS): `/icon-home.imageset/icon-home@2x.png`
-
-### 💾 Custom Presets
-
-Create, save, and manage your own export presets:
-
-**Features:**
-- Click **"+ Create Custom Preset"** to open the preset builder
-- Mix and match formats (PNG, JPG, SVG, PDF, WebP)
-- Set custom scales and constraints for each format
-- Add custom suffixes and naming conventions
-- Edit existing custom presets
-- Delete presets you no longer need
-- Presets persist across Figma sessions
-
-**Example Use Cases:**
-- Create a "Retina Web" preset with just @2x PNG + SVG
-- Build a "High-Res Print" preset with PDF + PNG @4x
-- Make a "Quick WebP" preset for modern web workflows
-- Design team-specific presets for your organization
-
----
-
-## 🎨 Design Philosophy
-
-### UI3 Aesthetic
-
-This plugin uses **Figma's native CSS variables** for seamless integration:
-
-- `--figma-color-bg` - Background colors
-- `--figma-color-text` - Text colors
-- `--figma-color-border` - Border styles
-- Automatic **Light/Dark mode** support
-
-### Speed First
-
-No dropdowns, no nested menus. Just:
-1. Select layers
-2. Click preset
-3. Done
-
----
-
-## 🛠️ Tech Stack
-
-| Category | Technology |
-|----------|-----------|
-| Framework | React 18 |
-| Language | TypeScript 5 |
-| Build Tool | Vite 5 |
-| Plugin API | Figma API v1.0.0 |
-| Bundler | esbuild (plugin) + Vite (UI) |
-| Testing | Vitest + React Testing Library |
-| Coverage | 93.82% on business logic |
-
----
-
-## 🧪 Testing & Quality
-
-This plugin includes comprehensive test coverage and error reporting:
-
-- **73 passing tests** covering plugin logic, utilities, and UI components
-- **93.82% code coverage** on business logic
-- **Privacy-focused error reporting** with automatic data sanitization
-- **Figma API mocks** for isolated testing
-
-### Running Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run with coverage
-npm run test:coverage
-
-# Interactive test UI
-npm run test:ui
-```
-
-For detailed testing documentation, see [TESTING.md](TESTING.md).
-
-### Error Reporting
-
-If you encounter a bug, the plugin provides:
-- **One-click error copying** with sanitized debug info
-- **Direct GitHub issue creation** link
-- **Privacy protection**: All sensitive data (file keys, user IDs, layer IDs) automatically removed
-
-For more information, see [ERROR_REPORTING.md](ERROR_REPORTING.md).
-
----
-
-## 📂 Project Structure
+### Architecture
 
 ```
-lazy-export/
-├── src/
-│   ├── ui/                # React UI (rendered in iframe)
-│   │   ├── App.tsx
-│   │   ├── components/
-│   │   └── styles/
-│   ├── plugin/            # Figma plugin sandbox code
-│   │   └── main.ts
-│   └── shared/            # Shared types & presets
-│       ├── types.ts
-│       └── presets.ts
-├── dist/                  # Build output
-│   ├── code.js           # Compiled plugin
-│   ├── index.html        # UI bundle
-│   └── manifest.json     # Figma manifest
-├── vite.config.ts
-├── tsconfig.json
-└── package.json
+src/
+ ├── ui/          # React app (The pretty part)
+ ├── plugin/      # Figma sandbox (The brain)
+ └── shared/      # Shared types (The glue)
 ```
+
+We communicate via `postMessage`. It's classic iframe architecture, but cleaner.
 
 ---
 
 ## 🤝 Contributing
 
-Found a bug or have a feature request?
+Found a bug? Want to add a "Smart Watch" preset?
+Open a PR. We love PRs.
 
-1. **Open an issue** on GitHub
-2. **Submit a Pull Request** with your improvements
-
-All contributions welcome! This is a learning project, so questions are encouraged.
+Check [CONTRIBUTING.md](CONTRIBUTING.md) for the rules of the road.
 
 ---
 
-## 📜 License
-
-MIT License - see [LICENSE](LICENSE) for details
-
----
-
-## 🙏 Acknowledgments
-
-- Built with [Figsvelte](https://github.com/thomas-lowry/figsvelte) (original boilerplate)
-- Inspired by Sketch's export presets feature
-- Redesigned for the modern Figma workflow
-
----
-
-## 📚 Learn More
-
-- [Figma Plugin API Documentation](https://www.figma.com/plugin-docs/)
-- [Vite Documentation](https://vitejs.dev/)
-- [React Documentation](https://react.dev/)
-
----
-
-**Made with ❤️ for the Figma community**
-
+**Made with ❤️ (and caffeine) for the Figma community.**
 *v2.0.0 - December 2025*

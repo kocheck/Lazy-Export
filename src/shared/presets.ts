@@ -98,31 +98,7 @@ export const DEFAULT_PRESETS: PresetConfig[] = [
       },
     ],
   },
-  {
-    id: 'webp',
-    name: 'WebP',
-    platform: 'WebP',
-    icon: '🖼️',
-    generateMetadata: false,
-    directoryStructure: false,
-    settings: [
-      {
-        format: 'WEBP',
-        suffix: '@3x',
-        constraint: { type: 'SCALE', value: 3 },
-      },
-      {
-        format: 'WEBP',
-        suffix: '@2x',
-        constraint: { type: 'SCALE', value: 2 },
-      },
-      {
-        format: 'WEBP',
-        suffix: '@1x',
-        constraint: { type: 'SCALE', value: 1 },
-      },
-    ],
-  },
+
   {
     id: 'pdf',
     name: 'PDF',

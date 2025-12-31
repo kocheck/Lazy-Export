@@ -1,21 +1,23 @@
 /**
  * Toast Notification Component
- * 
+ *
  * Displays non-fatal error messages with option to report bugs
  */
 
 import React from 'react';
 import { sanitizeLog, formatLogForGitHub } from '../../shared/sanitizeLog';
+import { copyToClipboard } from '../utils/clipboard';
 import './Toast.css';
 
 export interface ToastProps {
   message: string;
   type: 'error' | 'success' | 'info';
   error?: Error;
+  metadata?: { iosContentsJson?: string };
   onClose: () => void;
 }
 
-export const Toast: React.FC<ToastProps> = ({ message, type, error, onClose }) => {
+export const Toast: React.FC<ToastProps> = ({ message, type, error, metadata, onClose }) => {
   const copyDebugInfo = () => {
     if (!error) return;
 
@@ -32,7 +34,7 @@ export const Toast: React.FC<ToastProps> = ({ message, type, error, onClose }) =
 
     const markdown = formatLogForGitHub(sanitized);
 
-    navigator.clipboard.writeText(markdown).then(() => {
+    copyToClipboard(markdown).then(() => {
       alert('Debug info copied! You can paste it into a GitHub issue.');
     });
   };
@@ -51,8 +53,21 @@ export const Toast: React.FC<ToastProps> = ({ message, type, error, onClose }) =
           {type === 'info' && 'ℹ️'}
         </div>
         <div className="toast__message">{message}</div>
-        <button className="toast__close" onClick={onClose}>×</button>
-      </div>
+        <button className="toast__close" onClick={onClose} aria-label="Close">
+        ×
+      </button>
+      {metadata?.iosContentsJson && (
+        <button
+          className="toast__action-btn"
+          onClick={() => {
+            copyToClipboard(metadata.iosContentsJson!);
+            alert('Contents.json copied to clipboard!');
+          }}
+        >
+          Copy Contents.json
+        </button>
+      )}
+    </div>
       {type === 'error' && error && (
         <div className="toast__actions">
           <button className="toast__action" onClick={copyDebugInfo}>

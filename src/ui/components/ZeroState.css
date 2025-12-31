@@ -1,0 +1,29 @@
+.zero-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  height: 100%;
+}
+
+.zero-state__illustration {
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.zero-state__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--figma-color-text);
+  margin: 0 0 8px 0;
+}
+
+.zero-state__description {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--figma-color-text-secondary);
+  max-width: 240px;
+  margin: 0;
+}

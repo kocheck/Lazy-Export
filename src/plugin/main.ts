@@ -13,6 +13,7 @@
  */
 
 import { UIMessage, PluginMessage, SavedPreferences, ExportSetting } from '../shared/types';
+import { DEFAULT_PRESETS } from '../shared/presets';
 
 /**
  * Global error handler
@@ -20,13 +21,13 @@ import { UIMessage, PluginMessage, SavedPreferences, ExportSetting } from '../sh
  */
 function handlePluginError(error: Error): void {
   console.error('Plugin error:', error);
-  
+
   const errorMessage: PluginMessage = {
     type: 'error',
     message: error.message,
     stack: error.stack,
   };
-  
+
   try {
     figma.ui.postMessage(errorMessage);
   } catch (e) {
@@ -35,13 +36,7 @@ function handlePluginError(error: Error): void {
 }
 
 // Wrap initialization in try-catch
-try {
-  // Initialize UI with theme support
-  // themeColors: true enables automatic Dark Mode support
-  figma.showUI(__html__, { width: 320, height: 520, themeColors: true });
-} catch (error) {
-  handlePluginError(error as Error);
-}
+
 
 /**
  * Load saved preferences from Figma's clientStorage
@@ -205,13 +200,15 @@ function applyExportSettings(
   });
 
   // If iOS advanced mode, show info about Contents.json
+  // If iOS advanced mode, show info about Contents.json
   if (advancedMode && platform === 'iOS') {
     const contentsJSON = generateiOSContentsJSON(assetName);
-    console.log('iOS Contents.json:', contentsJSON);
-    figma.notify(
-      `✅ Applied to ${nodes.length} node(s). Remember to create Contents.json in ${assetName}.imageset/`,
-      { timeout: 4000 }
-    );
+    const message: PluginMessage = {
+      type: 'export-success',
+      message: `✅ Applied! Copy Contents.json required for Xcode.`,
+      metadata: { iosContentsJson: contentsJSON },
+    };
+    figma.ui.postMessage(message);
   } else {
     figma.notify(`✅ Export settings applied to ${nodes.length} node(s)`);
   }
@@ -244,16 +241,57 @@ function updateSelectionCount(): void {
 // Initialize
 (async () => {
   try {
-    // Load and send preferences to UI
-    const preferences = await loadPreferences();
-    const message: PluginMessage = {
-      type: 'preferences-loaded',
-      preferences,
-    };
-    figma.ui.postMessage(message);
+    switch (figma.command) {
+      case 'applyIOS': {
+        const preset = DEFAULT_PRESETS.find((p) => p.id === 'ios');
+        if (preset) {
+          applyExportSettings(figma.currentPage.selection, preset.settings, undefined, false);
+        }
+        figma.closePlugin();
+        break;
+      }
 
-    // Send initial selection count
-    updateSelectionCount();
+      case 'applyAndroid': {
+        const preset = DEFAULT_PRESETS.find((p) => p.id === 'android');
+        if (preset) {
+          applyExportSettings(figma.currentPage.selection, preset.settings, undefined, false);
+        }
+        figma.closePlugin();
+        break;
+      }
+
+      case 'applyWeb': {
+        const preset = DEFAULT_PRESETS.find((p) => p.id === 'web');
+        if (preset) {
+          applyExportSettings(figma.currentPage.selection, preset.settings, undefined, false);
+        }
+        figma.closePlugin();
+        break;
+      }
+
+      case 'clearExport': {
+        clearExportSettings(figma.currentPage.selection);
+        figma.closePlugin();
+        break;
+      }
+
+      case 'openPlugin':
+      default: {
+        // Load and send preferences to UI
+        figma.showUI(__html__, { width: 320, height: 520, themeColors: true });
+
+        const preferences = await loadPreferences();
+        const message: PluginMessage = {
+          type: 'preferences-loaded',
+          preferences,
+        };
+        figma.ui.postMessage(message);
+
+        // Send initial selection count
+        updateSelectionCount();
+        break;
+      }
+    }
   } catch (error) {
     handlePluginError(error as Error);
   }
