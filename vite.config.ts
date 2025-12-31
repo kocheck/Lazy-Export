@@ -41,8 +41,9 @@ export default defineConfig(({ mode }) => ({
         '**/*.d.ts',
         '**/*.config.*',
         '**/dist/**',
+        '**/coverage/**',
+        '**/*.css',
         'ui/main.tsx', // Entry point
-        'ui/index.html',
       ],
     },
   },
