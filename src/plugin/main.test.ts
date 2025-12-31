@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { installFigmaMock, createMockNode, FigmaMock } from '../test/figma-mock.js';
-import type { SavedPreferences, CustomPreset } from '../shared/types.js';
+import type { SavedPreferences } from '../shared/types.js';
 
 describe('Plugin Storage', () => {
   let figmaMock: FigmaMock;
@@ -58,10 +58,8 @@ describe('Plugin Storage', () => {
 });
 
 describe('Export Settings Application', () => {
-  let figmaMock: FigmaMock;
-
   beforeEach(() => {
-    figmaMock = installFigmaMock();
+    installFigmaMock();
   });
 
   it('should apply export settings to a node', () => {
