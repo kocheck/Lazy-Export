@@ -6,7 +6,10 @@
     "dev": "npm run build:plugin && vite build --mode development --watch",
     "build": "npm run build:plugin && vite build",
     "build:plugin": "node build-plugin.js",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -14,13 +17,21 @@
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.90.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/ui": "^4.0.16",
     "esbuild": "^0.19.0",
+    "happy-dom": "^20.0.11",
+    "jsdom": "^27.4.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.8",
-    "vite-plugin-singlefile": "^2.0.1"
+    "vite-plugin-singlefile": "^2.0.1",
+    "vitest": "^4.0.16"
   }
 }

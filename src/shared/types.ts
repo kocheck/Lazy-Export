@@ -73,6 +73,7 @@ export type PluginMessage =
   | {
       type: 'error';
       message: string;
+      stack?: string;
     }
   | {
       type: 'success';

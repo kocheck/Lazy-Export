@@ -5,9 +5,16 @@ import { Toggle } from './components/Toggle';
 import { Button } from './components/Button';
 import { Modal } from './components/Modal';
 import { PresetCreator } from './components/PresetCreator';
+import { Toast } from './components/Toast';
 import { DEFAULT_PRESETS } from '../shared/presets';
 import { PresetConfig, PluginMessage, UIMessage, SavedPreferences, CustomPreset } from '../shared/types';
 import './App.css';
+
+interface ToastState {
+  message: string;
+  type: 'error' | 'success' | 'info';
+  error?: Error;
+}
 
 const App: React.FC = () => {
   const [customName, setCustomName] = useState('');
@@ -16,6 +23,7 @@ const App: React.FC = () => {
   const [preferences, setPreferences] = useState<SavedPreferences | null>(null);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState<CustomPreset | undefined>();
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   // All presets (default + custom)
   const customPresets = preferences?.customPresets || [];
@@ -40,10 +48,17 @@ const App: React.FC = () => {
 
         case 'success':
           console.log('✅', msg.message);
+          setToast({ message: msg.message, type: 'success' });
+          setTimeout(() => setToast(null), 3000);
           break;
 
         case 'error':
           console.error('❌', msg.message);
+          const error = new Error(msg.message);
+          if (msg.stack) {
+            error.stack = msg.stack;
+          }
+          setToast({ message: msg.message, type: 'error', error });
           break;
       }
     };
@@ -247,6 +262,16 @@ const App: React.FC = () => {
           existingPreset={editingPreset}
         />
       </Modal>
+
+      {/* Toast Notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          error={toast.error}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 };

@@ -161,6 +161,43 @@ No dropdowns, no nested menus. Just:
 | Build Tool | Vite 5 |
 | Plugin API | Figma API v1.0.0 |
 | Bundler | esbuild (plugin) + Vite (UI) |
+| Testing | Vitest + React Testing Library |
+| Coverage | 93.82% on business logic |
+
+---
+
+## 🧪 Testing & Quality
+
+This plugin includes comprehensive test coverage and error reporting:
+
+- **73 passing tests** covering plugin logic, utilities, and UI components
+- **93.82% code coverage** on business logic
+- **Privacy-focused error reporting** with automatic data sanitization
+- **Figma API mocks** for isolated testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Interactive test UI
+npm run test:ui
+```
+
+For detailed testing documentation, see [TESTING.md](TESTING.md).
+
+### Error Reporting
+
+If you encounter a bug, the plugin provides:
+- **One-click error copying** with sanitized debug info
+- **Direct GitHub issue creation** link
+- **Privacy protection**: All sensitive data (file keys, user IDs, layer IDs) automatically removed
+
+For more information, see [ERROR_REPORTING.md](ERROR_REPORTING.md).
 
 ---
 
