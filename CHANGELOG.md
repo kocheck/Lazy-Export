@@ -16,7 +16,6 @@ This version is a complete modernization of the plugin from the ground up.
 ### Added
 
 #### **Core Features**
-- **WebP Export Format** - Modern next-gen image format support
 - **PDF Export Format** - Vector export for print and scalable assets
 - **Custom Preset System** - Create, edit, delete, and persist custom export presets
 - **Advanced Directory Mode** - Production-ready folder structure generation
