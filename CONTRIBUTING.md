@@ -247,7 +247,7 @@ Before submitting a PR, test these scenarios:
 
 **Basic Functionality:**
 - [ ] Select a layer → Click preset → Verify export settings applied
-- [ ] Try all 5 default presets (iOS, Android, Web, WebP, PDF)
+- [ ] Try all 4 default presets (iOS, Android, Web, PDF)
 - [ ] Custom name input → Verify suffix applied correctly
 - [ ] Advanced mode → Verify folder structure in export names
 - [ ] Clear export → Verify settings removed
