@@ -4,8 +4,17 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 import path from 'path';
 import crypto from 'crypto';
 
-// Plugin to calculate SHA256 hashes of inlined scripts and update CSP
+// Plugin to calculate SHA256 hashes of inlined scripts and styles and update CSP
 function cspHashPlugin(): PluginOption {
+  // Helper function to normalize CSP directive tokens
+  const normalizeTokens = (existingValues: string, hashes: string[]): string => {
+    const existingTokens = existingValues
+      .split(/\s+/)
+      .filter((token) => token.length > 0 && token !== `'unsafe-inline'`);
+    const finalTokens = [...existingTokens, ...hashes];
+    return finalTokens.join(' ');
+  };
+
   return {
     name: 'csp-hash-plugin',
     apply: 'build',
@@ -21,36 +30,72 @@ function cspHashPlugin(): PluginOption {
 
       let html = htmlAsset.source;
       const scriptHashes: string[] = [];
+      const styleHashes: string[] = [];
 
       // Find all script tags and generate hashes
       const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
       let match;
       while ((match = scriptRegex.exec(html)) !== null) {
         const content = match[1];
-        if (content) {
+        if (content && content.trim()) {
           const hash = crypto.createHash('sha256').update(content).digest('base64');
           scriptHashes.push(`'sha256-${hash}'`);
         }
       }
 
+      // Find all inline style tags and generate hashes
+      const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+      let styleMatch;
+      while ((styleMatch = styleRegex.exec(html)) !== null) {
+        const content = styleMatch[1];
+        if (content && content.trim()) {
+          const hash = crypto.createHash('sha256').update(content).digest('base64');
+          styleHashes.push(`'sha256-${hash}'`);
+        }
+      }
+
       // Update CSP to include hashes
-      if (scriptHashes.length > 0) {
-        // Look for CSP meta tag, handling potential newlines
-        const cspRegex = /<meta\s+http-equiv=["']Content-Security-Policy["']\s+content=["']([\s\S]*?)["']\s*\/?>/i;
+      if (scriptHashes.length > 0 || styleHashes.length > 0) {
+        // Look for CSP meta tag with flexible attribute order and quote styles
+        // We use two patterns to handle both possible attribute orders:
+        // Pattern 1: http-equiv before content
+        // Pattern 2: content before http-equiv (handled by [^>]* matching)
+        // The regex matches:
+        // - <meta with word boundary
+        // - Any attributes before http-equiv
+        // - http-equiv="Content-Security-Policy" or 'Content-Security-Policy'
+        // - Any attributes between http-equiv and content
+        // - content attribute with matching quotes, capturing the quote and content
+        // - Any remaining attributes and closing >
+        const cspRegex =
+          /<meta\b[^>]*\bhttp-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy')[^>]*\bcontent=(["'])([\s\S]*?)\1[^>]*>|<meta\b[^>]*\bcontent=(["'])([\s\S]*?)\3[^>]*\bhttp-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy')[^>]*>/i;
         html = html.replace(
           cspRegex,
-          (fullMatch: string, content: string) => {
-            // Replace script-src directive
-            const newContent = content.replace(
-              /script-src\s+([^;]*)/,
-              (_directiveMatch: string, existingValues: string) => {
-                 // Remove 'unsafe-inline' if present and add hashes
-                 const cleanedValues = existingValues
-                   .replace(/'unsafe-inline'/g, '')
-                   .trim();
-                 return `script-src ${cleanedValues} ${scriptHashes.join(' ')}`;
-              }
-            );
+          (fullMatch: string, quote1?: string, content1?: string, quote2?: string, content2?: string) => {
+            // Determine which pattern matched and extract the content
+            const content = content1 || content2 || '';
+            let newContent = content;
+            
+            // Replace script-src directive with normalized tokens
+            if (scriptHashes.length > 0) {
+              newContent = newContent.replace(
+                /script-src\s+([^;]*)/,
+                (_directiveMatch: string, existingValues: string) => {
+                  return `script-src ${normalizeTokens(existingValues, scriptHashes)}`;
+                }
+              );
+            }
+            
+            // Replace style-src directive with normalized tokens
+            if (styleHashes.length > 0) {
+              newContent = newContent.replace(
+                /style-src\s+([^;]*)/,
+                (_directiveMatch: string, existingValues: string) => {
+                  return `style-src ${normalizeTokens(existingValues, styleHashes)}`;
+                }
+              );
+            }
+            
             return fullMatch.replace(content, newContent);
           }
         );
