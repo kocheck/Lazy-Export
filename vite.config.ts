@@ -57,18 +57,23 @@ function cspHashPlugin(): PluginOption {
       // Update CSP to include hashes
       if (scriptHashes.length > 0 || styleHashes.length > 0) {
         // Look for CSP meta tag with flexible attribute order and quote styles
-        // Pattern explanation:
-        // - <meta\b[^>]*\b - matches opening <meta tag with word boundary
-        // - http-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy') - matches http-equiv attribute with either quote style
-        // - [^>]*\b - matches any other attributes
-        // - content=(["']) - matches content attribute, capturing the quote character
-        // - ([\s\S]*?)\1 - captures content value and ensures matching closing quote
-        // - [^>]*> - matches rest of tag to closing >
+        // We use two patterns to handle both possible attribute orders:
+        // Pattern 1: http-equiv before content
+        // Pattern 2: content before http-equiv (handled by [^>]* matching)
+        // The regex matches:
+        // - <meta with word boundary
+        // - Any attributes before http-equiv
+        // - http-equiv="Content-Security-Policy" or 'Content-Security-Policy'
+        // - Any attributes between http-equiv and content
+        // - content attribute with matching quotes, capturing the quote and content
+        // - Any remaining attributes and closing >
         const cspRegex =
-          /<meta\b[^>]*\bhttp-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy')[^>]*\bcontent=(["'])([\s\S]*?)\1[^>]*>/i;
+          /<meta\b[^>]*\bhttp-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy')[^>]*\bcontent=(["'])([\s\S]*?)\1[^>]*>|<meta\b[^>]*\bcontent=(["'])([\s\S]*?)\3[^>]*\bhttp-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy')[^>]*>/i;
         html = html.replace(
           cspRegex,
-          (fullMatch: string, _quote: string, content: string) => {
+          (fullMatch: string, quote1?: string, content1?: string, quote2?: string, content2?: string) => {
+            // Determine which pattern matched and extract the content
+            const content = content1 || content2 || '';
             let newContent = content;
             
             // Replace script-src directive with normalized tokens
