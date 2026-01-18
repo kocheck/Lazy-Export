@@ -58,11 +58,12 @@ function cspHashPlugin(): PluginOption {
       if (scriptHashes.length > 0 || styleHashes.length > 0) {
         // Look for CSP meta tag with flexible attribute order and quote styles
         // Pattern explanation:
-        // - <meta\b[^>]*\b - matches opening <meta tag
+        // - <meta\b[^>]*\b - matches opening <meta tag with word boundary
         // - http-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy') - matches http-equiv attribute with either quote style
-        // - [^>]*\bcontent=(["']) - matches content attribute, capturing the quote character
+        // - [^>]*\b - matches any other attributes
+        // - content=(["']) - matches content attribute, capturing the quote character
         // - ([\s\S]*?)\1 - captures content value and ensures matching closing quote
-        // - [^>]*> - matches rest of tag
+        // - [^>]*> - matches rest of tag to closing >
         const cspRegex =
           /<meta\b[^>]*\bhttp-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy')[^>]*\bcontent=(["'])([\s\S]*?)\1[^>]*>/i;
         html = html.replace(
