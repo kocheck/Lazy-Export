@@ -6,6 +6,15 @@ import crypto from 'crypto';
 
 // Plugin to calculate SHA256 hashes of inlined scripts and styles and update CSP
 function cspHashPlugin(): PluginOption {
+  // Helper function to normalize CSP directive tokens
+  const normalizeTokens = (existingValues: string, hashes: string[]): string => {
+    const existingTokens = existingValues
+      .split(/\s+/)
+      .filter((token) => token.length > 0 && token !== `'unsafe-inline'`);
+    const finalTokens = [...existingTokens, ...hashes];
+    return finalTokens.join(' ');
+  };
+
   return {
     name: 'csp-hash-plugin',
     apply: 'build',
@@ -47,7 +56,13 @@ function cspHashPlugin(): PluginOption {
 
       // Update CSP to include hashes
       if (scriptHashes.length > 0 || styleHashes.length > 0) {
-        // Look for CSP meta tag, handling potential newlines and flexible attribute order/quotes
+        // Look for CSP meta tag with flexible attribute order and quote styles
+        // Pattern explanation:
+        // - <meta\b[^>]*\b - matches opening <meta tag
+        // - http-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy') - matches http-equiv attribute with either quote style
+        // - [^>]*\bcontent=(["']) - matches content attribute, capturing the quote character
+        // - ([\s\S]*?)\1 - captures content value and ensures matching closing quote
+        // - [^>]*> - matches rest of tag
         const cspRegex =
           /<meta\b[^>]*\bhttp-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy')[^>]*\bcontent=(["'])([\s\S]*?)\1[^>]*>/i;
         html = html.replace(
@@ -60,14 +75,7 @@ function cspHashPlugin(): PluginOption {
               newContent = newContent.replace(
                 /script-src\s+([^;]*)/,
                 (_directiveMatch: string, existingValues: string) => {
-                  // Remove 'unsafe-inline' if present, normalize whitespace, and add hashes
-                  const existingTokens = existingValues
-                    .split(/\s+/)
-                    .filter(
-                      (token) => token.length > 0 && token !== `'unsafe-inline'`
-                    );
-                  const finalTokens = [...existingTokens, ...scriptHashes];
-                  return `script-src ${finalTokens.join(' ')}`;
+                  return `script-src ${normalizeTokens(existingValues, scriptHashes)}`;
                 }
               );
             }
@@ -77,14 +85,7 @@ function cspHashPlugin(): PluginOption {
               newContent = newContent.replace(
                 /style-src\s+([^;]*)/,
                 (_directiveMatch: string, existingValues: string) => {
-                  // Remove 'unsafe-inline' if present, normalize whitespace, and add hashes
-                  const existingTokens = existingValues
-                    .split(/\s+/)
-                    .filter(
-                      (token) => token.length > 0 && token !== `'unsafe-inline'`
-                    );
-                  const finalTokens = [...existingTokens, ...styleHashes];
-                  return `style-src ${finalTokens.join(' ')}`;
+                  return `style-src ${normalizeTokens(existingValues, styleHashes)}`;
                 }
               );
             }
