@@ -10,7 +10,12 @@ function cspHashPlugin(): PluginOption {
   const normalizeTokens = (existingValues: string, hashes: string[]): string => {
     const existingTokens = existingValues
       .split(/\s+/)
-      .filter((token) => token.length > 0 && token !== `'unsafe-inline'`);
+      .filter(
+        (token) =>
+          token.length > 0 &&
+          token !== 'unsafe-inline' &&
+          token !== "'unsafe-inline'"
+      );
     const finalTokens = [...existingTokens, ...hashes];
     return finalTokens.join(' ');
   };
@@ -117,6 +122,19 @@ export default defineConfig(() => ({
     rollupOptions: {
       input: {
         ui: path.resolve(__dirname, 'src/ui/index.html'),
+      },
+      output: {
+        // Use stable, non-hashed filenames to avoid breaking references (e.g., Figma manifest)
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name].js',
+        assetFileNames: (assetInfo) => {
+          const fileName = assetInfo.name ? path.basename(assetInfo.name) : '';
+          // Keep manifest.json stable; hash other assets to avoid name collisions
+          if (fileName === 'manifest.json') {
+            return '[name][extname]';
+          }
+          return '[name]-[hash][extname]';
+        },
       },
     },
   },
