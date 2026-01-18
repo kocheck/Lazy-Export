@@ -4,7 +4,7 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 import path from 'path';
 import crypto from 'crypto';
 
-// Plugin to calculate SHA256 hashes of inlined scripts and update CSP
+// Plugin to calculate SHA256 hashes of inlined scripts and styles and update CSP
 function cspHashPlugin(): PluginOption {
   return {
     name: 'csp-hash-plugin',
@@ -21,36 +21,74 @@ function cspHashPlugin(): PluginOption {
 
       let html = htmlAsset.source;
       const scriptHashes: string[] = [];
+      const styleHashes: string[] = [];
 
       // Find all script tags and generate hashes
       const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
       let match;
       while ((match = scriptRegex.exec(html)) !== null) {
         const content = match[1];
-        if (content) {
+        if (content && content.trim()) {
           const hash = crypto.createHash('sha256').update(content).digest('base64');
           scriptHashes.push(`'sha256-${hash}'`);
         }
       }
 
+      // Find all inline style tags and generate hashes
+      const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+      let styleMatch;
+      while ((styleMatch = styleRegex.exec(html)) !== null) {
+        const content = styleMatch[1];
+        if (content && content.trim()) {
+          const hash = crypto.createHash('sha256').update(content).digest('base64');
+          styleHashes.push(`'sha256-${hash}'`);
+        }
+      }
+
       // Update CSP to include hashes
-      if (scriptHashes.length > 0) {
-        // Look for CSP meta tag, handling potential newlines
-        const cspRegex = /<meta\s+http-equiv=["']Content-Security-Policy["']\s+content=["']([\s\S]*?)["']\s*\/?>/i;
+      if (scriptHashes.length > 0 || styleHashes.length > 0) {
+        // Look for CSP meta tag, handling potential newlines and flexible attribute order/quotes
+        const cspRegex =
+          /<meta\b[^>]*\bhttp-equiv=(?:"Content-Security-Policy"|'Content-Security-Policy')[^>]*\bcontent=(["'])([\s\S]*?)\1[^>]*>/i;
         html = html.replace(
           cspRegex,
-          (fullMatch: string, content: string) => {
-            // Replace script-src directive
-            const newContent = content.replace(
-              /script-src\s+([^;]*)/,
-              (_directiveMatch: string, existingValues: string) => {
-                 // Remove 'unsafe-inline' if present and add hashes
-                 const cleanedValues = existingValues
-                   .replace(/'unsafe-inline'/g, '')
-                   .trim();
-                 return `script-src ${cleanedValues} ${scriptHashes.join(' ')}`;
-              }
-            );
+          (fullMatch: string, _quote: string, content: string) => {
+            let newContent = content;
+            
+            // Replace script-src directive with normalized tokens
+            if (scriptHashes.length > 0) {
+              newContent = newContent.replace(
+                /script-src\s+([^;]*)/,
+                (_directiveMatch: string, existingValues: string) => {
+                  // Remove 'unsafe-inline' if present, normalize whitespace, and add hashes
+                  const existingTokens = existingValues
+                    .split(/\s+/)
+                    .filter(
+                      (token) => token.length > 0 && token !== `'unsafe-inline'`
+                    );
+                  const finalTokens = [...existingTokens, ...scriptHashes];
+                  return `script-src ${finalTokens.join(' ')}`;
+                }
+              );
+            }
+            
+            // Replace style-src directive with normalized tokens
+            if (styleHashes.length > 0) {
+              newContent = newContent.replace(
+                /style-src\s+([^;]*)/,
+                (_directiveMatch: string, existingValues: string) => {
+                  // Remove 'unsafe-inline' if present, normalize whitespace, and add hashes
+                  const existingTokens = existingValues
+                    .split(/\s+/)
+                    .filter(
+                      (token) => token.length > 0 && token !== `'unsafe-inline'`
+                    );
+                  const finalTokens = [...existingTokens, ...styleHashes];
+                  return `style-src ${finalTokens.join(' ')}`;
+                }
+              );
+            }
+            
             return fullMatch.replace(content, newContent);
           }
         );
