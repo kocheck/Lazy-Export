@@ -183,7 +183,7 @@ function generateiOSContentsJSON(assetName) {
     2
   );
 }
-function applyExportSettings(nodes, settings, customName, advancedMode = false, platform) {
+function applyExportSettings(nodes, settings, customName, advancedMode = false, platform, generateMetadata = false, directoryStructure = false) {
   if (!nodes || nodes.length === 0) {
     figma.notify("\u26A0\uFE0F No nodes selected");
     return;
@@ -192,7 +192,7 @@ function applyExportSettings(nodes, settings, customName, advancedMode = false, 
   nodes.forEach((node) => {
     const exportSettings = settings.map((setting) => {
       let suffix = setting.suffix || "";
-      if (advancedMode && platform) {
+      if (advancedMode && directoryStructure && platform) {
         if (platform === "iOS") {
           const scale = setting.suffix || "@1x";
           suffix = `/${assetName}.imageset/${assetName}${scale}`;
@@ -225,7 +225,7 @@ function applyExportSettings(nodes, settings, customName, advancedMode = false, 
     });
     node.exportSettings = exportSettings;
   });
-  if (advancedMode && platform === "iOS") {
+  if (advancedMode && generateMetadata && platform === "iOS") {
     const contentsJSON = generateiOSContentsJSON(assetName);
     const message = {
       type: "export-success",
@@ -274,7 +274,9 @@ async function handleUIMessage(msg) {
           preset.settings,
           nameResult.value,
           advancedMode,
-          preset.platform
+          preset.platform,
+          preset.generateMetadata ?? false,
+          preset.directoryStructure ?? false
         );
         break;
       }
