@@ -5,13 +5,17 @@ import { CUSTOM_NAME_ERROR } from '../shared/customName.js';
 
 function postFromPlugin(pluginMessage: unknown) {
   act(() => {
-    window.dispatchEvent(new MessageEvent('message', { data: { pluginMessage } }));
+    if (window.onmessage) {
+      window.onmessage(new MessageEvent('message', { data: { pluginMessage } }));
+    }
   });
 }
 
 function postRaw(data: unknown) {
   act(() => {
-    window.dispatchEvent(new MessageEvent('message', { data } ));
+    if (window.onmessage) {
+      window.onmessage(new MessageEvent('message', { data }));
+    }
   });
 }
 
@@ -73,7 +77,7 @@ describe('App customName contract (F10)', () => {
     expect(screen.getByText(CUSTOM_NAME_ERROR)).toBeInTheDocument();
 
     const applyCalls = postSpy.mock.calls.filter(
-      ([payload]) =>
+      ([payload]: [unknown, ...unknown[]]) =>
         typeof payload === 'object' &&
         payload !== null &&
         (payload as { pluginMessage?: { type?: string } }).pluginMessage?.type === 'apply-preset'
@@ -93,7 +97,7 @@ describe('App customName contract (F10)', () => {
     expect(screen.queryByText(CUSTOM_NAME_ERROR)).not.toBeInTheDocument();
 
     const applyCall = postSpy.mock.calls.find(
-      ([payload]) =>
+      ([payload]: [unknown, ...unknown[]]) =>
         typeof payload === 'object' &&
         payload !== null &&
         (payload as { pluginMessage?: { type?: string } }).pluginMessage?.type === 'apply-preset'

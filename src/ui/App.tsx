@@ -9,6 +9,7 @@ import { Toast } from './components/Toast';
 import { ZeroState } from './components/ZeroState';
 import { DEFAULT_PRESETS } from '../shared/presets';
 import { PresetConfig, PluginMessage, UIMessage, SavedPreferences, CustomPreset } from '../shared/types';
+import { validateCustomName, CUSTOM_NAME_ERROR } from '../shared/customName';
 import './App.css';
 
 interface ToastState {
@@ -20,6 +21,7 @@ interface ToastState {
 
 const App: React.FC = () => {
   const [customName, setCustomName] = useState('');
+  const [customNameError, setCustomNameError] = useState<string | null>(null);
   const [advancedMode, setAdvancedMode] = useState(false);
   const [selectionCount, setSelectionCount] = useState(0);
   const [preferences, setPreferences] = useState<SavedPreferences | null>(null);
@@ -36,11 +38,17 @@ const App: React.FC = () => {
   // Listen for messages from plugin
   useEffect(() => {
     window.onmessage = (event) => {
+      if (!event.data || !event.data.pluginMessage) return;
+
       const msg = event.data.pluginMessage as PluginMessage;
 
       switch (msg.type) {
         case 'selection-changed':
           setSelectionCount(msg.count);
+          break;
+
+        case 'invalid-custom-name':
+          setCustomNameError(msg.message);
           break;
 
         case 'preferences-loaded':
@@ -77,10 +85,17 @@ const App: React.FC = () => {
   }, []);
 
   const applyPreset = (preset: PresetConfig) => {
+    const result = validateCustomName(customName);
+    if (!result.valid) {
+      setCustomNameError(result.error ?? CUSTOM_NAME_ERROR);
+      return;
+    }
+    setCustomNameError(null);
+
     const message: UIMessage = {
       type: 'apply-preset',
       preset,
-      customName: customName.trim() || undefined,
+      customName: result.value,
       advancedMode,
     };
     parent.postMessage({ pluginMessage: message }, '*');
@@ -217,13 +232,22 @@ const App: React.FC = () => {
               <label className="app__section-label">Custom Name (optional)</label>
               <Input
                 value={customName}
-                onChange={setCustomName}
+                onChange={(value) => {
+                  setCustomName(value);
+                  if (customNameError) setCustomNameError(null);
+                }}
                 placeholder="e.g., icon-home"
                 disabled={!hasSelection}
               />
-              <p className="app__hint">
-                Leave empty to use default asset name
-              </p>
+              {customNameError ? (
+                <p className="app__hint app__hint--error" role="alert">
+                  {customNameError}
+                </p>
+              ) : (
+                <p className="app__hint">
+                  Leave empty to use default asset name
+                </p>
+              )}
             </section>
 
             {/* Advanced Mode Toggle */}
