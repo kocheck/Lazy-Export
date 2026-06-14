@@ -287,6 +287,7 @@ const App: React.FC = () => {
           message={toast.message}
           type={toast.type}
           error={toast.error}
+          metadata={toast.metadata}
           onClose={() => setToast(null)}
         />
       )}
