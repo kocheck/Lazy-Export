@@ -22,7 +22,7 @@ The audit baseline was **executed, not estimated**, in this worktree at `082adbb
 | Plan | Title | Findings | Effort | Depends on | Status |
 |------|-------|----------|--------|------------|--------|
 | [001](001-verification-baseline.md) | Verification baseline (typecheck + tests green + CI) | F1, F3-typings | L | — | DONE |
-| [002](002-figma-iframe-feedback.md) | Figma-iframe feedback (replace `alert`/`window.open`) | F2, F3-metadata | M | 001 | PLANNED |
+| [002](002-figma-iframe-feedback.md) | Figma-iframe feedback (replace `alert`/`window.open`) | F2, F3-metadata | M | 001 | DONE |
 | [003](003-harden-message-handler.md) | Harden UI message handler + `customName` contract | F3, F10 | S | 001 | PLANNED |
 | [004](004-remove-legacy-artifacts.md) | Remove legacy v1 artifacts + dead config | F4, F9 | S | 001 | PLANNED |
 | [005](005-persist-preferences.md) | Persist Advanced Mode + wire `lastUsedPreset` | F5, D1 | S | 001 | PLANNED |
