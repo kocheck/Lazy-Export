@@ -58,6 +58,10 @@ export type UIMessage =
     }
   | {
       type: 'get-preferences';
+    }
+  | {
+      type: 'open-external-url';
+      url: string;
     };
 
 // Messages from Plugin to UI
