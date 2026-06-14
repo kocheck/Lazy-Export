@@ -63,6 +63,10 @@
   margin-top: 6px;
 }
 
+.app__hint--error {
+  color: var(--figma-color-text-danger);
+}
+
 .app__info {
   padding: 12px;
   background-color: var(--figma-color-bg-secondary);

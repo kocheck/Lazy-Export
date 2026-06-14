@@ -269,8 +269,7 @@ describe('apply-preset defensive customName guard', () => {
 
     expect(node.exportSettings).toEqual([]);
     expect(mock.ui.postMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'invalid-custom-name' })
+      expect.objectContaining({ type: 'invalid-custom-name', message: CUSTOM_NAME_ERROR })
     );
-    void CUSTOM_NAME_ERROR;
   });
 });
