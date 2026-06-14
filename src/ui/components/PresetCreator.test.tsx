@@ -96,3 +96,61 @@ describe('PresetCreator', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('PresetCreator metadata toggles', () => {
+  it('defaults both toggles to off for a new preset and saves false', () => {
+    const onSave = vi.fn();
+    render(<PresetCreator onSave={onSave} onCancel={vi.fn()} />);
+
+    const metadata = screen.getByLabelText('Generate Metadata') as HTMLInputElement;
+    const directory = screen.getByLabelText('Use Directory Structure') as HTMLInputElement;
+    expect(metadata.checked).toBe(false);
+    expect(directory.checked).toBe(false);
+
+    fireEvent.change(screen.getByPlaceholderText(/My Custom Preset/i), {
+      target: { value: 'New Preset' },
+    });
+    fireEvent.click(screen.getByText('Save Preset'));
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+    const saved = onSave.mock.calls[0][0] as CustomPreset;
+    expect(saved.generateMetadata).toBe(false);
+    expect(saved.directoryStructure).toBe(false);
+  });
+
+  it('reflects existingPreset flags when editing', () => {
+    const baseExisting: CustomPreset = {
+      id: 'custom-1',
+      name: 'My Preset',
+      platform: 'iOS',
+      icon: '⚙️',
+      settings: [{ format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } }],
+      isCustom: true,
+      createdAt: 123,
+      generateMetadata: true,
+      directoryStructure: true,
+    };
+    render(<PresetCreator onSave={vi.fn()} onCancel={vi.fn()} existingPreset={baseExisting} />);
+
+    const metadata = screen.getByLabelText('Generate Metadata') as HTMLInputElement;
+    const directory = screen.getByLabelText('Use Directory Structure') as HTMLInputElement;
+    expect(metadata.checked).toBe(true);
+    expect(directory.checked).toBe(true);
+  });
+
+  it('saves the toggled-on values', () => {
+    const onSave = vi.fn();
+    render(<PresetCreator onSave={onSave} onCancel={vi.fn()} />);
+
+    fireEvent.change(screen.getByPlaceholderText(/My Custom Preset/i), {
+      target: { value: 'Toggled Preset' },
+    });
+    fireEvent.click(screen.getByLabelText('Generate Metadata'));
+    fireEvent.click(screen.getByLabelText('Use Directory Structure'));
+    fireEvent.click(screen.getByText('Save Preset'));
+
+    const saved = onSave.mock.calls[0][0] as CustomPreset;
+    expect(saved.generateMetadata).toBe(true);
+    expect(saved.directoryStructure).toBe(true);
+  });
+});
