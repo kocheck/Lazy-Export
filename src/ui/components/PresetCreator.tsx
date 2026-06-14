@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CustomPreset, ExportFormat, ExportSetting, Platform } from '../../shared/types';
 import { Input } from './Input';
 import { Button } from './Button';
+import { Toggle } from './Toggle';
 import './PresetCreator.css';
 
 interface PresetCreatorProps {
@@ -25,6 +26,13 @@ export const PresetCreator: React.FC<PresetCreatorProps> = ({
     existingPreset?.settings || [
       { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
     ]
+  );
+
+  const [generateMetadata, setGenerateMetadata] = useState(
+    existingPreset?.generateMetadata ?? false
+  );
+  const [directoryStructure, setDirectoryStructure] = useState(
+    existingPreset?.directoryStructure ?? false
   );
 
   const addSetting = () => {
@@ -56,8 +64,8 @@ export const PresetCreator: React.FC<PresetCreatorProps> = ({
       settings,
       isCustom: true,
       createdAt: existingPreset?.createdAt || Date.now(),
-      generateMetadata: false,
-      directoryStructure: false,
+      generateMetadata,
+      directoryStructure,
     };
 
     onSave(preset);
@@ -142,6 +150,19 @@ export const PresetCreator: React.FC<PresetCreatorProps> = ({
             + Add Export Setting
           </button>
         </div>
+      </div>
+
+      <div className="preset-creator__field">
+        <Toggle
+          checked={generateMetadata}
+          onChange={setGenerateMetadata}
+          label="Generate Metadata"
+        />
+        <Toggle
+          checked={directoryStructure}
+          onChange={setDirectoryStructure}
+          label="Use Directory Structure"
+        />
       </div>
 
       <div className="preset-creator__actions">
