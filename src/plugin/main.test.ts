@@ -13,6 +13,7 @@ import {
   savePreferences,
 } from './core.js';
 import type { ExportSetting, SavedPreferences } from '../shared/types.js';
+import { DEFAULT_PRESETS } from '../shared/presets.js';
 
 describe('loadPreferences / savePreferences', () => {
   let figmaMock: FigmaMock;
@@ -188,5 +189,33 @@ describe('clearExportSettings', () => {
     clearExportSettings([node]);
     expect(node.exportSettings).toHaveLength(0);
     expect(figmaMock.notify).toHaveBeenCalledWith('🗑️ Export settings cleared from 1 node(s)');
+  });
+});
+
+describe('Apply PDF quick-action', () => {
+  let figmaMock: ReturnType<typeof installFigmaMock>;
+
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+  });
+
+  it('resolves the pdf preset from DEFAULT_PRESETS', () => {
+    const preset = DEFAULT_PRESETS.find((p) => p.id === 'pdf');
+    expect(preset).toBeDefined();
+    expect(preset?.platform).toBe('PDF');
+    expect(preset?.settings).toEqual([{ format: 'PDF', suffix: '' }]);
+  });
+
+  it('applies the pdf preset settings to the selection via applyExportSettings', () => {
+    const preset = DEFAULT_PRESETS.find((p) => p.id === 'pdf');
+    expect(preset).toBeDefined();
+
+    const node = createMockNode();
+    applyExportSettings([node], preset!.settings, undefined, false);
+
+    expect(node.exportSettings.length).toBe(1);
+    expect(node.exportSettings[0].format).toBe('PDF');
+    expect(node.exportSettings[0].suffix).toBe('');
+    expect(figmaMock.notify).toHaveBeenCalledWith(expect.stringContaining('1 node'));
   });
 });
