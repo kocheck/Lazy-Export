@@ -271,12 +271,10 @@ Before submitting a PR, test these scenarios:
 - [ ] Modal opens/closes correctly
 - [ ] Forms validate properly
 
-### Future: Automated Testing
+### Automated Testing
 
-We plan to add:
-- Unit tests with Jest
-- Component tests with React Testing Library
-- E2E tests with Figma Plugin API mocks
+Tests exist and are required for all new code. We use **Vitest** + **React Testing Library**.
+See `TESTING.md` for how to run and write tests.
 
 ---
 

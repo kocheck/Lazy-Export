@@ -700,7 +700,7 @@ The plugin uses **Vitest** + **React Testing Library**. See `TESTING.md` for how
 write tests. Representative examples:
 
 ```typescript
-// Unit tests (Jest)
+// Unit tests (Vitest)
 describe('applyExportSettings', () => {
   it('should apply settings to all nodes', () => {
     const nodes = [createMockNode(), createMockNode()];
@@ -715,7 +715,7 @@ describe('applyExportSettings', () => {
 // Component tests (React Testing Library)
 describe('PresetCard', () => {
   it('should call onClick when clicked', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     const { getByRole } = render(
       <PresetCard preset={mockPreset} onClick={handleClick} />
     );

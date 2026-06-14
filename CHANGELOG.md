@@ -41,7 +41,7 @@ This version is a complete modernization of the plugin from the ground up.
 
 ### Changed
 
-- **Build System**: Rollup v1 → Vite 5 + esbuild
+- **Build System**: Rollup v1 → Vite 7 + esbuild
 - **Framework**: Svelte 3 → React 18
 - **TypeScript**: ES6 → ES2020 with strict mode
 - **UI Pattern**: Dropdown menus → Direct preset cards
