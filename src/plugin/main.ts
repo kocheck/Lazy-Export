@@ -14,6 +14,7 @@
 
 import { UIMessage, PluginMessage, SavedPreferences, ExportSetting } from '../shared/types';
 import { DEFAULT_PRESETS } from '../shared/presets';
+import { validateCustomName } from '../shared/customName';
 
 /**
  * Global error handler
@@ -305,10 +306,21 @@ figma.ui.onmessage = async (msg: UIMessage) => {
     switch (msg.type) {
       case 'apply-preset': {
         const { preset, customName, advancedMode } = msg;
+
+        const nameResult = validateCustomName(customName ?? '');
+        if (!nameResult.valid) {
+          const rejection: PluginMessage = {
+            type: 'invalid-custom-name',
+            message: nameResult.error ?? 'Invalid custom name',
+          };
+          figma.ui.postMessage(rejection);
+          break;
+        }
+
         applyExportSettings(
           figma.currentPage.selection,
           preset.settings,
-          customName,
+          nameResult.value,
           advancedMode,
           preset.platform
         );

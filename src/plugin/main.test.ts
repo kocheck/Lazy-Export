@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { installFigmaMock, createMockNode, FigmaMock } from '../test/figma-mock.js';
 import type { SavedPreferences } from '../shared/types.js';
+import { CUSTOM_NAME_ERROR } from '../shared/customName.js';
 
 describe('Plugin Storage', () => {
   let figmaMock: FigmaMock;
@@ -235,5 +236,41 @@ describe('open-external-url message', () => {
 
     expect(openExternal).toHaveBeenCalledWith('https://example.com/issue');
     void figmaMock;
+  });
+});
+
+describe('apply-preset defensive customName guard', () => {
+  it('rejects an invalid customName without applying export settings', async () => {
+    vi.resetModules();
+    const { installFigmaMock, createMockNode } = await import('../test/figma-mock.js');
+    const mock = installFigmaMock();
+
+    const node = createMockNode();
+    (globalThis as any).figma.currentPage.selection = [node];
+
+    await import('./main.js');
+
+    const handler = (globalThis as any).figma.ui.onmessage;
+
+    await handler(
+      {
+        type: 'apply-preset',
+        preset: {
+          id: 'ios',
+          name: 'iOS',
+          platform: 'iOS',
+          settings: [{ format: 'PNG', suffix: '@1x' }],
+        },
+        customName: 'bad/name',
+        advancedMode: false,
+      },
+      { origin: '*', sourceFrameId: '' }
+    );
+
+    expect(node.exportSettings).toEqual([]);
+    expect(mock.ui.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'invalid-custom-name' })
+    );
+    void CUSTOM_NAME_ERROR;
   });
 });
