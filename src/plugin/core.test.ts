@@ -2,7 +2,7 @@
  * Tests for the plugin message dispatcher (handleUIMessage) and error path.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { installFigmaMock, createMockNode, FigmaMock } from '../test/figma-mock.js';
 import { handleUIMessage, handlePluginError, generateIOSContentsJSON, applyExportSettings } from './core.js';
 import type { CustomPreset, ExportSetting, PresetConfig, SavedPreferences } from '../shared/types.js';
@@ -231,6 +231,38 @@ describe('preference mutation queue', () => {
 
     const stored = (await figmaMock.clientStorage.getAsync('preferences')) as SavedPreferences;
     expect(stored.customPresets.some((p) => p.id === 'b')).toBe(true);
+  });
+});
+
+describe('open-external-url handler', () => {
+  let figmaMock: FigmaMock;
+  const openExternalMock = vi.fn();
+
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+    // openExternal is not in FigmaMock; add it directly to the global so core.ts can call it.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global as any).figma.openExternal = openExternalMock;
+    openExternalMock.mockReset();
+    figmaMock.ui.postMessage.mockReset();
+  });
+
+  it('allows an https:// URL and calls figma.openExternal exactly once', async () => {
+    const url = 'https://github.com/example/repo/issues/1';
+    await handleUIMessage({ type: 'open-external-url', url });
+    expect(openExternalMock).toHaveBeenCalledOnce();
+    expect(openExternalMock).toHaveBeenCalledWith(url);
+    expect(figmaMock.ui.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('rejects a non-web URL without calling openExternal and posts an error', async () => {
+    // javascript: scheme used only as test input — never executed
+    await handleUIMessage({ type: 'open-external-url', url: 'javascript:void(0)' });
+    expect(openExternalMock).not.toHaveBeenCalled();
+    expect(figmaMock.ui.postMessage).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Refused to open a non-web URL.',
+    });
   });
 });
 
