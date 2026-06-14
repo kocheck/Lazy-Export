@@ -65,12 +65,11 @@ export function generateIOSContentsJSON(assetName: string, settings: ExportSetti
   const images = settings
     .filter((s) => s.format === 'PNG' && s.constraint?.type === 'SCALE')
     .map((s) => {
-      const scale = VALID_IOS_SCALES[String(s.constraint!.value)] ?? `${s.constraint!.value}x`;
-      const suffix = s.suffix ?? '';
+      const value = s.constraint!.value;
       return {
-        filename: `${assetName}${suffix}.png`,
+        filename: `${assetName}${iosScaleMarker(value)}.png`,
         idiom: 'universal',
-        scale,
+        scale: VALID_IOS_SCALES[String(value)] ?? `${value}x`,
       };
     });
 
