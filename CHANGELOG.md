@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0] - 2025-12-21
+## [2.0.0] - 2026-06-14
 
 ### 🎉 Complete Rewrite
 
@@ -34,7 +34,7 @@ This version is a complete modernization of the plugin from the ground up.
 #### **Technical**
 - **React 18** - Modern component-based UI
 - **TypeScript 5** - Full type safety throughout
-- **Vite 5** - Lightning-fast build tooling
+- **Vite 7** - Lightning-fast build tooling
 - **esbuild** - Optimized plugin compilation
 - **Type-Safe Messaging** - Strict types for UI ↔ Plugin communication
 - **Optimistic UI Updates** - Instant feedback on user actions
