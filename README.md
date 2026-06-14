@@ -35,6 +35,7 @@ Don't even open the plugin window. Just hit `Cmd + /` (or `Cmd + P`) and type:
 - `Lazy Export: Apply iOS`
 - `Lazy Export: Apply Android`
 - `Lazy Export: Apply Web`
+- `Lazy Export: Apply PDF`
 
 It applies the settings instantly. It’s almost *too* fast.
 
