@@ -4,7 +4,7 @@ This document summarizes the testing infrastructure and error reporting system i
 
 ## Overview
 
-Successfully implemented comprehensive testing infrastructure and privacy-focused error reporting, achieving 52.08% code coverage and 107 passing tests.
+Successfully implemented comprehensive testing infrastructure and privacy-focused error reporting. See TESTING.md and `npm run test:coverage` for current numbers (107 was the v2.0 milestone figure).
 
 ## What Was Implemented
 
@@ -45,7 +45,7 @@ ui/components/     |   92.15%|    90.32%|   94.73%|   95.91%
 > Snapshot from the v2.0 testing milestone; see TESTING.md and `npm run test:coverage` for current numbers.
 
 #### Test Files Created
-1. `src/plugin/main.test.ts` - 11 tests
+1. `src/plugin/main.test.ts` — integration tests (see TESTING.md for current count)
    - Storage operations (save/load preferences)
    - Export settings application
    - iOS metadata generation
@@ -61,7 +61,7 @@ ui/components/     |   92.15%|    90.32%|   94.73%|   95.91%
    - Error context handling
    - Markdown formatting
 
-3. `src/ui/components/*.test.tsx` - 49 tests
+3. `src/ui/components/*.test.tsx` — component tests (see TESTING.md for current count)
    - Button: Click handlers, variants, disabled state
    - Input: Value changes, placeholders, disabled state
    - Toggle: Checked state, onChange, disabled state
@@ -222,16 +222,15 @@ Created comprehensive documentation:
   "@testing-library/jest-dom": "^6.9.1",
   "@testing-library/react": "^16.3.1",
   "@testing-library/user-event": "^14.6.1",
-  "@vitest/coverage-v8": "^4.0.16",
-  "@vitest/ui": "^4.0.16",
-  "happy-dom": "^20.0.11",
+  "@vitest/coverage-v8": "^4.1.8",
+  "@vitest/ui": "^4.1.8",
   "jsdom": "^27.4.0",
-  "vitest": "^4.0.16"
+  "vitest": "^4.1.8"
 }
 ```
 
 **Total package size impact**: 0 bytes (all devDependencies)
-**Production bundle impact**: 0 KB (unchanged at 170.46 KB)
+**Production bundle impact**: 0 KB (see `dist/index.html` size for current figure)
 
 ## Quality Metrics
 
@@ -241,13 +240,12 @@ Created comprehensive documentation:
 - **Error Handling**: Basic try/catch
 - **Error Reporting**: Console only
 
-### After Implementation
-- **Tests**: 107 passing
-- **Coverage**: 52.08% on business logic
+### After Implementation (v2.0 milestone figures)
+- **Tests**: 107 passing (current: 176+ — see TESTING.md)
+- **Coverage**: 52.08% on business logic (current: ~75% — run `npm run test:coverage`)
 - **Error Handling**: Comprehensive with ErrorBoundary + global handlers
 - **Error Reporting**: Privacy-focused with sanitization + GitHub integration
-- **Security**: CodeQL scan passed (0 alerts)
-- **Bundle Size**: 170.46 kB (unchanged)
+- **Bundle Size**: 170.46 kB (current: ~176 kB — see `wc -c dist/index.html`)
 
 ## Example Error Report
 
