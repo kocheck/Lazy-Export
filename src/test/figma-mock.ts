@@ -5,15 +5,15 @@
  * It includes clientStorage, UI messaging, and node selection capabilities.
  */
 
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
 export interface FigmaMock {
   clientStorage: {
-    getAsync: ReturnType<typeof vi.fn>;
-    setAsync: ReturnType<typeof vi.fn>;
+    getAsync: Mock<(key: string) => Promise<unknown>>;
+    setAsync: Mock<(key: string, value: unknown) => Promise<void>>;
   };
   ui: {
-    postMessage: ReturnType<typeof vi.fn>;
+    postMessage: Mock<(pluginMessage: unknown) => void>;
   };
   currentPage: {
     selection: SceneNode[];
@@ -22,9 +22,9 @@ export interface FigmaMock {
     name: string;
     id: string;
   } | null;
-  notify: ReturnType<typeof vi.fn>;
-  showUI: ReturnType<typeof vi.fn>;
-  on: ReturnType<typeof vi.fn>;
+  notify: Mock<(message: string, options?: unknown) => unknown>;
+  showUI: Mock<(html: string, options?: unknown) => void>;
+  on: Mock<(type: string, callback: () => void) => void>;
 }
 
 /**
