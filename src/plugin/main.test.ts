@@ -130,7 +130,7 @@ describe('applyExportSettings', () => {
 
   it('advanced iOS builds the imageset path and posts export-success with Contents.json', () => {
     const node = createMockNode();
-    applyExportSettings([node], [{ format: 'PNG', suffix: '@2x' }], 'icon-home', true, 'iOS');
+    applyExportSettings([node], [{ format: 'PNG', suffix: '@2x' }], 'icon-home', true, 'iOS', true, true);
 
     expect(node.exportSettings[0].suffix).toBe('/icon-home.imageset/icon-home@2x');
 
@@ -154,7 +154,9 @@ describe('applyExportSettings', () => {
       [{ format: 'PNG', suffix: 'drawable-xhdpi' }],
       'icon-home',
       true,
-      'Android'
+      'Android',
+      false,
+      true
     );
 
     expect(node.exportSettings[0].suffix).toBe('/drawable-xhdpi/icon-home');
@@ -217,5 +219,67 @@ describe('Apply PDF quick-action', () => {
     expect(node.exportSettings[0].format).toBe('PDF');
     expect(node.exportSettings[0].suffix).toBe('');
     expect(figmaMock.notify).toHaveBeenCalledWith(expect.stringContaining('1 node'));
+  });
+});
+
+describe('applyExportSettings — per-preset flag precedence', () => {
+  let figmaMock: FigmaMock;
+
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+  });
+
+  function contentsJsonPosted(): boolean {
+    return figmaMock.ui.postMessage.mock.calls.some(
+      (call) =>
+        call[0] &&
+        typeof call[0] === 'object' &&
+        call[0].type === 'export-success' &&
+        call[0].metadata &&
+        typeof call[0].metadata.iosContentsJson === 'string'
+    );
+  }
+
+  const iosSettings = [{ format: 'PNG' as const, suffix: '@1x' }];
+
+  it('advanced ON + generateMetadata OFF ⇒ no Contents.json message', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, 'asset', true, 'iOS', false, true);
+    expect(contentsJsonPosted()).toBe(false);
+  });
+
+  it('advanced ON + generateMetadata ON (iOS) ⇒ Contents.json message posted', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, 'asset', true, 'iOS', true, true);
+    expect(contentsJsonPosted()).toBe(true);
+  });
+
+  it('advanced ON + directoryStructure OFF ⇒ plain custom-name suffix', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, 'asset', true, 'iOS', false, false);
+    const applied = node.exportSettings[0];
+    expect(applied.suffix).toBe('/asset@1x');
+    expect(applied.suffix).not.toContain('.imageset');
+  });
+
+  it('advanced ON + directoryStructure ON (iOS) ⇒ .imageset folder path', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, 'asset', true, 'iOS', false, true);
+    const applied = node.exportSettings[0];
+    expect(applied.suffix).toBe('/asset.imageset/asset@1x');
+  });
+
+  it('both ON (iOS) ⇒ Contents.json message AND .imageset path', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, 'asset', true, 'iOS', true, true);
+    expect(contentsJsonPosted()).toBe(true);
+    expect(node.exportSettings[0].suffix).toBe('/asset.imageset/asset@1x');
+  });
+
+  it('advanced OFF ⇒ flags ignored, no Contents.json (default-preset behavior unchanged)', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, undefined, false, 'iOS');
+    expect(contentsJsonPosted()).toBe(false);
+    expect(node.exportSettings[0].suffix).toBe('@1x');
   });
 });
