@@ -20,6 +20,11 @@ import { validateCustomName } from '../shared/customName';
 
 const VALID_IOS_SCALES: Record<string, string> = { '1': '1x', '2': '2x', '3': '3x' };
 
+/** Canonical iOS scale filename marker derived from a SCALE constraint value (e.g. 2 → "@2x"). */
+function iosScaleMarker(constraintValue: number): string {
+  return `@${constraintValue}x`;
+}
+
 /**
  * Validate that `settings` can produce a valid iOS Contents.json.
  * Returns `null` on success, or a user-facing error string on failure.
@@ -182,7 +187,10 @@ export function applyExportSettings(
       // Apply advanced directory structure (only when the preset opts in)
       if (advancedMode && directoryStructure && platform) {
         if (platform === 'iOS') {
-          const scale = setting.suffix || '@1x';
+          const scale =
+            setting.constraint?.type === 'SCALE'
+              ? iosScaleMarker(setting.constraint.value)
+              : setting.suffix || '@1x';
           suffix = `/${assetName}.imageset/${assetName}${scale}`;
         } else if (platform === 'Android') {
           const density = setting.suffix || 'drawable-mdpi';
