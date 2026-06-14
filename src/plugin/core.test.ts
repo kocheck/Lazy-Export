@@ -197,13 +197,11 @@ describe('preference mutation queue', () => {
   it('serialises concurrent save-preset messages — no preset is lost', async () => {
     // Make getAsync return a cloned snapshot so concurrent reads see stale data,
     // simulating the race that the queue prevents.
-    let writeCount = 0;
     figmaMock.clientStorage.setAsync.mockImplementation(async (_key: string, value: unknown) => {
       await new Promise((r) => setTimeout(r, 5));
       figmaMock.clientStorage.getAsync.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(value))
       );
-      writeCount++;
     });
 
     const presetA = makeCustomPreset({ id: 'a', name: 'A' });
@@ -241,7 +239,6 @@ describe('open-external-url handler', () => {
   beforeEach(() => {
     figmaMock = installFigmaMock();
     // openExternal is not in FigmaMock; add it directly to the global so core.ts can call it.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).figma.openExternal = openExternalMock;
     openExternalMock.mockReset();
     figmaMock.ui.postMessage.mockReset();

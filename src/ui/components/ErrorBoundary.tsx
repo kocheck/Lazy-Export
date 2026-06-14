@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
     };
   }
 
-  static getDerivedStateFromError(_error: Error): Partial<State> {
+  static getDerivedStateFromError(_: Error): Partial<State> {
     return { hasError: true };
   }
 
