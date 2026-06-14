@@ -34,6 +34,7 @@ export const PresetCreator: React.FC<PresetCreatorProps> = ({
   const [directoryStructure, setDirectoryStructure] = useState(
     existingPreset?.directoryStructure ?? false
   );
+  const [nameError, setNameError] = useState('');
 
   const addSetting = () => {
     setSettings([
@@ -52,9 +53,10 @@ export const PresetCreator: React.FC<PresetCreatorProps> = ({
 
   const handleSave = () => {
     if (!name.trim()) {
-      alert('Please enter a preset name');
+      setNameError('Please enter a preset name');
       return;
     }
+    setNameError('');
 
     const preset: CustomPreset = {
       id: existingPreset?.id || `custom-${Date.now()}`,
@@ -75,7 +77,14 @@ export const PresetCreator: React.FC<PresetCreatorProps> = ({
     <div className="preset-creator">
       <div className="preset-creator__field">
         <label className="preset-creator__label">Preset Name</label>
-        <Input value={name} onChange={setName} placeholder="e.g., My Custom Preset" />
+        <Input
+          value={name}
+          onChange={(v) => { setName(v); setNameError(''); }}
+          placeholder="e.g., My Custom Preset"
+        />
+        {nameError && (
+          <p className="app__hint app__hint--error" role="alert">{nameError}</p>
+        )}
       </div>
 
       <div className="preset-creator__field">
