@@ -170,6 +170,22 @@ function generateIOSContentsJSON(assetName, settings) {
   });
   return JSON.stringify({ images, info: { author: "Lazy Export", version: 1 } }, null, 2);
 }
+var VALID_PLATFORMS = ["iOS", "Android", "Web", "PDF"];
+var MAX_PRESET_SETTINGS = 50;
+function validateCustomPreset(p) {
+  if (typeof p !== "object" || p === null) return { valid: false, error: "Preset is not an object." };
+  const preset = p;
+  if (typeof preset.id !== "string" || preset.id.length === 0)
+    return { valid: false, error: "Preset id must be a non-empty string." };
+  if (typeof preset.name !== "string" || preset.name.length === 0)
+    return { valid: false, error: "Preset name must be a non-empty string." };
+  if (typeof preset.platform !== "string" || !VALID_PLATFORMS.includes(preset.platform))
+    return { valid: false, error: "Preset platform is invalid." };
+  if (!Array.isArray(preset.settings) || preset.settings.length > MAX_PRESET_SETTINGS)
+    return { valid: false, error: "Preset settings are invalid." };
+  if (preset.isCustom !== true) return { valid: false, error: "Preset must be a custom preset." };
+  return { valid: true };
+}
 var _prefQueue = Promise.resolve();
 function enqueuePrefMutation(fn) {
   const next = _prefQueue.then(fn, fn);
@@ -313,6 +329,15 @@ async function handleUIMessage(msg) {
       }
       case "save-preset": {
         const preset = msg.preset;
+        const validation = validateCustomPreset(preset);
+        if (!validation.valid) {
+          const rejection = {
+            type: "error",
+            message: validation.error ?? "Invalid preset"
+          };
+          figma.ui.postMessage(rejection);
+          break;
+        }
         await enqueuePrefMutation(async () => {
           const preferences = await loadPreferences();
           const existingIndex = preferences.customPresets.findIndex((p) => p.id === preset.id);
