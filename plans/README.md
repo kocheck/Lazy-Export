@@ -26,7 +26,7 @@ The audit baseline was **executed, not estimated**, in this worktree at `082adbb
 | [003](003-harden-message-handler.md) | Harden UI message handler + `customName` contract | F3, F10 | S | 001 | DONE |
 | [004](004-remove-legacy-artifacts.md) | Remove legacy v1 artifacts + dead config | F4, F9 | S | 001 | DONE |
 | [005](005-persist-preferences.md) | Persist Advanced Mode + wire `lastUsedPreset` | F5, D1 | S | 001 | DONE |
-| [006](006-dependency-security.md) | Dependency security bumps | F6 | M | 001 | PLANNED |
+| [006](006-dependency-security.md) | Dependency security bumps | F6 | M | 001 | DONE |
 | [007](007-docs-truth-up.md) | Docs truth-up + deprecated CI actions | F7, F6-docs | S | partial (see note) | PLANNED |
 | [008](008-core-path-tests.md) | Core-path tests (with a real test seam) | F8, F7 | M | 001 | PLANNED |
 | [009](009-apply-pdf-quick-action.md) | Add `applyPDF` quick-action | D4 | S | 001 | PLANNED |
