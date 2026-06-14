@@ -251,9 +251,7 @@ describe('App optimistic CRUD', () => {
     window.onmessage = null;
   });
 
-  it('optimistically removes a preset on delete and posts delete-preset', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-
+  it('optimistically removes a preset on delete after two-step confirm', () => {
     render(<App />);
     postFromPlugin({ type: 'selection-changed', count: 1 });
     postFromPlugin({
@@ -263,8 +261,16 @@ describe('App optimistic CRUD', () => {
 
     expect(screen.getByText('My Custom Preset')).toBeInTheDocument();
 
+    // First click arms the button — no deletion yet.
     fireEvent.click(screen.getByTitle('Delete preset'));
+    expect(screen.getByText('My Custom Preset')).toBeInTheDocument();
+    const sentAfterArm = postSpy.mock.calls.filter(
+      (c: [unknown, ...unknown[]]) => (c[0] as { pluginMessage: UIMessage }).pluginMessage.type === 'delete-preset'
+    );
+    expect(sentAfterArm).toHaveLength(0);
 
+    // Second click (confirm) deletes.
+    fireEvent.click(screen.getByTitle('Click again to confirm deletion'));
     expect(screen.queryByText('My Custom Preset')).not.toBeInTheDocument();
 
     const sent = postSpy.mock.calls.map(
@@ -273,9 +279,7 @@ describe('App optimistic CRUD', () => {
     expect(sent).toContainEqual({ type: 'delete-preset', presetId: 'custom-1' });
   });
 
-  it('does not delete when confirm is cancelled', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
-
+  it('does not delete when the first (arm) click is not followed by confirm', () => {
     render(<App />);
     postFromPlugin({ type: 'selection-changed', count: 1 });
     postFromPlugin({
@@ -283,6 +287,7 @@ describe('App optimistic CRUD', () => {
       preferences: { customPresets: [examplePreset], advancedModeEnabled: false },
     });
 
+    // Only one click — arms but doesn't confirm.
     fireEvent.click(screen.getByTitle('Delete preset'));
 
     expect(screen.getByText('My Custom Preset')).toBeInTheDocument();

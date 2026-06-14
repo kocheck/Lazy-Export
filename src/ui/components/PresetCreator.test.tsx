@@ -2,25 +2,32 @@
  * Tests for PresetCreator component.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { PresetCreator } from './PresetCreator.js';
 import type { CustomPreset } from '../../shared/types.js';
 
 describe('PresetCreator', () => {
-  beforeEach(() => {
-    // handleSave uses alert() for the empty-name validation path.
-    global.alert = vi.fn();
-  });
-
-  it('blocks save and alerts when the name is empty', () => {
+  it('blocks save and shows an inline error when the name is empty', () => {
     const onSave = vi.fn();
     render(<PresetCreator onSave={onSave} onCancel={vi.fn()} />);
 
     fireEvent.click(screen.getByText('Save Preset'));
 
-    expect(global.alert).toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Please enter a preset name');
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('clears the inline error when the name is typed after a failed save', () => {
+    render(<PresetCreator onSave={vi.fn()} onCancel={vi.fn()} />);
+
+    fireEvent.click(screen.getByText('Save Preset'));
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText(/My Custom Preset/i), {
+      target: { value: 'a' },
+    });
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('saves a well-formed custom preset when a name is provided', () => {
