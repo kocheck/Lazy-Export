@@ -346,6 +346,15 @@ async function runCommand(): Promise<void> {
       break;
     }
 
+    case 'applyPDF': {
+      const preset = DEFAULT_PRESETS.find((p) => p.id === 'pdf');
+      if (preset) {
+        applyExportSettings(figma.currentPage.selection, preset.settings, undefined, false);
+      }
+      figma.closePlugin();
+      break;
+    }
+
     case 'clearExport': {
       clearExportSettings(figma.currentPage.selection);
       figma.closePlugin();
