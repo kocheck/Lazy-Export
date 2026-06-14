@@ -74,6 +74,8 @@ When importing into Figma, point to:
 src/
  ├── ui/          # React app (The pretty part)
  ├── plugin/      # Figma sandbox (The brain)
+ │   ├── main.ts  #   Thin entry shim — registers listeners and calls initPlugin()
+ │   └── core.ts  #   All plugin logic: handleUIMessage() and its cases
  └── shared/      # Shared types (The glue)
 ```
 

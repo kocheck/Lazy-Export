@@ -246,7 +246,7 @@ function calculate(x: number): number {
 - **Use useMemo** for derived state
 - **Use useCallback** for event handlers passed to children
 - **Avoid inline object creation** in render (causes re-renders)
-- **Keep bundle size under 200kb** (currently ~165kb)
+- **Keep bundle size under 200kb** (currently ~176kb)
 
 ## Security Reminders
 
