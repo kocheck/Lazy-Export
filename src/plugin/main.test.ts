@@ -2,7 +2,7 @@
  * Tests for Plugin Main Logic
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { installFigmaMock, createMockNode, FigmaMock } from '../test/figma-mock.js';
 import type { SavedPreferences } from '../shared/types.js';
 
@@ -216,5 +216,24 @@ describe('Suffix and Path Formatting', () => {
     const expectedPath = `/${assetName}${suffix}`;
     
     expect(expectedPath).toBe('/icon-home@2x');
+  });
+});
+
+describe('open-external-url message', () => {
+  it('routes open-external-url through figma.openExternal', async () => {
+    const figmaMock = installFigmaMock();
+    const openExternal = vi.fn();
+    (globalThis as unknown as { figma: Record<string, unknown> }).figma.openExternal = openExternal;
+
+    await import('./main.js');
+
+    const handler = (globalThis as unknown as {
+      figma: { ui: { onmessage: (msg: unknown) => unknown } };
+    }).figma.ui.onmessage;
+
+    await handler({ type: 'open-external-url', url: 'https://example.com/issue' });
+
+    expect(openExternal).toHaveBeenCalledWith('https://example.com/issue');
+    void figmaMock;
   });
 });

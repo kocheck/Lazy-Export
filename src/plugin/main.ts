@@ -367,6 +367,11 @@ figma.ui.onmessage = async (msg: UIMessage) => {
         break;
       }
 
+      case 'open-external-url': {
+        figma.openExternal(msg.url);
+        break;
+      }
+
       default:
         console.warn('Unknown message type:', msg);
     }
