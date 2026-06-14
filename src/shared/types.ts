@@ -87,4 +87,8 @@ export type PluginMessage =
   | {
       type: 'success';
       message: string;
+    }
+  | {
+      type: 'invalid-custom-name';
+      message: string;
     };
