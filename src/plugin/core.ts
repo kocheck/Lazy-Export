@@ -104,7 +104,9 @@ export function applyExportSettings(
   settings: ExportSetting[],
   customName?: string,
   advancedMode: boolean = false,
-  platform?: string
+  platform?: string,
+  generateMetadata: boolean = false,
+  directoryStructure: boolean = false
 ): void {
   if (!nodes || nodes.length === 0) {
     figma.notify('⚠️ No nodes selected');
@@ -117,8 +119,8 @@ export function applyExportSettings(
     const exportSettings: ExportSettings[] = settings.map((setting): ExportSettings => {
       let suffix = setting.suffix || '';
 
-      // Apply advanced directory structure
-      if (advancedMode && platform) {
+      // Apply advanced directory structure (only when the preset opts in)
+      if (advancedMode && directoryStructure && platform) {
         if (platform === 'iOS') {
           const scale = setting.suffix || '@1x';
           suffix = `/${assetName}.imageset/${assetName}${scale}`;
@@ -157,8 +159,8 @@ export function applyExportSettings(
     node.exportSettings = exportSettings;
   });
 
-  // If iOS advanced mode, show info about Contents.json
-  if (advancedMode && platform === 'iOS') {
+  // If iOS advanced mode AND the preset opts into metadata, surface Contents.json
+  if (advancedMode && generateMetadata && platform === 'iOS') {
     const contentsJSON = generateiOSContentsJSON(assetName);
     const message: PluginMessage = {
       type: 'export-success',
@@ -225,7 +227,9 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
           preset.settings,
           nameResult.value,
           advancedMode,
-          preset.platform
+          preset.platform,
+          preset.generateMetadata ?? false,
+          preset.directoryStructure ?? false
         );
         break;
       }
