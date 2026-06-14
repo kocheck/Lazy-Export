@@ -30,7 +30,7 @@ The audit baseline was **executed, not estimated**, in this worktree at `082adbb
 | [007](007-docs-truth-up.md) | Docs truth-up + deprecated CI actions | F7, F6-docs | S | partial (see note) | DONE |
 | [008](008-core-path-tests.md) | Core-path tests (with a real test seam) | F8, F7 | M | 001 | DONE |
 | [009](009-apply-pdf-quick-action.md) | Add `applyPDF` quick-action | D4 | S | 001 | DONE |
-| [010](010-custom-preset-metadata-toggles.md) | Custom-preset metadata toggles (UI + plugin) | D3, F2-blocker | M | 001 | PLANNED |
+| [010](010-custom-preset-metadata-toggles.md) | Custom-preset metadata toggles (UI + plugin) | D3, F2-blocker | M | 001 | DONE |
 | [011](011-preset-import-export-spike.md) | Preset import/export — design spike | D2 | M | 001 | PLANNED |
 
 Set a row to `DONE` (or `BLOCKED` + one-line reason) when its plan completes. That is the
