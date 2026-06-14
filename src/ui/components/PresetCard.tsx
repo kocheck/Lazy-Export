@@ -6,9 +6,15 @@ interface PresetCardProps {
   preset: PresetConfig;
   onClick: () => void;
   disabled?: boolean;
+  isLastUsed?: boolean;
 }
 
-export const PresetCard: React.FC<PresetCardProps> = ({ preset, onClick, disabled = false }) => {
+export const PresetCard: React.FC<PresetCardProps> = ({
+  preset,
+  onClick,
+  disabled = false,
+  isLastUsed = false,
+}) => {
   const [isAnimating, setIsAnimating] = React.useState(false);
 
   // Derive unique formats
@@ -35,6 +41,11 @@ export const PresetCard: React.FC<PresetCardProps> = ({ preset, onClick, disable
       <div className="preset-card__content">
         <div className="preset-card__icon">{preset.icon}</div>
         <div className="preset-card__name">{preset.name}</div>
+        {isLastUsed && (
+          <div className="preset-card__last-used" title="Last used preset">
+            ★ Last used
+          </div>
+        )}
         <div className="preset-card__badges">
           {formats.map((format) => (
             <span key={format} className={`preset-card__badge preset-card__badge--${format.toLowerCase()}`}>

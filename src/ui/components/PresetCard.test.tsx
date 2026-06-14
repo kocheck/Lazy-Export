@@ -71,8 +71,20 @@ describe('PresetCard', () => {
   it('should be disabled attribute when disabled', () => {
     const onClick = vi.fn();
     render(<PresetCard preset={mockPreset} onClick={onClick} disabled />);
-    
+
     const button = screen.getByRole('button', { name: /Apply Test Preset/i });
     expect(button).toBeDisabled();
+  });
+
+  it('renders the last-used badge when isLastUsed is true', () => {
+    const onClick = vi.fn();
+    render(<PresetCard preset={mockPreset} onClick={onClick} isLastUsed />);
+    expect(screen.getByText(/Last used/i)).toBeInTheDocument();
+  });
+
+  it('does not render the last-used badge by default', () => {
+    const onClick = vi.fn();
+    render(<PresetCard preset={mockPreset} onClick={onClick} />);
+    expect(screen.queryByText(/Last used/i)).not.toBeInTheDocument();
   });
 });
