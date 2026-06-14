@@ -33,9 +33,22 @@ The audit baseline was **executed, not estimated**, in this worktree at `082adbb
 | [010](010-custom-preset-metadata-toggles.md) | Custom-preset metadata toggles (UI + plugin) | D3, F2-blocker | M | 001 | DONE |
 | [011](011-preset-import-export-spike.md) | Preset import/export — design spike | D2 | M | 001 | DONE |
 | [012](012-preset-import-export-build.md) | Preset import/export — build | D2 | M | 001, 011 | PLANNED |
+| [013](013-ios-contents-json-filename.md) | Fix iOS imageset/Contents.json filename derivation | F1′ | M | — | DONE |
+| [014](014-eslint-and-dialog-cleanup.md) | Add ESLint + remove stray `alert`/`confirm` | F2′, F3′ | M | — | DONE |
+| [015](015-openexternal-scheme-guard.md) | Guard `figma.openExternal` to http(s) | F5′ | S | — | DONE |
+| [016](016-docs-truth-up-round-2.md) | Docs truth-up round 2 (TESTING.md CI fiction) | F6′ | S | 014 (soft) | DONE |
+| [017](017-import-export-decisions-and-validator.md) | Import/export §7 decisions + shared preset validator | D1′ | S–M | — | DONE |
 
 Set a row to `DONE` (or `BLOCKED` + one-line reason) when its plan completes. That is the
 only edit a plan makes to this index.
+
+> **Second audit round (`df82c72`, 2026-06-14).** Plans `013`–`017` come from a `/improve deep`
+> re-audit at `df82c72` (after `001`–`011` landed; baseline was green: `tsc` 0 errors, `vitest`
+> 159 passing, `npm audit` 0). Their finding IDs are primed (`F1′…`, `D1′`) to distinguish them
+> from the first round's `F1…`/`D…`. Recommended order within this round:
+> **013 → 014 → 016 → 015 → 017** (013 is the real bug; 014 adds enforcement; 016 follows 014 so
+> the "CI runs linters" doc line becomes true; 015 and 017 are independent). `017` resolves the §7
+> decisions that gate the already-written `012`.
 
 ---
 
@@ -115,6 +128,23 @@ below so it can be executed standalone.
   `dist/code.js`. For a distributed plugin the dependency field placement is cosmetic.
 - **Optimistic-update rollback** — `ARCHITECTURE.md` documents this as an accepted tradeoff.
 - **`sanitizeLog` ReDoS** — patterns are bounded; not vulnerable.
+
+Second round (`df82c72`):
+- **`core.ts` "god module" (476 lines)** — cohesive single-purpose sections, each independently
+  tested. Not worth splitting.
+- **Dual `postMessage` per apply** (`apply-preset` + `record-preset-usage`) — unmeasurable on a
+  local client plugin.
+- **`Date.now()` preset-id collision** (`PresetCreator.tsx:60`) — sub-ms double-save effectively
+  impossible single-user; import design already adds randomness.
+- **`window.onmessage` effect missing cleanup** (`App.tsx:40`) — App is the StrictMode root and the
+  assignment is idempotent (not `addEventListener`); no handler stacking. (Optionally tidied by 014's
+  `react-hooks` rule.)
+- **`sanitizeLog` `JSON.parse(sanitizeString(JSON.stringify(value)))` throwing** — the only trigger
+  (a 22+digit unquoted token) is unreachable for JS `Number`; `Infinity`/`NaN` stringify to `null`.
+- **Unbounded `customPresets` / error-message-length "DoS"** — speculative on a single-user local
+  plugin; the only real ingestion vector (import) is covered by 017's validator (optional length cap).
+- **CSP / `cspHashPlugin`** — verified sound: `index.html` is `script-src 'self'; style-src 'self'`
+  (no `unsafe-inline`/`unsafe-eval`); the build plugin appends sha256 hashes. Not a finding.
 
 ---
 
