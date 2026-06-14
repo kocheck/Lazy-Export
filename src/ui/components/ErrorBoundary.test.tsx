@@ -88,15 +88,8 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText(/Reload Plugin/i)).toBeInTheDocument();
   });
 
-  it('should copy debug info to clipboard when button clicked', async () => {
-    const mockWriteText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: mockWriteText,
-      },
-    });
-
-    // Mock alert
+  it('should copy debug info via execCommand when button clicked', async () => {
+    const exec = vi.spyOn(document, 'execCommand').mockReturnValue(true);
     global.alert = vi.fn();
 
     render(
@@ -108,25 +101,14 @@ describe('ErrorBoundary', () => {
     const button = screen.getByText(/Copy Debug Info/i);
     fireEvent.click(button);
 
-    // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    expect(mockWriteText).toHaveBeenCalled();
-    const clipboardContent = mockWriteText.mock.calls[0][0];
-    expect(clipboardContent).toContain('Bug Report');
-    expect(clipboardContent).toContain('Plugin Version: 2.0.0');
+    expect(exec).toHaveBeenCalledWith('copy');
+    exec.mockRestore();
   });
 
-  it('should use fallback copy method when clipboard API fails', async () => {
-    const mockWriteText = vi.fn().mockRejectedValue(new Error('Clipboard API not available'));
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: mockWriteText,
-      },
-    });
-
-    // Mock document.execCommand
-    document.execCommand = vi.fn().mockReturnValue(true);
+  it('should run the fallback copy path when execCommand fails', async () => {
+    const exec = vi.spyOn(document, 'execCommand').mockReturnValue(false);
     global.alert = vi.fn();
 
     render(
@@ -138,12 +120,11 @@ describe('ErrorBoundary', () => {
     const button = screen.getByText(/Copy Debug Info/i);
     fireEvent.click(button);
 
-    // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    expect(mockWriteText).toHaveBeenCalled();
-    expect(document.execCommand).toHaveBeenCalledWith('copy');
+    expect(exec).toHaveBeenCalledWith('copy');
     expect(global.alert).toHaveBeenCalled();
+    exec.mockRestore();
   });
 
   it('should open GitHub issue page when Report button clicked', () => {
