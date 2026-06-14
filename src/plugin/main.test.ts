@@ -230,14 +230,13 @@ describe('applyExportSettings — per-preset flag precedence', () => {
   });
 
   function contentsJsonPosted(): boolean {
-    return figmaMock.ui.postMessage.mock.calls.some(
-      (call) =>
-        call[0] &&
-        typeof call[0] === 'object' &&
-        call[0].type === 'export-success' &&
-        call[0].metadata &&
-        typeof call[0].metadata.iosContentsJson === 'string'
-    );
+    return figmaMock.ui.postMessage.mock.calls.some((call) => {
+      const msg = call[0] as Record<string, unknown>;
+      if (!msg || typeof msg !== 'object') return false;
+      if (msg['type'] !== 'export-success') return false;
+      const metadata = msg['metadata'] as Record<string, unknown> | undefined;
+      return typeof metadata?.['iosContentsJson'] === 'string';
+    });
   }
 
   const iosSettings = [{ format: 'PNG' as const, suffix: '@1x' }];
