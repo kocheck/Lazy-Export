@@ -88,9 +88,8 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText(/Reload Plugin/i)).toBeInTheDocument();
   });
 
-  it('should copy debug info via execCommand when button clicked', async () => {
+  it('shows a success status after copying debug info', async () => {
     const exec = vi.spyOn(document, 'execCommand').mockReturnValue(true);
-    global.alert = vi.fn();
 
     render(
       <ErrorBoundary>
@@ -98,18 +97,17 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const button = screen.getByText(/Copy Debug Info/i);
-    fireEvent.click(button);
+    fireEvent.click(screen.getByText(/Copy Debug Info/i));
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(exec).toHaveBeenCalledWith('copy');
+    expect(await screen.findByText(/Copied!/i)).toBeInTheDocument();
     exec.mockRestore();
   });
 
-  it('should run the fallback copy path when execCommand fails', async () => {
+  it('shows a failure status when the copy fails', async () => {
     const exec = vi.spyOn(document, 'execCommand').mockReturnValue(false);
-    global.alert = vi.fn();
 
     render(
       <ErrorBoundary>
@@ -117,19 +115,17 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const button = screen.getByText(/Copy Debug Info/i);
-    fireEvent.click(button);
+    fireEvent.click(screen.getByText(/Copy Debug Info/i));
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(exec).toHaveBeenCalledWith('copy');
-    expect(global.alert).toHaveBeenCalled();
+    expect(await screen.findByText(/Copy failed/i)).toBeInTheDocument();
     exec.mockRestore();
   });
 
-  it('should open GitHub issue page when Report button clicked', () => {
-    const mockOpen = vi.fn();
-    global.window.open = mockOpen;
+  it('posts an open-external-url message when Report on GitHub clicked', () => {
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
 
     render(
       <ErrorBoundary>
@@ -137,12 +133,17 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const button = screen.getByText(/Report on GitHub/i);
-    fireEvent.click(button);
+    fireEvent.click(screen.getByText(/Report on GitHub/i));
 
-    expect(mockOpen).toHaveBeenCalledWith(
-      expect.stringContaining('github.com/kocheck/Lazy-Export/issues/new'),
-      '_blank'
+    expect(postMessage).toHaveBeenCalledWith(
+      {
+        pluginMessage: {
+          type: 'open-external-url',
+          url: expect.stringContaining('github.com/kocheck/Lazy-Export/issues/new'),
+        },
+      },
+      '*'
     );
+    postMessage.mockRestore();
   });
 });
