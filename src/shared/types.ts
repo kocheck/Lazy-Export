@@ -37,6 +37,17 @@ export interface SavedPreferences {
   advancedModeEnabled: boolean;
 }
 
+/**
+ * Shape of an exported preset file (D2). Design: docs/preset-import-export-design.md.
+ * Type-only stub — no runtime export/import logic lands until plan 012.
+ */
+export interface PresetExportFile {
+  format: 'lazy-export-presets';
+  version: 1;
+  exportedAt: number;
+  presets: CustomPreset[];
+}
+
 // Messages from UI to Plugin
 export type UIMessage =
   | {
