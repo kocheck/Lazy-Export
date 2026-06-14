@@ -4,7 +4,7 @@ This document summarizes the testing infrastructure and error reporting system i
 
 ## Overview
 
-Successfully implemented comprehensive testing infrastructure and privacy-focused error reporting, achieving 93.82% code coverage and 73 passing tests.
+Successfully implemented comprehensive testing infrastructure and privacy-focused error reporting, achieving 52.08% code coverage and 107 passing tests.
 
 ## What Was Implemented
 
@@ -27,7 +27,7 @@ Created comprehensive mocks in `src/test/figma-mock.ts`:
 - `showUI`: UI initialization
 - `on`: Event listener registration
 
-#### Test Coverage (93.82% overall)
+#### Test Coverage (52.08% overall)
 ```
 File               | % Stmts | % Branch | % Funcs | % Lines
 -------------------|---------|----------|---------|----------
@@ -41,6 +41,8 @@ ui/components/     |   92.15%|    90.32%|   94.73%|   95.91%
   Toast.tsx        |   91.66%|    92.30%|  100.00%|  100.00%
   Toggle.tsx       |  100.00%|   100.00%|  100.00%|  100.00%
 ```
+
+> Snapshot from the v2.0 testing milestone; see TESTING.md and `npm run test:coverage` for current numbers.
 
 #### Test Files Created
 1. `src/plugin/main.test.ts` - 11 tests
@@ -240,8 +242,8 @@ Created comprehensive documentation:
 - **Error Reporting**: Console only
 
 ### After Implementation
-- **Tests**: 73 passing
-- **Coverage**: 93.82% on business logic
+- **Tests**: 107 passing
+- **Coverage**: 52.08% on business logic
 - **Error Handling**: Comprehensive with ErrorBoundary + global handlers
 - **Error Reporting**: Privacy-focused with sanitization + GitHub integration
 - **Security**: CodeQL scan passed (0 alerts)
@@ -295,7 +297,7 @@ Potential improvements for future releases:
 
 Successfully implemented a robust testing infrastructure and privacy-focused error reporting system that:
 
-✅ Achieves high code coverage (93.82%)
+✅ Achieves code coverage (52.08% overall; see `npm run test:coverage` for current)
 ✅ Provides excellent developer experience (Vitest + RTL)
 ✅ Protects user privacy (sanitization)
 ✅ Enables easy bug reporting (one-click copy)

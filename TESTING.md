@@ -4,7 +4,7 @@ This document explains the testing infrastructure for Lazy Export and how to run
 
 ## Overview
 
-The Lazy Export plugin uses **Vitest** for unit and component testing, with **React Testing Library** for UI components. We maintain **93.82% code coverage** on business logic.
+The Lazy Export plugin uses **Vitest** for unit and component testing, with **React Testing Library** for UI components. We maintain **52.08% code coverage** on business logic.
 
 ## Running Tests
 
