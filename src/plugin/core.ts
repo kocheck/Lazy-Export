@@ -364,7 +364,22 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
       }
 
       case 'open-external-url': {
-        figma.openExternal(msg.url);
+        let allowed = false;
+        try {
+          const scheme = new URL(msg.url).protocol;
+          allowed = scheme === 'http:' || scheme === 'https:';
+        } catch {
+          allowed = false;
+        }
+        if (allowed) {
+          figma.openExternal(msg.url);
+        } else {
+          const rejection: PluginMessage = {
+            type: 'error',
+            message: 'Refused to open a non-web URL.',
+          };
+          figma.ui.postMessage(rejection);
+        }
         break;
       }
 
