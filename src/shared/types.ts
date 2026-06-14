@@ -60,6 +60,14 @@ export type UIMessage =
       type: 'get-preferences';
     }
   | {
+      type: 'save-preferences';
+      advancedModeEnabled: boolean;
+    }
+  | {
+      type: 'record-preset-usage';
+      presetId: string;
+    }
+  | {
       type: 'open-external-url';
       url: string;
     };
