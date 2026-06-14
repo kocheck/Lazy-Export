@@ -180,15 +180,19 @@ An invalid entry does not abort the import; the rest continue to be processed.
 
 **Error response:** If the whole blob fails validation, the plugin replies with a `{ type: 'error', message: '...' }` PluginMessage so the existing UI error-display path handles it.
 
-## 7. Open questions for the maintainer
+## 7. Resolved decisions
 
-These decisions were deliberately left open. Each should be answered before plan 012 begins implementation.
+These questions were resolved before plan 012 began implementation.
 
-1. **Selective import:** Should import offer per-preset selection (checkboxes) so the user can choose which presets to bring in, or is merge-all sufficient for v1?
-2. **Overwrite option:** Should `overwrite` be exposed as an explicit "Replace existing" option in the import UI in v1, or is `rename-with-new-id` (non-destructive) the only supported mode until a later release?
-3. **Suggested filename / guidance text:** Since there is no real file download, should the export UI display a suggested filename (e.g. `lazy-export-presets.json`) as guidance text above the textarea, even though it is not enforced?
-4. **Exporting default presets:** Should it ever be possible to export default (non-`isCustom`) presets — e.g. if the user has heavily relied on a default preset and wants to snapshot it? Or is `isCustom === true` the permanent filter?
-5. **Version migration ownership:** When `CustomPreset`'s shape changes (as plans 005 and 010 have already added fields like `generateMetadata` and `directoryStructure`), who is responsible for bumping `version` in the file format and writing a migration function? Is there a policy for backward-compatible field additions (new optional fields) vs. breaking changes?
+1. **Selective import** → **No for v1.** Import is merge-all. Per-preset selection (checkboxes) is a v2 feature. Rationale: simplicity; merge-all with `rename-with-new-id` collision handling is safe and non-destructive.
+
+2. **Overwrite option** → **No for v1.** `rename-with-new-id` is the only collision mode. An explicit "Replace existing" checkbox is deferred to a later release. Rationale: non-destructive default; overwrite UI adds complexity without clear v1 demand.
+
+3. **Suggested filename guidance** → **Yes.** Show `lazy-export-presets.json` as guidance text above the export textarea. Not enforced — there is no real file download in the iframe — but helpful to orient users.
+
+4. **Exporting default presets** → **No.** The `isCustom === true` filter is permanent. Shipping presets live in code and don't need to travel in a file. Rationale: default presets are versioned with the plugin; copying them into user files creates divergence risk.
+
+5. **Version migration ownership** → Additive **optional** fields do **not** bump `version`; only a breaking shape change bumps it and ships a migration function beside the import handler in `src/plugin/core.ts`. Plans 005/010 added `generateMetadata`/`directoryStructure` as optional fields — they stay `version: 1`. Rationale: optional fields are backward-compatible; consumers that don't know a field ignore it.
 
 ## 8. Follow-up build plan (012) summary
 
