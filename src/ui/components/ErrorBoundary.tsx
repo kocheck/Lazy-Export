@@ -7,7 +7,7 @@
 
 import React, { Component, ReactNode } from 'react';
 import { copyToClipboard } from '../utils/clipboard';
-import { buildBugReportMarkdown, BUG_REPORT_ISSUE_URL } from '../utils/bugReporting';
+import { buildBugReportMarkdown, BUG_REPORT_ISSUE_URL, COPY_SUCCESS_MSG, COPY_FAILURE_MSG } from '../utils/bugReporting';
 import './ErrorBoundary.css';
 
 interface Props {
@@ -54,10 +54,8 @@ export class ErrorBoundary extends Component<Props, State> {
     });
 
     copyToClipboard(markdown)
-      .then(() => this.setState({ copyStatus: 'Copied!' }))
-      .catch(() =>
-        this.setState({ copyStatus: 'Copy failed — select and copy manually' })
-      );
+      .then(() => this.setState({ copyStatus: COPY_SUCCESS_MSG }))
+      .catch(() => this.setState({ copyStatus: COPY_FAILURE_MSG }));
   };
 
   reportIssue = () => {

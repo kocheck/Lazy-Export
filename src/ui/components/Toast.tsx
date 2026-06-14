@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { copyToClipboard } from '../utils/clipboard';
-import { buildBugReportMarkdown, BUG_REPORT_ISSUE_URL } from '../utils/bugReporting';
+import { buildBugReportMarkdown, BUG_REPORT_ISSUE_URL, COPY_SUCCESS_MSG, COPY_FAILURE_MSG } from '../utils/bugReporting';
 import './Toast.css';
 
 export interface ToastProps {
@@ -16,9 +16,6 @@ export interface ToastProps {
   metadata?: { iosContentsJson?: string };
   onClose: () => void;
 }
-
-const COPIED = 'Copied!';
-const COPY_FAILED = 'Copy failed — select and copy manually';
 
 export const Toast: React.FC<ToastProps> = ({ message, type, error, metadata, onClose }) => {
   const [status, setStatus] = useState<string | null>(null);
@@ -32,15 +29,15 @@ export const Toast: React.FC<ToastProps> = ({ message, type, error, metadata, on
     });
 
     copyToClipboard(markdown)
-      .then(() => setStatus(COPIED))
-      .catch(() => setStatus(COPY_FAILED));
+      .then(() => setStatus(COPY_SUCCESS_MSG))
+      .catch(() => setStatus(COPY_FAILURE_MSG));
   };
 
   const copyContents = () => {
     if (!metadata?.iosContentsJson) return;
     copyToClipboard(metadata.iosContentsJson)
-      .then(() => setStatus(COPIED))
-      .catch(() => setStatus(COPY_FAILED));
+      .then(() => setStatus(COPY_SUCCESS_MSG))
+      .catch(() => setStatus(COPY_FAILURE_MSG));
   };
 
   const reportIssue = () => {
