@@ -115,6 +115,21 @@ var DEFAULT_PRESETS = [
   }
 ];
 
+// src/shared/customName.ts
+var CUSTOM_NAME_PATTERN = /^[A-Za-z0-9 _-]+$/;
+var CUSTOM_NAME_MAX_LENGTH = 64;
+var CUSTOM_NAME_ERROR = "Use letters, numbers, spaces, - or _";
+function validateCustomName(raw) {
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) {
+    return { valid: true, value: void 0 };
+  }
+  if (trimmed.length > CUSTOM_NAME_MAX_LENGTH || !CUSTOM_NAME_PATTERN.test(trimmed)) {
+    return { valid: false, error: CUSTOM_NAME_ERROR };
+  }
+  return { valid: true, value: trimmed };
+}
+
 // src/plugin/main.ts
 function handlePluginError(error) {
   console.error("Plugin error:", error);
@@ -301,10 +316,19 @@ figma.ui.onmessage = async (msg) => {
     switch (msg.type) {
       case "apply-preset": {
         const { preset, customName, advancedMode } = msg;
+        const nameResult = validateCustomName(customName ?? "");
+        if (!nameResult.valid) {
+          const rejection = {
+            type: "invalid-custom-name",
+            message: nameResult.error ?? "Invalid custom name"
+          };
+          figma.ui.postMessage(rejection);
+          break;
+        }
         applyExportSettings(
           figma.currentPage.selection,
           preset.settings,
-          customName,
+          nameResult.value,
           advancedMode,
           preset.platform
         );
