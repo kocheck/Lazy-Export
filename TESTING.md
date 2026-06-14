@@ -4,7 +4,7 @@ This document explains the testing infrastructure for Lazy Export and how to run
 
 ## Overview
 
-The Lazy Export plugin uses **Vitest** for unit and component testing, with **React Testing Library** for UI components. We maintain **52.08% code coverage** on business logic.
+The Lazy Export plugin uses **Vitest** for unit and component testing, with **React Testing Library** for UI components. Run `npm run test:coverage` for current coverage figures (approximately 75% statements at time of writing — see coverage report for exact numbers).
 
 ## Running Tests
 
@@ -27,17 +27,24 @@ npm run test:ui
 ```
 src/
 ├── plugin/
-│   └── main.test.ts          # Plugin logic tests
+│   ├── core.test.ts          # Plugin dispatcher and core logic tests
+│   └── main.test.ts          # Integration tests (applyExportSettings, iOS Contents.json, prefs)
 ├── shared/
-│   └── sanitizeLog.test.ts   # Utility function tests
+│   ├── customName.test.ts    # Custom name validation tests
+│   └── sanitizeLog.test.ts   # Log sanitization tests
 ├── ui/
-│   └── components/
-│       ├── Button.test.tsx
-│       ├── Input.test.tsx
-│       ├── Toggle.test.tsx
-│       ├── PresetCard.test.tsx
-│       ├── ErrorBoundary.test.tsx
-│       └── Toast.test.tsx
+│   ├── App.test.tsx          # App-level integration tests
+│   ├── components/
+│   │   ├── Button.test.tsx
+│   │   ├── ErrorBoundary.test.tsx
+│   │   ├── Input.test.tsx
+│   │   ├── Modal.test.tsx
+│   │   ├── PresetCard.test.tsx
+│   │   ├── PresetCreator.test.tsx
+│   │   ├── Toast.test.tsx
+│   │   └── Toggle.test.tsx
+│   └── utils/
+│       └── bugReporting.test.ts
 └── test/
     ├── setup.ts              # Test environment setup
     └── figma-mock.ts         # Figma API mocks
@@ -236,11 +243,13 @@ it('should display error boundary on component error', () => {
 
 Tests run automatically on every push and pull request. The CI pipeline:
 
-1. Installs dependencies
-2. Runs linters
-3. Runs all tests with coverage
-4. Fails if coverage drops below threshold
-5. Runs security scans
+1. Installs dependencies (`npm ci`)
+2. Runs TypeScript type checking (`npm run typecheck`)
+3. Runs ESLint (`npm run lint`)
+4. Builds the plugin (`npm run build`) and verifies `dist/` artifacts are up-to-date
+5. Runs all tests (`npm run test:run`)
+
+No coverage threshold is enforced and no security scanning is currently configured.
 
 ## Troubleshooting
 
