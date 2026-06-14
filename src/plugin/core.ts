@@ -77,6 +77,28 @@ export function generateIOSContentsJSON(assetName: string, settings: ExportSetti
 }
 
 // ---------------------------------------------------------------------------
+// Preset validation
+// ---------------------------------------------------------------------------
+
+const VALID_PLATFORMS = ['iOS', 'Android', 'Web', 'PDF'];
+const MAX_PRESET_SETTINGS = 50;
+
+export function validateCustomPreset(p: unknown): { valid: boolean; error?: string } {
+  if (typeof p !== 'object' || p === null) return { valid: false, error: 'Preset is not an object.' };
+  const preset = p as Record<string, unknown>;
+  if (typeof preset.id !== 'string' || preset.id.length === 0)
+    return { valid: false, error: 'Preset id must be a non-empty string.' };
+  if (typeof preset.name !== 'string' || preset.name.length === 0)
+    return { valid: false, error: 'Preset name must be a non-empty string.' };
+  if (typeof preset.platform !== 'string' || !VALID_PLATFORMS.includes(preset.platform))
+    return { valid: false, error: 'Preset platform is invalid.' };
+  if (!Array.isArray(preset.settings) || preset.settings.length > MAX_PRESET_SETTINGS)
+    return { valid: false, error: 'Preset settings are invalid.' };
+  if (preset.isCustom !== true) return { valid: false, error: 'Preset must be a custom preset.' };
+  return { valid: true };
+}
+
+// ---------------------------------------------------------------------------
 // Preference mutation queue — serialises all read-modify-write operations so
 // concurrent messages cannot clobber each other's writes.
 // ---------------------------------------------------------------------------
@@ -306,6 +328,15 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
 
       case 'save-preset': {
         const preset = msg.preset;
+        const validation = validateCustomPreset(preset);
+        if (!validation.valid) {
+          const rejection: PluginMessage = {
+            type: 'error',
+            message: validation.error ?? 'Invalid preset',
+          };
+          figma.ui.postMessage(rejection);
+          break;
+        }
         await enqueuePrefMutation(async () => {
           const preferences = await loadPreferences();
           const existingIndex = preferences.customPresets.findIndex((p) => p.id === preset.id);
