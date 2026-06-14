@@ -1,0 +1,24 @@
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - '.cursorrules'
+
+ui:
+  - changed-files:
+      - any-glob-to-any-file: 'src/ui/**'
+
+plugin:
+  - changed-files:
+      - any-glob-to-any-file: 'src/plugin/**'
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: '.github/**'
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/**/*.test.ts'
+          - 'src/**/*.test.tsx'
+          - 'src/test/**'
