@@ -7,10 +7,10 @@ This file helps AI coding assistants (Cursor, GitHub Copilot, Claude, etc.) unde
 **Name:** Lazy Export
 **Type:** Figma Plugin
 **Version:** 2.0.0
-**Stack:** React 18 + TypeScript 5 + Vite 5 + Figma Plugin API v1.0.0
+**Stack:** React 18 + TypeScript 5 + Vite 7 + Figma Plugin API v1.0.0
 
 **Purpose:**
-A Figma plugin that allows users to quickly apply export settings to selected layers using preset configurations. Supports iOS, Android, Web, WebP, and PDF exports with custom preset creation.
+A Figma plugin that allows users to quickly apply export settings to selected layers using preset configurations. Supports iOS, Android, Web, and PDF exports with custom preset creation.
 
 ## Architecture Overview
 
@@ -294,7 +294,7 @@ For more details:
 ### Completed Features
 ✅ Modern tech stack (Vite + React + TypeScript)
 ✅ Figma UI3 design with Dark Mode
-✅ Default presets (iOS, Android, Web, WebP, PDF)
+✅ Default presets (iOS, Android, Web, PDF)
 ✅ Custom preset creation/editing/deletion
 ✅ Advanced directory mode with folder structures
 ✅ iOS Contents.json generation
@@ -306,7 +306,6 @@ For more details:
 ⏭️ Preset templates library
 ⏭️ Export history
 ⏭️ Keyboard shortcuts
-⏭️ Automated tests
 
 ## Questions to Ask Before Suggesting Code
 
