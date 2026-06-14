@@ -22,9 +22,11 @@ export interface FigmaMock {
     name: string;
     id: string;
   } | null;
+  command: string;
   notify: Mock<(message: string, options?: unknown) => unknown>;
   showUI: Mock<(html: string, options?: unknown) => void>;
   on: Mock<(type: string, callback: () => void) => void>;
+  closePlugin: Mock<(message?: string) => void>;
 }
 
 /**
@@ -51,9 +53,11 @@ export function createFigmaMock(): FigmaMock {
       name: 'Test User',
       id: 'test-user-id-12345',
     },
+    command: 'openPlugin',
     notify: vi.fn(),
     showUI: vi.fn(),
     on: vi.fn(),
+    closePlugin: vi.fn(),
   };
 }
 
