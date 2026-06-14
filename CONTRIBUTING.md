@@ -367,7 +367,7 @@ A Figma plugin that lets users apply export settings to layers with one click. T
 **Tech Stack:**
 - React 18 + TypeScript 5 (UI)
 - Figma Plugin API v1.0.0 (Plugin)
-- Vite 5 (Build)
+- Vite 7 (Build)
 - CSS with Figma UI3 variables (Styling)
 
 ### Key Constraints
