@@ -130,7 +130,7 @@ function validateCustomName(raw) {
   return { valid: true, value: trimmed };
 }
 
-// src/plugin/main.ts
+// src/plugin/core.ts
 function handlePluginError(error) {
   console.error("Plugin error:", error);
   const errorMessage = {
@@ -255,63 +255,7 @@ function updateSelectionCount() {
   };
   figma.ui.postMessage(message);
 }
-(async () => {
-  try {
-    switch (figma.command) {
-      case "applyIOS": {
-        const preset = DEFAULT_PRESETS.find((p) => p.id === "ios");
-        if (preset) {
-          applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
-        }
-        figma.closePlugin();
-        break;
-      }
-      case "applyAndroid": {
-        const preset = DEFAULT_PRESETS.find((p) => p.id === "android");
-        if (preset) {
-          applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
-        }
-        figma.closePlugin();
-        break;
-      }
-      case "applyWeb": {
-        const preset = DEFAULT_PRESETS.find((p) => p.id === "web");
-        if (preset) {
-          applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
-        }
-        figma.closePlugin();
-        break;
-      }
-      case "clearExport": {
-        clearExportSettings(figma.currentPage.selection);
-        figma.closePlugin();
-        break;
-      }
-      case "openPlugin":
-      default: {
-        figma.showUI(__html__, { width: 320, height: 520, themeColors: true });
-        const preferences = await loadPreferences();
-        const message = {
-          type: "preferences-loaded",
-          preferences
-        };
-        figma.ui.postMessage(message);
-        updateSelectionCount();
-        break;
-      }
-    }
-  } catch (error) {
-    handlePluginError(error);
-  }
-})();
-figma.on("selectionchange", () => {
-  try {
-    updateSelectionCount();
-  } catch (error) {
-    handlePluginError(error);
-  }
-});
-figma.ui.onmessage = async (msg) => {
+async function handleUIMessage(msg) {
   try {
     switch (msg.type) {
       case "apply-preset": {
@@ -404,4 +348,65 @@ figma.ui.onmessage = async (msg) => {
     };
     figma.ui.postMessage(errorMessage);
   }
-};
+}
+async function runCommand() {
+  switch (figma.command) {
+    case "applyIOS": {
+      const preset = DEFAULT_PRESETS.find((p) => p.id === "ios");
+      if (preset) {
+        applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
+      }
+      figma.closePlugin();
+      break;
+    }
+    case "applyAndroid": {
+      const preset = DEFAULT_PRESETS.find((p) => p.id === "android");
+      if (preset) {
+        applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
+      }
+      figma.closePlugin();
+      break;
+    }
+    case "applyWeb": {
+      const preset = DEFAULT_PRESETS.find((p) => p.id === "web");
+      if (preset) {
+        applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
+      }
+      figma.closePlugin();
+      break;
+    }
+    case "clearExport": {
+      clearExportSettings(figma.currentPage.selection);
+      figma.closePlugin();
+      break;
+    }
+    case "openPlugin":
+    default: {
+      figma.showUI(__html__, { width: 320, height: 520, themeColors: true });
+      const preferences = await loadPreferences();
+      const message = {
+        type: "preferences-loaded",
+        preferences
+      };
+      figma.ui.postMessage(message);
+      updateSelectionCount();
+      break;
+    }
+  }
+}
+function initPlugin() {
+  runCommand().catch((error) => handlePluginError(error));
+  figma.on("selectionchange", () => {
+    try {
+      updateSelectionCount();
+    } catch (error) {
+      handlePluginError(error);
+    }
+  });
+  figma.ui.onmessage = (msg) => {
+    void handleUIMessage(msg);
+  };
+}
+
+// src/plugin/main.ts
+initPlugin();
