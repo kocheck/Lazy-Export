@@ -194,7 +194,6 @@ function applyExportSettings(
   });
 
   // If iOS advanced mode, show info about Contents.json
-  // If iOS advanced mode, show info about Contents.json
   if (advancedMode && platform === 'iOS') {
     const contentsJSON = generateiOSContentsJSON(assetName);
     const message: PluginMessage = {
