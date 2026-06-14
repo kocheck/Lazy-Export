@@ -590,14 +590,15 @@ const savePreset = (preset: CustomPreset) => {
 
 1. **Update types:**
    ```typescript
-   // src/shared/types.ts
-   export type ExportFormat = 'PNG' | 'JPG' | 'SVG' | 'PDF' | 'WEBP' | 'AVIF';
+   // src/shared/types.ts — current type is 'PNG' | 'JPG' | 'SVG' | 'PDF'
+   // add your new format to the union, e.g.:
+   export type ExportFormat = 'PNG' | 'JPG' | 'SVG' | 'PDF' | 'WEBP';
    ```
 
 2. **Update UI form:**
    ```typescript
    // src/ui/components/PresetCreator.tsx
-   const FORMATS = ['PNG', 'JPG', 'SVG', 'PDF', 'WEBP', 'AVIF'] as const;
+   const FORMATS = ['PNG', 'JPG', 'SVG', 'PDF', 'WEBP'] as const;
    ```
 
 3. **Handle in plugin (if special logic needed):**
