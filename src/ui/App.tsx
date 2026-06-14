@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [editingPreset, setEditingPreset] = useState<CustomPreset | undefined>();
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // All presets (default + custom)
   const customPresets = preferences?.customPresets || [];
@@ -73,7 +74,7 @@ const App: React.FC = () => {
           setTimeout(() => setToast(null), 5000);
           break;
 
-        case 'error':
+        case 'error': {
           console.error('❌', msg.message);
           const error = new Error(msg.message);
           if (msg.stack) {
@@ -81,6 +82,7 @@ const App: React.FC = () => {
           }
           setToast({ message: msg.message, type: 'error', error });
           break;
+        }
       }
     };
   }, []);
@@ -146,7 +148,11 @@ const App: React.FC = () => {
   };
 
   const deletePreset = (presetId: string) => {
-    if (!confirm('Delete this preset?')) return;
+    if (pendingDeleteId !== presetId) {
+      setPendingDeleteId(presetId);
+      return;
+    }
+    setPendingDeleteId(null);
 
     const message: UIMessage = {
       type: 'delete-preset',
@@ -226,9 +232,10 @@ const App: React.FC = () => {
                         <button
                           className="app__preset-action app__preset-action--danger"
                           onClick={() => deletePreset(preset.id)}
-                          title="Delete preset"
+                          title={pendingDeleteId === preset.id ? 'Click again to confirm deletion' : 'Delete preset'}
+                          aria-pressed={pendingDeleteId === preset.id}
                         >
-                          🗑️
+                          {pendingDeleteId === preset.id ? '✓?' : '🗑️'}
                         </button>
                       </div>
                     </div>
