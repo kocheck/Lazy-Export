@@ -7,8 +7,10 @@
     "build": "npm run build:plugin && vite build",
     "build:plugin": "node build-plugin.js",
     "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
+    "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
