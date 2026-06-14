@@ -14,6 +14,101 @@ import { UIMessage, PluginMessage, SavedPreferences, ExportSetting } from '../sh
 import { DEFAULT_PRESETS } from '../shared/presets';
 import { validateCustomName } from '../shared/customName';
 
+// ---------------------------------------------------------------------------
+// iOS metadata validation & generation
+// ---------------------------------------------------------------------------
+
+const VALID_IOS_SCALES: Record<string, string> = { '1': '1x', '2': '2x', '3': '3x' };
+
+/**
+ * Validate that `settings` can produce a valid iOS Contents.json.
+ * Returns `null` on success, or a user-facing error string on failure.
+ */
+export function validateIOSMetadataSettings(settings: ExportSetting[]): string | null {
+  const png = settings.filter((s) => s.format === 'PNG');
+  if (png.length === 0) {
+    return 'iOS metadata requires at least one PNG export setting.';
+  }
+  if (png.length !== settings.length) {
+    return 'iOS metadata only supports PNG settings — remove JPG or SVG entries.';
+  }
+
+  const seenScales = new Set<string>();
+  for (const s of png) {
+    if (!s.constraint || s.constraint.type !== 'SCALE') {
+      return 'iOS metadata requires a SCALE constraint on every PNG entry.';
+    }
+    const val = String(s.constraint.value);
+    if (!VALID_IOS_SCALES[val]) {
+      return `iOS metadata only supports 1×, 2×, or 3× scales; found ${s.constraint.value}×.`;
+    }
+    if (seenScales.has(val)) {
+      return `iOS metadata has duplicate ${VALID_IOS_SCALES[val]} entries.`;
+    }
+    seenScales.add(val);
+  }
+
+  return null;
+}
+
+/**
+ * Generate iOS Contents.json from actual export settings.
+ * Builds one image entry per PNG setting using its suffix and scale.
+ * Callers must run validateIOSMetadataSettings first if coming from user input.
+ */
+export function generateIOSContentsJSON(assetName: string, settings: ExportSetting[]): string {
+  const images = settings
+    .filter((s) => s.format === 'PNG' && s.constraint?.type === 'SCALE')
+    .map((s) => {
+      const scale = VALID_IOS_SCALES[String(s.constraint!.value)] ?? `${s.constraint!.value}x`;
+      const suffix = s.suffix ?? '';
+      return {
+        filename: `${assetName}${suffix}.png`,
+        idiom: 'universal',
+        scale,
+      };
+    });
+
+  return JSON.stringify({ images, info: { author: 'Lazy Export', version: 1 } }, null, 2);
+}
+
+/**
+ * @deprecated Use generateIOSContentsJSON(assetName, settings) instead.
+ * Kept for backwards-compat with existing tests that call the old signature.
+ */
+export function generateiOSContentsJSON(assetName: string): string {
+  return generateIOSContentsJSON(assetName, [
+    { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+    { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+    { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
+  ]);
+}
+
+// ---------------------------------------------------------------------------
+// Preference mutation queue — serialises all read-modify-write operations so
+// concurrent messages cannot clobber each other's writes.
+// ---------------------------------------------------------------------------
+
+let _prefQueue: Promise<unknown> = Promise.resolve();
+
+/**
+ * Run `fn` exclusively: it starts only after the previous enqueued mutation
+ * completes (or fails). A rejected `fn` does not poison later queue entries.
+ */
+function enqueuePrefMutation<T>(fn: () => Promise<T>): Promise<T> {
+  const next = _prefQueue.then(fn, fn as () => Promise<T>);
+  // Let the queue tail ignore errors so a later enqueue always proceeds.
+  _prefQueue = next.then(
+    () => undefined,
+    () => undefined
+  );
+  return next;
+}
+
+// ---------------------------------------------------------------------------
+// Global error handler
+// ---------------------------------------------------------------------------
+
 /**
  * Global error handler.
  * Catches errors and sends them to the UI for user reporting.
@@ -54,41 +149,6 @@ export async function loadPreferences(): Promise<SavedPreferences> {
  */
 export async function savePreferences(preferences: SavedPreferences): Promise<void> {
   await figma.clientStorage.setAsync('preferences', preferences);
-}
-
-/**
- * Generate iOS Contents.json metadata file content.
- * @param assetName - Base name for the asset (e.g., "icon-home")
- * @returns Formatted JSON string for Contents.json
- */
-export function generateiOSContentsJSON(assetName: string): string {
-  return JSON.stringify(
-    {
-      images: [
-        {
-          filename: `${assetName}@1x.png`,
-          idiom: 'universal',
-          scale: '1x',
-        },
-        {
-          filename: `${assetName}@2x.png`,
-          idiom: 'universal',
-          scale: '2x',
-        },
-        {
-          filename: `${assetName}@3x.png`,
-          idiom: 'universal',
-          scale: '3x',
-        },
-      ],
-      info: {
-        author: 'Lazy Export',
-        version: 1,
-      },
-    },
-    null,
-    2
-  );
 }
 
 /**
@@ -161,7 +221,7 @@ export function applyExportSettings(
 
   // If iOS advanced mode AND the preset opts into metadata, surface Contents.json
   if (advancedMode && generateMetadata && platform === 'iOS') {
-    const contentsJSON = generateiOSContentsJSON(assetName);
+    const contentsJSON = generateIOSContentsJSON(assetName, settings);
     const message: PluginMessage = {
       type: 'export-success',
       message: `✅ Applied! Copy Contents.json required for Xcode.`,
@@ -222,6 +282,16 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
           break;
         }
 
+        // Validate iOS metadata settings before touching any node.
+        if (preset.generateMetadata && preset.platform === 'iOS') {
+          const metaErr = validateIOSMetadataSettings(preset.settings);
+          if (metaErr) {
+            const rejection: PluginMessage = { type: 'error', message: metaErr };
+            figma.ui.postMessage(rejection);
+            break;
+          }
+        }
+
         applyExportSettings(
           figma.currentPage.selection,
           preset.settings,
@@ -240,38 +310,30 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
       }
 
       case 'save-preset': {
-        const preferences = await loadPreferences();
-        const existingIndex = preferences.customPresets.findIndex(
-          (p) => p.id === msg.preset.id
-        );
-
-        if (existingIndex >= 0) {
-          preferences.customPresets[existingIndex] = msg.preset;
-        } else {
-          preferences.customPresets.push(msg.preset);
-        }
-
-        await savePreferences(preferences);
-
-        const response: PluginMessage = {
-          type: 'success',
-          message: 'Preset saved successfully',
-        };
+        const preset = msg.preset;
+        await enqueuePrefMutation(async () => {
+          const preferences = await loadPreferences();
+          const existingIndex = preferences.customPresets.findIndex((p) => p.id === preset.id);
+          if (existingIndex >= 0) {
+            preferences.customPresets[existingIndex] = preset;
+          } else {
+            preferences.customPresets.push(preset);
+          }
+          await savePreferences(preferences);
+        });
+        const response: PluginMessage = { type: 'success', message: 'Preset saved successfully' };
         figma.ui.postMessage(response);
         break;
       }
 
       case 'delete-preset': {
-        const preferences = await loadPreferences();
-        preferences.customPresets = preferences.customPresets.filter(
-          (p) => p.id !== msg.presetId
-        );
-        await savePreferences(preferences);
-
-        const response: PluginMessage = {
-          type: 'success',
-          message: 'Preset deleted',
-        };
+        const presetId = msg.presetId;
+        await enqueuePrefMutation(async () => {
+          const preferences = await loadPreferences();
+          preferences.customPresets = preferences.customPresets.filter((p) => p.id !== presetId);
+          await savePreferences(preferences);
+        });
+        const response: PluginMessage = { type: 'success', message: 'Preset deleted' };
         figma.ui.postMessage(response);
         break;
       }
@@ -287,16 +349,22 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
       }
 
       case 'save-preferences': {
-        const preferences = await loadPreferences();
-        preferences.advancedModeEnabled = msg.advancedModeEnabled;
-        await savePreferences(preferences);
+        const advancedModeEnabled = msg.advancedModeEnabled;
+        await enqueuePrefMutation(async () => {
+          const preferences = await loadPreferences();
+          preferences.advancedModeEnabled = advancedModeEnabled;
+          await savePreferences(preferences);
+        });
         break;
       }
 
       case 'record-preset-usage': {
-        const preferences = await loadPreferences();
-        preferences.lastUsedPreset = msg.presetId;
-        await savePreferences(preferences);
+        const presetId = msg.presetId;
+        await enqueuePrefMutation(async () => {
+          const preferences = await loadPreferences();
+          preferences.lastUsedPreset = presetId;
+          await savePreferences(preferences);
+        });
         break;
       }
 

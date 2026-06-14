@@ -131,6 +131,52 @@ function validateCustomName(raw) {
 }
 
 // src/plugin/core.ts
+var VALID_IOS_SCALES = { "1": "1x", "2": "2x", "3": "3x" };
+function validateIOSMetadataSettings(settings) {
+  const png = settings.filter((s) => s.format === "PNG");
+  if (png.length === 0) {
+    return "iOS metadata requires at least one PNG export setting.";
+  }
+  if (png.length !== settings.length) {
+    return "iOS metadata only supports PNG settings \u2014 remove JPG or SVG entries.";
+  }
+  const seenScales = /* @__PURE__ */ new Set();
+  for (const s of png) {
+    if (!s.constraint || s.constraint.type !== "SCALE") {
+      return "iOS metadata requires a SCALE constraint on every PNG entry.";
+    }
+    const val = String(s.constraint.value);
+    if (!VALID_IOS_SCALES[val]) {
+      return `iOS metadata only supports 1\xD7, 2\xD7, or 3\xD7 scales; found ${s.constraint.value}\xD7.`;
+    }
+    if (seenScales.has(val)) {
+      return `iOS metadata has duplicate ${VALID_IOS_SCALES[val]} entries.`;
+    }
+    seenScales.add(val);
+  }
+  return null;
+}
+function generateIOSContentsJSON(assetName, settings) {
+  const images = settings.filter((s) => s.format === "PNG" && s.constraint?.type === "SCALE").map((s) => {
+    const scale = VALID_IOS_SCALES[String(s.constraint.value)] ?? `${s.constraint.value}x`;
+    const suffix = s.suffix ?? "";
+    return {
+      filename: `${assetName}${suffix}.png`,
+      idiom: "universal",
+      scale
+    };
+  });
+  return JSON.stringify({ images, info: { author: "Lazy Export", version: 1 } }, null, 2);
+}
+var _prefQueue = Promise.resolve();
+function enqueuePrefMutation(fn) {
+  const next = _prefQueue.then(fn, fn);
+  _prefQueue = next.then(
+    () => void 0,
+    () => void 0
+  );
+  return next;
+}
 function handlePluginError(error) {
   console.error("Plugin error:", error);
   const errorMessage = {
@@ -153,35 +199,6 @@ async function loadPreferences() {
 }
 async function savePreferences(preferences) {
   await figma.clientStorage.setAsync("preferences", preferences);
-}
-function generateiOSContentsJSON(assetName) {
-  return JSON.stringify(
-    {
-      images: [
-        {
-          filename: `${assetName}@1x.png`,
-          idiom: "universal",
-          scale: "1x"
-        },
-        {
-          filename: `${assetName}@2x.png`,
-          idiom: "universal",
-          scale: "2x"
-        },
-        {
-          filename: `${assetName}@3x.png`,
-          idiom: "universal",
-          scale: "3x"
-        }
-      ],
-      info: {
-        author: "Lazy Export",
-        version: 1
-      }
-    },
-    null,
-    2
-  );
 }
 function applyExportSettings(nodes, settings, customName, advancedMode = false, platform, generateMetadata = false, directoryStructure = false) {
   if (!nodes || nodes.length === 0) {
@@ -226,7 +243,7 @@ function applyExportSettings(nodes, settings, customName, advancedMode = false, 
     node.exportSettings = exportSettings;
   });
   if (advancedMode && generateMetadata && platform === "iOS") {
-    const contentsJSON = generateiOSContentsJSON(assetName);
+    const contentsJSON = generateIOSContentsJSON(assetName, settings);
     const message = {
       type: "export-success",
       message: `\u2705 Applied! Copy Contents.json required for Xcode.`,
@@ -269,6 +286,14 @@ async function handleUIMessage(msg) {
           figma.ui.postMessage(rejection);
           break;
         }
+        if (preset.generateMetadata && preset.platform === "iOS") {
+          const metaErr = validateIOSMetadataSettings(preset.settings);
+          if (metaErr) {
+            const rejection = { type: "error", message: metaErr };
+            figma.ui.postMessage(rejection);
+            break;
+          }
+        }
         applyExportSettings(
           figma.currentPage.selection,
           preset.settings,
@@ -285,33 +310,29 @@ async function handleUIMessage(msg) {
         break;
       }
       case "save-preset": {
-        const preferences = await loadPreferences();
-        const existingIndex = preferences.customPresets.findIndex(
-          (p) => p.id === msg.preset.id
-        );
-        if (existingIndex >= 0) {
-          preferences.customPresets[existingIndex] = msg.preset;
-        } else {
-          preferences.customPresets.push(msg.preset);
-        }
-        await savePreferences(preferences);
-        const response = {
-          type: "success",
-          message: "Preset saved successfully"
-        };
+        const preset = msg.preset;
+        await enqueuePrefMutation(async () => {
+          const preferences = await loadPreferences();
+          const existingIndex = preferences.customPresets.findIndex((p) => p.id === preset.id);
+          if (existingIndex >= 0) {
+            preferences.customPresets[existingIndex] = preset;
+          } else {
+            preferences.customPresets.push(preset);
+          }
+          await savePreferences(preferences);
+        });
+        const response = { type: "success", message: "Preset saved successfully" };
         figma.ui.postMessage(response);
         break;
       }
       case "delete-preset": {
-        const preferences = await loadPreferences();
-        preferences.customPresets = preferences.customPresets.filter(
-          (p) => p.id !== msg.presetId
-        );
-        await savePreferences(preferences);
-        const response = {
-          type: "success",
-          message: "Preset deleted"
-        };
+        const presetId = msg.presetId;
+        await enqueuePrefMutation(async () => {
+          const preferences = await loadPreferences();
+          preferences.customPresets = preferences.customPresets.filter((p) => p.id !== presetId);
+          await savePreferences(preferences);
+        });
+        const response = { type: "success", message: "Preset deleted" };
         figma.ui.postMessage(response);
         break;
       }
@@ -325,15 +346,21 @@ async function handleUIMessage(msg) {
         break;
       }
       case "save-preferences": {
-        const preferences = await loadPreferences();
-        preferences.advancedModeEnabled = msg.advancedModeEnabled;
-        await savePreferences(preferences);
+        const advancedModeEnabled = msg.advancedModeEnabled;
+        await enqueuePrefMutation(async () => {
+          const preferences = await loadPreferences();
+          preferences.advancedModeEnabled = advancedModeEnabled;
+          await savePreferences(preferences);
+        });
         break;
       }
       case "record-preset-usage": {
-        const preferences = await loadPreferences();
-        preferences.lastUsedPreset = msg.presetId;
-        await savePreferences(preferences);
+        const presetId = msg.presetId;
+        await enqueuePrefMutation(async () => {
+          const preferences = await loadPreferences();
+          preferences.lastUsedPreset = presetId;
+          await savePreferences(preferences);
+        });
         break;
       }
       case "open-external-url": {

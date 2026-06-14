@@ -9,6 +9,8 @@ import {
   applyExportSettings,
   clearExportSettings,
   generateiOSContentsJSON,
+  generateIOSContentsJSON,
+  validateIOSMetadataSettings,
   loadPreferences,
   savePreferences,
 } from './core.js';
@@ -130,7 +132,15 @@ describe('applyExportSettings', () => {
 
   it('advanced iOS builds the imageset path and posts export-success with Contents.json', () => {
     const node = createMockNode();
-    applyExportSettings([node], [{ format: 'PNG', suffix: '@2x' }], 'icon-home', true, 'iOS', true, true);
+    applyExportSettings(
+      [node],
+      [{ format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } }],
+      'icon-home',
+      true,
+      'iOS',
+      true,
+      true
+    );
 
     expect(node.exportSettings[0].suffix).toBe('/icon-home.imageset/icon-home@2x');
 
@@ -280,5 +290,128 @@ describe('applyExportSettings — per-preset flag precedence', () => {
     applyExportSettings([node], iosSettings, undefined, false, 'iOS');
     expect(contentsJsonPosted()).toBe(false);
     expect(node.exportSettings[0].suffix).toBe('@1x');
+  });
+});
+
+describe('validateIOSMetadataSettings', () => {
+  it('returns null for a valid single-scale PNG preset', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+      ])
+    ).toBeNull();
+  });
+
+  it('returns null for a valid multi-scale PNG preset (1x + 2x)', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+      ])
+    ).toBeNull();
+  });
+
+  it('returns null for the full 1x/2x/3x set', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+        { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
+      ])
+    ).toBeNull();
+  });
+
+  it('rejects an empty settings array', () => {
+    expect(validateIOSMetadataSettings([])).toMatch(/PNG/);
+  });
+
+  it('rejects a JPG entry', () => {
+    expect(
+      validateIOSMetadataSettings([{ format: 'JPG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } }])
+    ).toMatch(/PNG/);
+  });
+
+  it('rejects a mixed PNG + SVG array', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+        { format: 'SVG', suffix: '' },
+      ])
+    ).toMatch(/PNG/);
+  });
+
+  it('rejects a PNG entry missing a constraint', () => {
+    expect(validateIOSMetadataSettings([{ format: 'PNG', suffix: '@2x' }])).toMatch(/SCALE/);
+  });
+
+  it('rejects a PNG entry with a WIDTH constraint', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'WIDTH', value: 64 } },
+      ])
+    ).toMatch(/SCALE/);
+  });
+
+  it('rejects an unsupported scale (e.g. 4×)', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@4x', constraint: { type: 'SCALE', value: 4 } },
+      ])
+    ).toMatch(/4/);
+  });
+
+  it('rejects duplicate scale values', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+      ])
+    ).toMatch(/duplicate/i);
+  });
+});
+
+describe('generateIOSContentsJSON', () => {
+  it('produces a single-entry Contents.json for a 2× preset', () => {
+    const parsed = JSON.parse(
+      generateIOSContentsJSON('icon-home', [
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+      ])
+    );
+    expect(parsed.images).toHaveLength(1);
+    expect(parsed.images[0]).toEqual({ filename: 'icon-home@2x.png', idiom: 'universal', scale: '2x' });
+    expect(parsed.info).toEqual({ author: 'Lazy Export', version: 1 });
+  });
+
+  it('produces a two-entry Contents.json for 1× + 3× settings', () => {
+    const parsed = JSON.parse(
+      generateIOSContentsJSON('logo', [
+        { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+        { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
+      ])
+    );
+    expect(parsed.images).toHaveLength(2);
+    expect(parsed.images[0].filename).toBe('logo@1x.png');
+    expect(parsed.images[0].scale).toBe('1x');
+    expect(parsed.images[1].filename).toBe('logo@3x.png');
+    expect(parsed.images[1].scale).toBe('3x');
+  });
+
+  it('skips non-PNG entries silently (they were already rejected by validate)', () => {
+    const parsed = JSON.parse(
+      generateIOSContentsJSON('icon', [
+        { format: 'SVG', suffix: '' },
+        { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+      ])
+    );
+    expect(parsed.images).toHaveLength(1);
+    expect(parsed.images[0].filename).toBe('icon@1x.png');
+  });
+
+  it('deprecated generateiOSContentsJSON still produces the @1x/@2x/@3x structure', () => {
+    const parsed = JSON.parse(generateiOSContentsJSON('icon-home'));
+    expect(parsed.images).toHaveLength(3);
+    expect(parsed.images[0].filename).toBe('icon-home@1x.png');
+    expect(parsed.images[1].filename).toBe('icon-home@2x.png');
+    expect(parsed.images[2].filename).toBe('icon-home@3x.png');
   });
 });
