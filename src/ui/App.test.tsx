@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import App from './App.js';
 import { CUSTOM_NAME_ERROR } from '../shared/customName.js';
-import type { PluginMessage } from '../shared/types.js';
+import type { CustomPreset, PluginMessage, UIMessage } from '../shared/types.js';
 
 function postFromPlugin(pluginMessage: unknown) {
   act(() => {
@@ -190,5 +190,105 @@ describe('App preference wiring', () => {
 
     const iosCard = screen.getByLabelText(/Apply iOS/i);
     expect(within(iosCard).queryByText(/Last used/i)).not.toBeInTheDocument();
+  });
+});
+
+const examplePreset: CustomPreset = {
+  id: 'custom-1',
+  name: 'My Custom Preset',
+  platform: 'iOS',
+  icon: '⚙️',
+  isCustom: true,
+  createdAt: 1,
+  settings: [{ format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } }],
+};
+
+describe('App message routing', () => {
+  beforeEach(() => {
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    window.onmessage = null;
+  });
+
+  it('updates the selection count on selection-changed', () => {
+    render(<App />);
+    expect(screen.getByText(/No selection/i)).toBeInTheDocument();
+
+    postFromPlugin({ type: 'selection-changed', count: 3 });
+    expect(screen.getByText(/3 selected/i)).toBeInTheDocument();
+  });
+
+  it('renders custom presets after preferences-loaded (with a selection)', () => {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+    postFromPlugin({
+      type: 'preferences-loaded',
+      preferences: { customPresets: [examplePreset], advancedModeEnabled: false },
+    });
+
+    expect(screen.getByText('My Custom Preset')).toBeInTheDocument();
+  });
+
+  it('shows an error toast on error messages', () => {
+    render(<App />);
+    postFromPlugin({ type: 'error', message: 'Something failed' });
+    expect(screen.getByText('Something failed')).toBeInTheDocument();
+  });
+});
+
+describe('App optimistic CRUD', () => {
+  let postSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    postSpy = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    window.onmessage = null;
+  });
+
+  it('optimistically removes a preset on delete and posts delete-preset', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+    postFromPlugin({
+      type: 'preferences-loaded',
+      preferences: { customPresets: [examplePreset], advancedModeEnabled: false },
+    });
+
+    expect(screen.getByText('My Custom Preset')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTitle('Delete preset'));
+
+    expect(screen.queryByText('My Custom Preset')).not.toBeInTheDocument();
+
+    const sent = postSpy.mock.calls.map(
+      (c: [unknown, ...unknown[]]) => (c[0] as { pluginMessage: UIMessage }).pluginMessage
+    );
+    expect(sent).toContainEqual({ type: 'delete-preset', presetId: 'custom-1' });
+  });
+
+  it('does not delete when confirm is cancelled', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+    postFromPlugin({
+      type: 'preferences-loaded',
+      preferences: { customPresets: [examplePreset], advancedModeEnabled: false },
+    });
+
+    fireEvent.click(screen.getByTitle('Delete preset'));
+
+    expect(screen.getByText('My Custom Preset')).toBeInTheDocument();
+    const deletes = postSpy.mock.calls.filter(
+      (c: [unknown, ...unknown[]]) => (c[0] as { pluginMessage: UIMessage }).pluginMessage.type === 'delete-preset'
+    );
+    expect(deletes).toHaveLength(0);
   });
 });
