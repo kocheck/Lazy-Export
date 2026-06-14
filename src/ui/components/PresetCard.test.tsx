@@ -33,11 +33,11 @@ describe('PresetCard', () => {
     expect(screen.getByText('📱')).toBeInTheDocument();
   });
 
-  it('should show correct settings count', () => {
+  it('should render a format badge for the preset', () => {
     const onClick = vi.fn();
     render(<PresetCard preset={mockPreset} onClick={onClick} />);
-    
-    expect(screen.getByText('2x')).toBeInTheDocument();
+
+    expect(screen.getByText('PNG')).toBeInTheDocument();
   });
 
   it('should call onClick when clicked', () => {
