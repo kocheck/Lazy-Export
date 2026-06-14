@@ -132,6 +132,9 @@ function validateCustomName(raw) {
 
 // src/plugin/core.ts
 var VALID_IOS_SCALES = { "1": "1x", "2": "2x", "3": "3x" };
+function iosScaleMarker(constraintValue) {
+  return `@${constraintValue}x`;
+}
 function validateIOSMetadataSettings(settings) {
   const png = settings.filter((s) => s.format === "PNG");
   if (png.length === 0) {
@@ -158,12 +161,11 @@ function validateIOSMetadataSettings(settings) {
 }
 function generateIOSContentsJSON(assetName, settings) {
   const images = settings.filter((s) => s.format === "PNG" && s.constraint?.type === "SCALE").map((s) => {
-    const scale = VALID_IOS_SCALES[String(s.constraint.value)] ?? `${s.constraint.value}x`;
-    const suffix = s.suffix ?? "";
+    const value = s.constraint.value;
     return {
-      filename: `${assetName}${suffix}.png`,
+      filename: `${assetName}${iosScaleMarker(value)}.png`,
       idiom: "universal",
-      scale
+      scale: VALID_IOS_SCALES[String(value)] ?? `${value}x`
     };
   });
   return JSON.stringify({ images, info: { author: "Lazy Export", version: 1 } }, null, 2);
@@ -211,7 +213,7 @@ function applyExportSettings(nodes, settings, customName, advancedMode = false, 
       let suffix = setting.suffix || "";
       if (advancedMode && directoryStructure && platform) {
         if (platform === "iOS") {
-          const scale = setting.suffix || "@1x";
+          const scale = setting.constraint?.type === "SCALE" ? iosScaleMarker(setting.constraint.value) : setting.suffix || "@1x";
           suffix = `/${assetName}.imageset/${assetName}${scale}`;
         } else if (platform === "Android") {
           const density = setting.suffix || "drawable-mdpi";
