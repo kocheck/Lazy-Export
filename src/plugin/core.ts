@@ -76,18 +76,6 @@ export function generateIOSContentsJSON(assetName: string, settings: ExportSetti
   return JSON.stringify({ images, info: { author: 'Lazy Export', version: 1 } }, null, 2);
 }
 
-/**
- * @deprecated Use generateIOSContentsJSON(assetName, settings) instead.
- * Kept for backwards-compat with existing tests that call the old signature.
- */
-export function generateiOSContentsJSON(assetName: string): string {
-  return generateIOSContentsJSON(assetName, [
-    { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
-    { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
-    { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
-  ]);
-}
-
 // ---------------------------------------------------------------------------
 // Preference mutation queue — serialises all read-modify-write operations so
 // concurrent messages cannot clobber each other's writes.

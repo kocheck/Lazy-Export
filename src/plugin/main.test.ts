@@ -1,6 +1,6 @@
 /**
  * Tests for plugin core: applyExportSettings, clearExportSettings,
- * generateiOSContentsJSON, load/savePreferences — invoked for real.
+ * generateIOSContentsJSON, load/savePreferences — invoked for real.
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
@@ -8,7 +8,6 @@ import { installFigmaMock, createMockNode, FigmaMock } from '../test/figma-mock.
 import {
   applyExportSettings,
   clearExportSettings,
-  generateiOSContentsJSON,
   generateIOSContentsJSON,
   validateIOSMetadataSettings,
   loadPreferences,
@@ -52,13 +51,19 @@ describe('loadPreferences / savePreferences', () => {
   });
 });
 
-describe('generateiOSContentsJSON', () => {
+describe('generateIOSContentsJSON (default 1×/2×/3× settings)', () => {
+  const defaultSettings: ExportSetting[] = [
+    { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+    { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+    { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
+  ];
+
   beforeEach(() => {
     installFigmaMock();
   });
 
   it('produces the @1x/@2x/@3x Contents.json structure', () => {
-    const parsed = JSON.parse(generateiOSContentsJSON('icon-home'));
+    const parsed = JSON.parse(generateIOSContentsJSON('icon-home', defaultSettings));
     expect(parsed.images).toHaveLength(3);
     expect(parsed.images[0].filename).toBe('icon-home@1x.png');
     expect(parsed.images[1].filename).toBe('icon-home@2x.png');
@@ -407,8 +412,14 @@ describe('generateIOSContentsJSON', () => {
     expect(parsed.images[0].filename).toBe('icon@1x.png');
   });
 
-  it('deprecated generateiOSContentsJSON still produces the @1x/@2x/@3x structure', () => {
-    const parsed = JSON.parse(generateiOSContentsJSON('icon-home'));
+  it('produces the @1x/@2x/@3x structure with explicit default settings', () => {
+    const parsed = JSON.parse(
+      generateIOSContentsJSON('icon-home', [
+        { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+        { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
+      ])
+    );
     expect(parsed.images).toHaveLength(3);
     expect(parsed.images[0].filename).toBe('icon-home@1x.png');
     expect(parsed.images[1].filename).toBe('icon-home@2x.png');

@@ -4,8 +4,8 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { installFigmaMock, createMockNode, FigmaMock } from '../test/figma-mock.js';
-import { handleUIMessage, handlePluginError } from './core.js';
-import type { CustomPreset, PresetConfig, SavedPreferences } from '../shared/types.js';
+import { handleUIMessage, handlePluginError, generateIOSContentsJSON, applyExportSettings } from './core.js';
+import type { CustomPreset, ExportSetting, PresetConfig, SavedPreferences } from '../shared/types.js';
 
 const makeCustomPreset = (overrides: Partial<CustomPreset> = {}): CustomPreset => ({
   id: 'custom-1',
@@ -231,5 +231,70 @@ describe('preference mutation queue', () => {
 
     const stored = (await figmaMock.clientStorage.getAsync('preferences')) as SavedPreferences;
     expect(stored.customPresets.some((p) => p.id === 'b')).toBe(true);
+  });
+});
+
+describe('iOS filename derivation', () => {
+  beforeEach(() => {
+    installFigmaMock();
+  });
+
+  const builtInSettings: ExportSetting[] = [
+    { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
+    { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+    { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+  ];
+
+  it('regression: built-in iOS preset produces @1x/@2x/@3x in both the imageset path and Contents.json', () => {
+    const node = createMockNode();
+    applyExportSettings([node], builtInSettings, 'asset', true, 'iOS', false, true);
+    const suffixes = node.exportSettings.map((s) => s.suffix);
+    expect(suffixes).toEqual([
+      '/asset.imageset/asset@3x',
+      '/asset.imageset/asset@2x',
+      '/asset.imageset/asset@1x',
+    ]);
+
+    const contents = JSON.parse(generateIOSContentsJSON('asset', builtInSettings));
+    expect(contents.images.map((img: { filename: string }) => img.filename)).toEqual([
+      'asset@3x.png',
+      'asset@2x.png',
+      'asset@1x.png',
+    ]);
+  });
+
+  it('empty-suffix custom preset: imageset path and Contents.json both use @1x/@2x/@3x', () => {
+    const settings: ExportSetting[] = [
+      { format: 'PNG', suffix: '', constraint: { type: 'SCALE', value: 1 } },
+      { format: 'PNG', suffix: '', constraint: { type: 'SCALE', value: 2 } },
+      { format: 'PNG', suffix: '', constraint: { type: 'SCALE', value: 3 } },
+    ];
+    const node = createMockNode();
+    applyExportSettings([node], settings, 'asset', true, 'iOS', false, true);
+    const suffixes = node.exportSettings.map((s) => s.suffix);
+    expect(suffixes).toEqual([
+      '/asset.imageset/asset@1x',
+      '/asset.imageset/asset@2x',
+      '/asset.imageset/asset@3x',
+    ]);
+
+    const contents = JSON.parse(generateIOSContentsJSON('asset', settings));
+    expect(contents.images.map((img: { filename: string }) => img.filename)).toEqual([
+      'asset@1x.png',
+      'asset@2x.png',
+      'asset@3x.png',
+    ]);
+  });
+
+  it('mismatched-suffix case: scale 2 with suffix "foo" still produces asset@2x in both places', () => {
+    const settings: ExportSetting[] = [
+      { format: 'PNG', suffix: 'foo', constraint: { type: 'SCALE', value: 2 } },
+    ];
+    const node = createMockNode();
+    applyExportSettings([node], settings, 'asset', true, 'iOS', false, true);
+    expect(node.exportSettings[0].suffix).toBe('/asset.imageset/asset@2x');
+
+    const contents = JSON.parse(generateIOSContentsJSON('asset', settings));
+    expect(contents.images[0].filename).toBe('asset@2x.png');
   });
 });
