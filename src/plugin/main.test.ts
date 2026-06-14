@@ -139,10 +139,13 @@ describe('Export Settings Application', () => {
 
     node.exportSettings = exportSettings;
 
-    expect(node.exportSettings[0].format).toBe('SVG');
-    expect(node.exportSettings[0].svgOutlineText).toBe(true);
-    expect(node.exportSettings[0].svgIdAttribute).toBe(false);
-    expect(node.exportSettings[0].svgSimplifyStroke).toBe(true);
+    const applied = node.exportSettings[0];
+    expect(applied.format).toBe('SVG');
+    if (applied.format === 'SVG') {
+      expect(applied.svgOutlineText).toBe(true);
+      expect(applied.svgIdAttribute).toBe(false);
+      expect(applied.svgSimplifyStroke).toBe(true);
+    }
   });
 });
 
