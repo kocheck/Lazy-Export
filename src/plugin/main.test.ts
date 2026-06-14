@@ -273,3 +273,52 @@ describe('apply-preset defensive customName guard', () => {
     );
   });
 });
+
+describe('Preferences message handlers', () => {
+  let figmaMock: FigmaMock;
+
+  beforeEach(async () => {
+    vi.resetModules();
+    figmaMock = installFigmaMock();
+    await import('./main.js');
+  });
+
+  function send(msg: unknown): Promise<unknown> {
+    const handler = (figmaMock as unknown as {
+      ui: { onmessage?: (m: unknown) => unknown };
+    }).ui.onmessage;
+    if (!handler) throw new Error('figma.ui.onmessage was not registered');
+    return Promise.resolve(handler(msg));
+  }
+
+  it('persists advancedModeEnabled on save-preferences', async () => {
+    await send({ type: 'save-preferences', advancedModeEnabled: true });
+    const stored = await figmaMock.clientStorage.getAsync('preferences');
+    expect((stored as { advancedModeEnabled: boolean }).advancedModeEnabled).toBe(true);
+  });
+
+  it('preserves existing prefs when saving advancedModeEnabled', async () => {
+    await figmaMock.clientStorage.setAsync('preferences', {
+      customPresets: [{ id: 'keep-me' }],
+      lastUsedPreset: 'ios',
+      advancedModeEnabled: false,
+    });
+    await send({ type: 'save-preferences', advancedModeEnabled: true });
+    const stored = (await figmaMock.clientStorage.getAsync('preferences')) as {
+      advancedModeEnabled: boolean;
+      lastUsedPreset?: string;
+      customPresets: { id: string }[];
+    };
+    expect(stored.advancedModeEnabled).toBe(true);
+    expect(stored.lastUsedPreset).toBe('ios');
+    expect(stored.customPresets[0].id).toBe('keep-me');
+  });
+
+  it('stores lastUsedPreset on record-preset-usage', async () => {
+    await send({ type: 'record-preset-usage', presetId: 'android' });
+    const stored = (await figmaMock.clientStorage.getAsync('preferences')) as {
+      lastUsedPreset?: string;
+    };
+    expect(stored.lastUsedPreset).toBe('android');
+  });
+});

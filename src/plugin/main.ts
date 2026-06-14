@@ -379,6 +379,20 @@ figma.ui.onmessage = async (msg: UIMessage) => {
         break;
       }
 
+      case 'save-preferences': {
+        const preferences = await loadPreferences();
+        preferences.advancedModeEnabled = msg.advancedModeEnabled;
+        await savePreferences(preferences);
+        break;
+      }
+
+      case 'record-preset-usage': {
+        const preferences = await loadPreferences();
+        preferences.lastUsedPreset = msg.presetId;
+        await savePreferences(preferences);
+        break;
+      }
+
       case 'open-external-url': {
         figma.openExternal(msg.url);
         break;
