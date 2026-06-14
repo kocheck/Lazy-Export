@@ -150,50 +150,44 @@ function applyExportSettings(
   const assetName = customName || 'asset';
 
   nodes.forEach((node) => {
-    // Map settings to Figma's ExportSettings format
-    const exportSettings: ExportSettings[] = settings.map((setting) => {
+    const exportSettings: ExportSettings[] = settings.map((setting): ExportSettings => {
       let suffix = setting.suffix || '';
 
       // Apply advanced directory structure
       if (advancedMode && platform) {
         if (platform === 'iOS') {
-          // iOS: /asset.imageset/asset@1x.png
           const scale = setting.suffix || '@1x';
           suffix = `/${assetName}.imageset/${assetName}${scale}`;
         } else if (platform === 'Android') {
-          // Android: /drawable-mdpi/asset.png
           const density = setting.suffix || 'drawable-mdpi';
           suffix = `/${density}/${assetName}`;
         }
       } else if (customName && setting.suffix) {
-        // Simple mode with custom name
         suffix = `/${assetName}${setting.suffix}`;
       }
 
-      const exportSetting: ExportSettings = {
-        format: setting.format,
-        suffix: suffix,
-      };
-
-      // Add constraint if present
-      if (setting.constraint) {
-        exportSetting.constraint = setting.constraint;
-      }
-
-      // Add SVG options if present
       if (setting.format === 'SVG') {
-        if (setting.svgOutlineText !== undefined) {
-          exportSetting.svgOutlineText = setting.svgOutlineText;
-        }
-        if (setting.svgIdAttribute !== undefined) {
-          exportSetting.svgIdAttribute = setting.svgIdAttribute;
-        }
-        if (setting.svgSimplifyStroke !== undefined) {
-          exportSetting.svgSimplifyStroke = setting.svgSimplifyStroke;
-        }
+        return {
+          format: 'SVG',
+          suffix,
+          ...(setting.svgOutlineText !== undefined && { svgOutlineText: setting.svgOutlineText }),
+          ...(setting.svgIdAttribute !== undefined && { svgIdAttribute: setting.svgIdAttribute }),
+          ...(setting.svgSimplifyStroke !== undefined && {
+            svgSimplifyStroke: setting.svgSimplifyStroke,
+          }),
+        };
       }
 
-      return exportSetting;
+      if (setting.format === 'PDF') {
+        return { format: 'PDF', suffix };
+      }
+
+      // PNG | JPG → image variant (the only variant that accepts `constraint`)
+      return {
+        format: setting.format,
+        suffix,
+        ...(setting.constraint && { constraint: setting.constraint }),
+      };
     });
 
     node.exportSettings = exportSettings;

@@ -188,25 +188,25 @@ function applyExportSettings(nodes, settings, customName, advancedMode = false, 
       } else if (customName && setting.suffix) {
         suffix = `/${assetName}${setting.suffix}`;
       }
-      const exportSetting = {
-        format: setting.format,
-        suffix
-      };
-      if (setting.constraint) {
-        exportSetting.constraint = setting.constraint;
-      }
       if (setting.format === "SVG") {
-        if (setting.svgOutlineText !== void 0) {
-          exportSetting.svgOutlineText = setting.svgOutlineText;
-        }
-        if (setting.svgIdAttribute !== void 0) {
-          exportSetting.svgIdAttribute = setting.svgIdAttribute;
-        }
-        if (setting.svgSimplifyStroke !== void 0) {
-          exportSetting.svgSimplifyStroke = setting.svgSimplifyStroke;
-        }
+        return {
+          format: "SVG",
+          suffix,
+          ...setting.svgOutlineText !== void 0 && { svgOutlineText: setting.svgOutlineText },
+          ...setting.svgIdAttribute !== void 0 && { svgIdAttribute: setting.svgIdAttribute },
+          ...setting.svgSimplifyStroke !== void 0 && {
+            svgSimplifyStroke: setting.svgSimplifyStroke
+          }
+        };
       }
-      return exportSetting;
+      if (setting.format === "PDF") {
+        return { format: "PDF", suffix };
+      }
+      return {
+        format: setting.format,
+        suffix,
+        ...setting.constraint && { constraint: setting.constraint }
+      };
     });
     node.exportSettings = exportSettings;
   });
