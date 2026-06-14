@@ -694,9 +694,10 @@ figma.ui.onmessage = (msg) => {
 
 See CONTRIBUTING.md for comprehensive checklist.
 
-### Future: Automated Testing
+### Automated Testing
 
-**Planned:**
+The plugin uses **Vitest** + **React Testing Library**. See `TESTING.md` for how to run and
+write tests. Representative examples:
 
 ```typescript
 // Unit tests (Jest)
