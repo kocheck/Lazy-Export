@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { installFigmaMock, createMockNode, FigmaMock } from '../test/figma-mock.js';
-import { handleUIMessage, handlePluginError, generateIOSContentsJSON, applyExportSettings } from './core.js';
+import { handleUIMessage, handlePluginError, generateIOSContentsJSON, applyExportSettings, validateCustomPreset } from './core.js';
 import type { CustomPreset, ExportSetting, PresetConfig, SavedPreferences } from '../shared/types.js';
 
 const makeCustomPreset = (overrides: Partial<CustomPreset> = {}): CustomPreset => ({
@@ -328,5 +328,93 @@ describe('iOS filename derivation', () => {
 
     const contents = JSON.parse(generateIOSContentsJSON('asset', settings));
     expect(contents.images[0].filename).toBe('asset@2x.png');
+  });
+});
+
+describe('validateCustomPreset', () => {
+  const validPreset = {
+    id: 'custom-abc',
+    name: 'My Preset',
+    platform: 'iOS',
+    isCustom: true as const,
+    createdAt: 1,
+    settings: [{ format: 'PNG' as const, suffix: '@2x' }],
+  };
+
+  it('accepts a valid CustomPreset', () => {
+    expect(validateCustomPreset(validPreset)).toEqual({ valid: true });
+  });
+
+  it('rejects null / non-object', () => {
+    expect(validateCustomPreset(null).valid).toBe(false);
+    expect(validateCustomPreset('string').valid).toBe(false);
+    expect(validateCustomPreset(42).valid).toBe(false);
+  });
+
+  it('rejects missing or empty id', () => {
+    expect(validateCustomPreset({ ...validPreset, id: '' }).valid).toBe(false);
+    expect(validateCustomPreset({ ...validPreset, id: 123 }).valid).toBe(false);
+  });
+
+  it('rejects missing or empty name', () => {
+    expect(validateCustomPreset({ ...validPreset, name: '' }).valid).toBe(false);
+    expect(validateCustomPreset({ ...validPreset, name: undefined }).valid).toBe(false);
+  });
+
+  it('rejects unknown platform', () => {
+    expect(validateCustomPreset({ ...validPreset, platform: 'Windows' }).valid).toBe(false);
+    expect(validateCustomPreset({ ...validPreset, platform: '' }).valid).toBe(false);
+  });
+
+  it('rejects non-array settings', () => {
+    expect(validateCustomPreset({ ...validPreset, settings: 'not-array' }).valid).toBe(false);
+    expect(validateCustomPreset({ ...validPreset, settings: null }).valid).toBe(false);
+  });
+
+  it('rejects oversized settings (> 50)', () => {
+    const big = Array.from({ length: 51 }, () => ({ format: 'PNG' as const, suffix: '' }));
+    expect(validateCustomPreset({ ...validPreset, settings: big }).valid).toBe(false);
+  });
+
+  it('rejects when isCustom is not true', () => {
+    expect(validateCustomPreset({ ...validPreset, isCustom: false }).valid).toBe(false);
+    expect(validateCustomPreset({ ...validPreset, isCustom: undefined }).valid).toBe(false);
+  });
+
+  it('accepts all valid platforms', () => {
+    for (const platform of ['iOS', 'Android', 'Web', 'PDF']) {
+      expect(validateCustomPreset({ ...validPreset, platform }).valid).toBe(true);
+    }
+  });
+});
+
+describe('save-preset with validateCustomPreset guard', () => {
+  let figmaMock: FigmaMock;
+
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+  });
+
+  it('rejects a malformed preset with an error and does not write to storage', async () => {
+    const badPreset = { id: '', name: 'Bad', platform: 'iOS', isCustom: true, createdAt: 1, settings: [] };
+    await handleUIMessage({ type: 'save-preset', preset: badPreset as CustomPreset });
+
+    const stored = await figmaMock.clientStorage.getAsync('preferences');
+    expect(stored).toBeUndefined();
+    expect(figmaMock.ui.postMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'error' })
+    );
+  });
+
+  it('regression: a valid preset still writes and posts success', async () => {
+    const goodPreset = makeCustomPreset({ id: 'good-1', name: 'Good' });
+    await handleUIMessage({ type: 'save-preset', preset: goodPreset });
+
+    const stored = (await figmaMock.clientStorage.getAsync('preferences')) as SavedPreferences;
+    expect(stored.customPresets).toHaveLength(1);
+    expect(figmaMock.ui.postMessage).toHaveBeenCalledWith({
+      type: 'success',
+      message: 'Preset saved successfully',
+    });
   });
 });
