@@ -34,6 +34,7 @@ const App: React.FC = () => {
   const hasCustomPresets = customPresets.length > 0;
 
   const hasSelection = selectionCount > 0;
+  const lastUsedPreset = preferences?.lastUsedPreset;
 
   // Listen for messages from plugin
   useEffect(() => {
@@ -97,6 +98,20 @@ const App: React.FC = () => {
       preset,
       customName: result.value,
       advancedMode,
+    };
+    parent.postMessage({ pluginMessage: message }, '*');
+    const usageMessage: UIMessage = {
+      type: 'record-preset-usage',
+      presetId: preset.id,
+    };
+    parent.postMessage({ pluginMessage: usageMessage }, '*');
+  };
+
+  const handleAdvancedModeChange = (enabled: boolean) => {
+    setAdvancedMode(enabled);
+    const message: UIMessage = {
+      type: 'save-preferences',
+      advancedModeEnabled: enabled,
     };
     parent.postMessage({ pluginMessage: message }, '*');
   };
@@ -179,6 +194,7 @@ const App: React.FC = () => {
                     preset={preset}
                     onClick={() => applyPreset(preset)}
                     disabled={!hasSelection}
+                    isLastUsed={preset.id === lastUsedPreset}
                   />
                 ))}
               </div>
@@ -197,6 +213,7 @@ const App: React.FC = () => {
                         preset={preset}
                         onClick={() => applyPreset(preset)}
                         disabled={!hasSelection}
+                        isLastUsed={preset.id === lastUsedPreset}
                       />
                       <div className="app__custom-preset-actions">
                         <button
@@ -254,7 +271,7 @@ const App: React.FC = () => {
             <section className="app__section">
               <Toggle
                 checked={advancedMode}
-                onChange={setAdvancedMode}
+                onChange={handleAdvancedModeChange}
                 label="Advanced Mode"
                 disabled={!hasSelection}
               />

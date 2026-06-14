@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import App from './App.js';
 import { CUSTOM_NAME_ERROR } from '../shared/customName.js';
+import type { PluginMessage } from '../shared/types.js';
 
 function postFromPlugin(pluginMessage: unknown) {
   act(() => {
@@ -105,5 +106,89 @@ describe('App customName contract (F10)', () => {
     expect(applyCall).toBeDefined();
     const sent = (applyCall![0] as { pluginMessage: { customName?: string } }).pluginMessage;
     expect(sent.customName).toBe('icon-home');
+  });
+});
+
+/** Deliver a PluginMessage to App's window.onmessage handler. */
+function deliverPref(message: PluginMessage): void {
+  // jsdom: window.dispatchEvent does NOT trigger window.onmessage property.
+  // Must invoke directly. Wrap in act() to flush React state updates.
+  act(() => {
+    if (typeof window.onmessage === 'function') {
+      window.onmessage(new MessageEvent('message', { data: { pluginMessage: message } }));
+    }
+  });
+}
+
+describe('App preference wiring', () => {
+  let postSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    postSpy = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    postSpy.mockRestore();
+    vi.restoreAllMocks();
+    window.onmessage = null;
+  });
+
+  function sentMessages(): Array<{ type: string; [k: string]: unknown }> {
+    return postSpy.mock.calls
+      .map((call: [unknown, ...unknown[]]) => (call[0] as { pluginMessage?: { type: string } } | undefined)?.pluginMessage)
+      .filter((m: { type: string } | undefined): m is { type: string; [k: string]: unknown } => Boolean(m));
+  }
+
+  it('posts save-preferences when Advanced Mode is toggled', () => {
+    render(<App />);
+    // selection-changed needed so the toggle renders
+    deliverPref({ type: 'selection-changed', count: 1 });
+
+    const toggle = screen.getByLabelText('Advanced Mode');
+    fireEvent.click(toggle);
+
+    const save = sentMessages().find((m) => m.type === 'save-preferences');
+    expect(save).toBeDefined();
+    expect(save?.advancedModeEnabled).toBe(true);
+  });
+
+  it('reflects advancedModeEnabled from preferences-loaded', () => {
+    render(<App />);
+    deliverPref({ type: 'selection-changed', count: 1 });
+    deliverPref({
+      type: 'preferences-loaded',
+      preferences: { customPresets: [], advancedModeEnabled: true },
+    });
+
+    const toggle = screen.getByLabelText('Advanced Mode') as HTMLInputElement;
+    expect(toggle.checked).toBe(true);
+  });
+
+  it('posts record-preset-usage when a preset is applied', () => {
+    render(<App />);
+    deliverPref({ type: 'selection-changed', count: 1 });
+
+    // Find and click the iOS preset card
+    const iosCard = screen.getByLabelText(/Apply iOS/i);
+    fireEvent.click(iosCard);
+
+    const usage = sentMessages().find((m) => m.type === 'record-preset-usage');
+    expect(usage).toBeDefined();
+    expect(usage?.presetId).toBe('ios');
+  });
+
+  it('renders the last-used badge on the matching preset card after preferences-loaded', () => {
+    render(<App />);
+    deliverPref({ type: 'selection-changed', count: 1 });
+    deliverPref({
+      type: 'preferences-loaded',
+      preferences: { customPresets: [], advancedModeEnabled: false, lastUsedPreset: 'web' },
+    });
+
+    const webCard = screen.getByLabelText(/Apply Web/i);
+    expect(within(webCard).getByText(/Last used/i)).toBeInTheDocument();
+
+    const iosCard = screen.getByLabelText(/Apply iOS/i);
+    expect(within(iosCard).queryByText(/Last used/i)).not.toBeInTheDocument();
   });
 });
