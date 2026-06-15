@@ -142,11 +142,12 @@ UI Re-renders
 - Contains default preset configurations
 - Easy to add new default presets here
 
-#### **src/plugin/main.ts**
-- Handles all Figma API interactions
+#### **src/plugin/core.ts**
+- Handles all Figma API interactions (`handleUIMessage`, `applyExportSettings`, etc.)
 - Manages client storage (persistence)
 - Applies export settings to nodes
 - Generates metadata (iOS Contents.json)
+- `main.ts` is the thin entry point that calls `initPlugin()` from `core.ts`
 
 #### **src/ui/App.tsx**
 - Main React component
@@ -271,12 +272,10 @@ Before submitting a PR, test these scenarios:
 - [ ] Modal opens/closes correctly
 - [ ] Forms validate properly
 
-### Future: Automated Testing
+### Automated Testing
 
-We plan to add:
-- Unit tests with Jest
-- Component tests with React Testing Library
-- E2E tests with Figma Plugin API mocks
+Tests exist and are required for all new code. We use **Vitest** + **React Testing Library**.
+See `TESTING.md` for how to run and write tests.
 
 ---
 
@@ -367,7 +366,7 @@ A Figma plugin that lets users apply export settings to layers with one click. T
 **Tech Stack:**
 - React 18 + TypeScript 5 (UI)
 - Figma Plugin API v1.0.0 (Plugin)
-- Vite 5 (Build)
+- Vite 7 (Build)
 - CSS with Figma UI3 variables (Styling)
 
 ### Key Constraints
@@ -398,7 +397,7 @@ A Figma plugin that lets users apply export settings to layers with one click. T
 **Modify message types:**
 1. Update types in `src/shared/types.ts`
 2. Update sender in `src/ui/App.tsx`
-3. Update handler in `src/plugin/main.ts`
+3. Update handler in `src/plugin/core.ts`
 
 ### Architecture Patterns to Follow
 
@@ -428,7 +427,7 @@ A Figma plugin that lets users apply export settings to layers with one click. T
 |------|---------------|
 | Add preset | `src/shared/presets.ts` |
 | Change UI | `src/ui/App.tsx`, `src/ui/components/*.tsx` |
-| Modify logic | `src/plugin/main.ts` |
+| Modify logic | `src/plugin/core.ts` |
 | Update types | `src/shared/types.ts` |
 | Style changes | `src/ui/**/*.css` |
 

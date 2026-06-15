@@ -88,16 +88,8 @@ describe('ErrorBoundary', () => {
     expect(screen.getByText(/Reload Plugin/i)).toBeInTheDocument();
   });
 
-  it('should copy debug info to clipboard when button clicked', async () => {
-    const mockWriteText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: mockWriteText,
-      },
-    });
-
-    // Mock alert
-    global.alert = vi.fn();
+  it('shows a success status after copying debug info', async () => {
+    const exec = vi.spyOn(document, 'execCommand').mockReturnValue(true);
 
     render(
       <ErrorBoundary>
@@ -105,29 +97,17 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const button = screen.getByText(/Copy Debug Info/i);
-    fireEvent.click(button);
+    fireEvent.click(screen.getByText(/Copy Debug Info/i));
 
-    // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(mockWriteText).toHaveBeenCalled();
-    const clipboardContent = mockWriteText.mock.calls[0][0];
-    expect(clipboardContent).toContain('Bug Report');
-    expect(clipboardContent).toContain('Plugin Version: 2.0.0');
+    expect(exec).toHaveBeenCalledWith('copy');
+    expect(await screen.findByText(/Copied!/i)).toBeInTheDocument();
+    exec.mockRestore();
   });
 
-  it('should use fallback copy method when clipboard API fails', async () => {
-    const mockWriteText = vi.fn().mockRejectedValue(new Error('Clipboard API not available'));
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: mockWriteText,
-      },
-    });
-
-    // Mock document.execCommand
-    document.execCommand = vi.fn().mockReturnValue(true);
-    global.alert = vi.fn();
+  it('shows a failure status when the copy fails', async () => {
+    const exec = vi.spyOn(document, 'execCommand').mockReturnValue(false);
 
     render(
       <ErrorBoundary>
@@ -135,20 +115,17 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const button = screen.getByText(/Copy Debug Info/i);
-    fireEvent.click(button);
+    fireEvent.click(screen.getByText(/Copy Debug Info/i));
 
-    // Wait for async operation
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(mockWriteText).toHaveBeenCalled();
-    expect(document.execCommand).toHaveBeenCalledWith('copy');
-    expect(global.alert).toHaveBeenCalled();
+    expect(exec).toHaveBeenCalledWith('copy');
+    expect(await screen.findByText(/Copy failed/i)).toBeInTheDocument();
+    exec.mockRestore();
   });
 
-  it('should open GitHub issue page when Report button clicked', () => {
-    const mockOpen = vi.fn();
-    global.window.open = mockOpen;
+  it('posts an open-external-url message when Report on GitHub clicked', () => {
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
 
     render(
       <ErrorBoundary>
@@ -156,12 +133,17 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const button = screen.getByText(/Report on GitHub/i);
-    fireEvent.click(button);
+    fireEvent.click(screen.getByText(/Report on GitHub/i));
 
-    expect(mockOpen).toHaveBeenCalledWith(
-      expect.stringContaining('github.com/kocheck/Lazy-Export/issues/new'),
-      '_blank'
+    expect(postMessage).toHaveBeenCalledWith(
+      {
+        pluginMessage: {
+          type: 'open-external-url',
+          url: expect.stringContaining('github.com/kocheck/Lazy-Export/issues/new'),
+        },
+      },
+      '*'
     );
+    postMessage.mockRestore();
   });
 });

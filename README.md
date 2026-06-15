@@ -35,6 +35,7 @@ Don't even open the plugin window. Just hit `Cmd + /` (or `Cmd + P`) and type:
 - `Lazy Export: Apply iOS`
 - `Lazy Export: Apply Android`
 - `Lazy Export: Apply Web`
+- `Lazy Export: Apply PDF`
 
 It applies the settings instantly. It’s almost *too* fast.
 
@@ -73,6 +74,8 @@ When importing into Figma, point to:
 src/
  ├── ui/          # React app (The pretty part)
  ├── plugin/      # Figma sandbox (The brain)
+ │   ├── main.ts  #   Thin entry shim — registers listeners and calls initPlugin()
+ │   └── core.ts  #   All plugin logic: handleUIMessage() and its cases
  └── shared/      # Shared types (The glue)
 ```
 
@@ -90,4 +93,4 @@ Check [CONTRIBUTING.md](CONTRIBUTING.md) for the rules of the road.
 ---
 
 **Made with ❤️ (and caffeine) for the Figma community.**
-*v2.0.0 - December 2025*
+*v2.0.0 - June 2026*

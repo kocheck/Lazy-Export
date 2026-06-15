@@ -32,7 +32,7 @@ describe('Toast', () => {
     const onClose = vi.fn();
     render(<Toast message="Test" type="info" onClose={onClose} />);
 
-    const closeButton = screen.getByRole('button', { name: /×/i });
+    const closeButton = screen.getByRole('button', { name: /close/i });
     fireEvent.click(closeButton);
 
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -63,66 +63,79 @@ describe('Toast', () => {
     expect(screen.queryByText(/Report Issue/i)).not.toBeInTheDocument();
   });
 
-  it('should copy debug info when Copy button clicked', async () => {
-    const mockWriteText = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: mockWriteText,
-      },
-    });
-    global.alert = vi.fn();
+  it('shows a success status after copying debug info', async () => {
+    const exec = vi.spyOn(document, 'execCommand').mockReturnValue(true);
 
     const onClose = vi.fn();
     const error = new Error('Test error');
     render(<Toast message="Error occurred" type="error" error={error} onClose={onClose} />);
 
-    const copyButton = screen.getByText(/Copy Debug Info/i);
-    fireEvent.click(copyButton);
+    fireEvent.click(screen.getByText(/Copy Debug Info/i));
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(mockWriteText).toHaveBeenCalled();
-    const clipboardContent = mockWriteText.mock.calls[0][0];
-    expect(clipboardContent).toContain('Bug Report');
+    expect(exec).toHaveBeenCalledWith('copy');
+    expect(await screen.findByText(/Copied!/i)).toBeInTheDocument();
+    exec.mockRestore();
   });
 
-  it('should handle clipboard copy failure gracefully', async () => {
-    const mockWriteText = vi.fn().mockRejectedValue(new Error('Failed'));
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: mockWriteText,
-      },
-    });
-    global.alert = vi.fn();
+  it('shows a failure status when the copy fails', async () => {
+    const exec = vi.spyOn(document, 'execCommand').mockReturnValue(false);
 
     const onClose = vi.fn();
     const error = new Error('Test error');
     render(<Toast message="Error occurred" type="error" error={error} onClose={onClose} />);
 
-    const copyButton = screen.getByText(/Copy Debug Info/i);
-    fireEvent.click(copyButton);
+    fireEvent.click(screen.getByText(/Copy Debug Info/i));
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
-    // Should still have attempted to copy
-    expect(mockWriteText).toHaveBeenCalled();
+    expect(exec).toHaveBeenCalledWith('copy');
+    expect(await screen.findByText(/Copy failed/i)).toBeInTheDocument();
+    exec.mockRestore();
   });
 
-  it('should open GitHub issue page when Report Issue clicked', () => {
-    const mockOpen = vi.fn();
-    global.window.open = mockOpen;
+  it('posts an open-external-url message when Report Issue clicked', () => {
+    const postMessage = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
 
     const onClose = vi.fn();
     const error = new Error('Test error');
     render(<Toast message="Error occurred" type="error" error={error} onClose={onClose} />);
 
-    const reportButton = screen.getByText(/Report Issue/i);
-    fireEvent.click(reportButton);
+    fireEvent.click(screen.getByText(/Report Issue/i));
 
-    expect(mockOpen).toHaveBeenCalledWith(
-      expect.stringContaining('github.com/kocheck/Lazy-Export/issues/new'),
-      '_blank'
+    expect(postMessage).toHaveBeenCalledWith(
+      {
+        pluginMessage: {
+          type: 'open-external-url',
+          url: expect.stringContaining('github.com/kocheck/Lazy-Export/issues/new'),
+        },
+      },
+      '*'
     );
+    postMessage.mockRestore();
+  });
+
+  it('copies Contents.json via execCommand and shows status', async () => {
+    const exec = vi.spyOn(document, 'execCommand').mockReturnValue(true);
+
+    const onClose = vi.fn();
+    render(
+      <Toast
+        message="Export complete"
+        type="success"
+        metadata={{ iosContentsJson: '{"images":[]}' }}
+        onClose={onClose}
+      />
+    );
+
+    fireEvent.click(screen.getByText(/Copy Contents\.json/i));
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(exec).toHaveBeenCalledWith('copy');
+    expect(await screen.findByText(/Copied!/i)).toBeInTheDocument();
+    exec.mockRestore();
   });
 
   it('should show error icon for error type', () => {

@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      - name: Check dist/ artifacts are up-to-date
+        run: |
+          status=$(git status --porcelain -- dist)
+          if [ -n "$status" ]; then
+            echo "ERROR: dist/ is out of date. Rebuild and commit the artifacts."
+            echo "$status"
+            git diff -- dist
+            exit 1
+          fi
+      - run: npm run test:run

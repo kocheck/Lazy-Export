@@ -33,11 +33,11 @@ describe('PresetCard', () => {
     expect(screen.getByText('📱')).toBeInTheDocument();
   });
 
-  it('should show correct settings count', () => {
+  it('should render a format badge for the preset', () => {
     const onClick = vi.fn();
     render(<PresetCard preset={mockPreset} onClick={onClick} />);
-    
-    expect(screen.getByText('2x')).toBeInTheDocument();
+
+    expect(screen.getByText('PNG')).toBeInTheDocument();
   });
 
   it('should call onClick when clicked', () => {
@@ -71,8 +71,47 @@ describe('PresetCard', () => {
   it('should be disabled attribute when disabled', () => {
     const onClick = vi.fn();
     render(<PresetCard preset={mockPreset} onClick={onClick} disabled />);
-    
+
     const button = screen.getByRole('button', { name: /Apply Test Preset/i });
     expect(button).toBeDisabled();
+  });
+
+  it('renders the last-used badge when isLastUsed is true', () => {
+    const onClick = vi.fn();
+    render(<PresetCard preset={mockPreset} onClick={onClick} isLastUsed />);
+    expect(screen.getByText(/Last used/i)).toBeInTheDocument();
+  });
+
+  it('does not render the last-used badge by default', () => {
+    const onClick = vi.fn();
+    render(<PresetCard preset={mockPreset} onClick={onClick} />);
+    expect(screen.queryByText(/Last used/i)).not.toBeInTheDocument();
+  });
+
+  it('folds "(last used)" into the accessible name when isLastUsed (#15)', () => {
+    render(<PresetCard preset={mockPreset} onClick={vi.fn()} isLastUsed />);
+    expect(
+      screen.getByRole('button', { name: 'Apply Test Preset export preset (last used)' })
+    ).toBeInTheDocument();
+  });
+
+  it('omits "(last used)" from the accessible name by default', () => {
+    render(<PresetCard preset={mockPreset} onClick={vi.fn()} />);
+    expect(
+      screen.getByRole('button', { name: 'Apply Test Preset export preset' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /\(last used\)/i })).not.toBeInTheDocument();
+  });
+
+  it('sets aria-busy when busy and omits it otherwise', () => {
+    const { rerender } = render(<PresetCard preset={mockPreset} onClick={vi.fn()} busy />);
+    expect(screen.getByRole('button', { name: /Apply Test Preset/i })).toHaveAttribute(
+      'aria-busy',
+      'true'
+    );
+    rerender(<PresetCard preset={mockPreset} onClick={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /Apply Test Preset/i })).not.toHaveAttribute(
+      'aria-busy'
+    );
   });
 });

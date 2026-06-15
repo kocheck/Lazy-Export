@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0] - 2025-12-21
+## [Unreleased]
+
+### Fixed
+- Serialized all preference writes through a write queue so concurrent read-modify-write operations can no longer clobber each other's data.
+- CI now fails when the committed `dist/` artifacts are out of date with source (dist-staleness check).
+
+### Security
+- Custom presets are now fully validated — every field, per export format — before any `clientStorage` write, hardening the untrusted-input boundary.
+
+## [2.0.0] - 2026-06-14
 
 ### 🎉 Complete Rewrite
 
@@ -34,25 +43,25 @@ This version is a complete modernization of the plugin from the ground up.
 #### **Technical**
 - **React 18** - Modern component-based UI
 - **TypeScript 5** - Full type safety throughout
-- **Vite 5** - Lightning-fast build tooling
+- **Vite 7** - Lightning-fast build tooling
 - **esbuild** - Optimized plugin compilation
 - **Type-Safe Messaging** - Strict types for UI ↔ Plugin communication
 - **Optimistic UI Updates** - Instant feedback on user actions
 
 ### Changed
 
-- **Build System**: Rollup v1 → Vite 5 + esbuild
+- **Build System**: Rollup v1 → Vite 7 + esbuild
 - **Framework**: Svelte 3 → React 18
 - **TypeScript**: ES6 → ES2020 with strict mode
 - **UI Pattern**: Dropdown menus → Direct preset cards
-- **Interaction Model**: Menu commands removed (UI-only now)
+- **Interaction Model**: Dropdown menus → Direct preset cards (menu commands retained and extended)
 - **Project Structure**: Organized into `ui/`, `plugin/`, `shared/` folders
 - **Export Naming**: Smarter suffix handling with advanced mode
 - **Bundle Output**: `public/` → `dist/`
 
 ### Removed
 
-- **Deprecated `figma.command` pattern** - No longer uses menu commands
+- **Legacy dropdown UI** - Replaced by direct-click preset cards; `figma.command` menu commands are retained and extended (applyIOS, applyAndroid, applyWeb, applyPDF, clearExport)
 - **Svelte Dependencies** - Fully migrated to React
 - **Rollup Build System** - Replaced with Vite
 - **Legacy Component Library** - Custom UI3 components instead
@@ -93,7 +102,7 @@ This was the original version built with Svelte and Rollup. See git history for 
 ### For Users
 
 **Breaking Changes:**
-- Menu commands are removed. The plugin now works entirely through the UI panel.
+- The dropdown-based UI is replaced by direct-click preset cards. Menu commands (iOS, Android, Web, PDF, Clear) are still present in the manifest.
 - You'll need to re-import the plugin manifest from the new `dist/` folder.
 
 **New Workflow:**

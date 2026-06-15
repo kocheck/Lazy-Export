@@ -1,30 +1,34 @@
 /**
- * Tests for Plugin Main Logic
+ * Tests for plugin core: applyExportSettings, clearExportSettings,
+ * generateIOSContentsJSON, load/savePreferences — invoked for real.
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { installFigmaMock, createMockNode, FigmaMock } from '../test/figma-mock.js';
-import type { SavedPreferences } from '../shared/types.js';
+import {
+  applyExportSettings,
+  clearExportSettings,
+  generateIOSContentsJSON,
+  validateIOSMetadataSettings,
+  loadPreferences,
+  savePreferences,
+} from './core.js';
+import type { ExportSetting, SavedPreferences } from '../shared/types.js';
+import { DEFAULT_PRESETS } from '../shared/presets.js';
 
-describe('Plugin Storage', () => {
+describe('loadPreferences / savePreferences', () => {
   let figmaMock: FigmaMock;
 
   beforeEach(() => {
     figmaMock = installFigmaMock();
   });
 
-  it('should save preferences to clientStorage', async () => {
-    const preferences: SavedPreferences = {
-      customPresets: [],
-      advancedModeEnabled: false,
-    };
-
-    await figmaMock.clientStorage.setAsync('preferences', preferences);
-
-    expect(figmaMock.clientStorage.setAsync).toHaveBeenCalledWith('preferences', preferences);
+  it('returns defaults when nothing is stored', async () => {
+    const prefs = await loadPreferences();
+    expect(prefs).toEqual({ customPresets: [], advancedModeEnabled: false });
   });
 
-  it('should load preferences from clientStorage', async () => {
+  it('round-trips saved preferences through clientStorage', async () => {
     const preferences: SavedPreferences = {
       customPresets: [
         {
@@ -32,102 +36,73 @@ describe('Plugin Storage', () => {
           name: 'My Preset',
           platform: 'iOS',
           isCustom: true,
-          createdAt: Date.now(),
-          settings: [
-            {
-              format: 'PNG',
-              suffix: '@2x',
-              constraint: { type: 'SCALE', value: 2 },
-            },
-          ],
+          createdAt: 123,
+          settings: [{ format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } }],
         },
       ],
       advancedModeEnabled: true,
     };
 
-    await figmaMock.clientStorage.setAsync('preferences', preferences);
-    const loaded = await figmaMock.clientStorage.getAsync('preferences');
+    await savePreferences(preferences);
+    expect(figmaMock.clientStorage.setAsync).toHaveBeenCalledWith('preferences', preferences);
 
+    const loaded = await loadPreferences();
     expect(loaded).toEqual(preferences);
-  });
-
-  it('should return undefined for non-existent keys', async () => {
-    const result = await figmaMock.clientStorage.getAsync('non-existent');
-    expect(result).toBeUndefined();
   });
 });
 
-describe('Export Settings Application', () => {
+describe('generateIOSContentsJSON (default 1×/2×/3× settings)', () => {
+  const defaultSettings: ExportSetting[] = [
+    { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+    { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+    { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
+  ];
+
   beforeEach(() => {
     installFigmaMock();
   });
 
-  it('should apply export settings to a node', () => {
-    const node = createMockNode();
-    
-    const exportSettings: ExportSettings[] = [
-      {
-        format: 'PNG',
-        suffix: '@2x',
-        constraint: { type: 'SCALE', value: 2 },
-      },
-    ];
+  it('produces the @1x/@2x/@3x Contents.json structure', () => {
+    const parsed = JSON.parse(generateIOSContentsJSON('icon-home', defaultSettings));
+    expect(parsed.images).toHaveLength(3);
+    expect(parsed.images[0].filename).toBe('icon-home@1x.png');
+    expect(parsed.images[1].filename).toBe('icon-home@2x.png');
+    expect(parsed.images[2].filename).toBe('icon-home@3x.png');
+    expect(parsed.info).toEqual({ author: 'Lazy Export', version: 1 });
+  });
+});
 
-    node.exportSettings = exportSettings;
+describe('applyExportSettings', () => {
+  let figmaMock: FigmaMock;
 
-    expect(node.exportSettings).toEqual(exportSettings);
-    expect(node.exportSettings.length).toBe(1);
-    expect(node.exportSettings[0].format).toBe('PNG');
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
   });
 
-  it('should apply multiple export settings to a node', () => {
-    const node = createMockNode();
-    
-    const exportSettings: ExportSettings[] = [
-      {
-        format: 'PNG',
-        suffix: '@3x',
-        constraint: { type: 'SCALE', value: 3 },
-      },
-      {
-        format: 'PNG',
-        suffix: '@2x',
-        constraint: { type: 'SCALE', value: 2 },
-      },
-      {
-        format: 'PNG',
-        suffix: '@1x',
-        constraint: { type: 'SCALE', value: 1 },
-      },
-    ];
-
-    node.exportSettings = exportSettings;
-
-    expect(node.exportSettings.length).toBe(3);
+  it('notifies and applies nothing when no nodes are selected', () => {
+    applyExportSettings([], [{ format: 'PNG', suffix: '@2x' }]);
+    expect(figmaMock.notify).toHaveBeenCalledWith('⚠️ No nodes selected');
   });
 
-  it('should clear export settings from a node', () => {
+  it('applies basic PNG settings to a node and notifies success', () => {
     const node = createMockNode();
-    
-    node.exportSettings = [
-      {
-        format: 'PNG',
-        suffix: '@2x',
-        constraint: { type: 'SCALE', value: 2 },
-      },
+    const settings: ExportSetting[] = [
+      { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
     ];
 
-    expect(node.exportSettings.length).toBe(1);
+    applyExportSettings([node], settings);
 
-    node.exportSettings = [];
-
-    expect(node.exportSettings.length).toBe(0);
+    expect(node.exportSettings).toHaveLength(1);
+    const applied = node.exportSettings[0];
+    expect(applied.format).toBe('PNG');
+    expect(applied.suffix).toBe('@2x');
+    expect(figmaMock.notify).toHaveBeenCalledWith('✅ Export settings applied to 1 node(s)');
+    expect(figmaMock.ui.postMessage).not.toHaveBeenCalled();
   });
 
-  it('should apply SVG settings correctly', () => {
+  it('emits SVG-only fields for SVG settings', () => {
     const node = createMockNode();
-    
-    const exportSettings: ExportSettings[] = [
+    const settings: ExportSetting[] = [
       {
         format: 'SVG',
         suffix: '',
@@ -137,81 +112,317 @@ describe('Export Settings Application', () => {
       },
     ];
 
-    node.exportSettings = exportSettings;
+    applyExportSettings([node], settings);
 
-    expect(node.exportSettings[0].format).toBe('SVG');
-    expect(node.exportSettings[0].svgOutlineText).toBe(true);
-    expect(node.exportSettings[0].svgIdAttribute).toBe(false);
-    expect(node.exportSettings[0].svgSimplifyStroke).toBe(true);
+    const applied = node.exportSettings[0];
+    expect(applied.format).toBe('SVG');
+    if (applied.format === 'SVG') {
+      expect(applied.svgOutlineText).toBe(true);
+      expect(applied.svgIdAttribute).toBe(false);
+      expect(applied.svgSimplifyStroke).toBe(true);
+    }
+  });
+
+  it('emits a PDF variant for PDF settings', () => {
+    const node = createMockNode();
+    applyExportSettings([node], [{ format: 'PDF', suffix: '' }]);
+    expect(node.exportSettings[0].format).toBe('PDF');
+  });
+
+  it('basic mode with a custom name prefixes the suffix', () => {
+    const node = createMockNode();
+    applyExportSettings([node], [{ format: 'PNG', suffix: '@2x' }], 'icon-home');
+    expect(node.exportSettings[0].suffix).toBe('/icon-home@2x');
+  });
+
+  it('advanced iOS builds the imageset path and posts export-success with Contents.json', () => {
+    const node = createMockNode();
+    applyExportSettings(
+      [node],
+      [{ format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } }],
+      'icon-home',
+      true,
+      'iOS',
+      true,
+      true
+    );
+
+    expect(node.exportSettings[0].suffix).toBe('/icon-home.imageset/icon-home@2x');
+
+    const calls = figmaMock.ui.postMessage.mock.calls;
+    expect(calls).toHaveLength(1);
+    const msg = calls[0][0] as {
+      type: string;
+      message: string;
+      metadata?: { iosContentsJson?: string };
+    };
+    expect(msg.type).toBe('export-success');
+    expect(msg.metadata?.iosContentsJson).toContain('icon-home@2x.png');
+    // iOS advanced posts a message instead of notifying.
+    expect(figmaMock.notify).not.toHaveBeenCalled();
+  });
+
+  it('advanced Android builds the density path and notifies (no postMessage)', () => {
+    const node = createMockNode();
+    applyExportSettings(
+      [node],
+      [{ format: 'PNG', suffix: 'drawable-xhdpi' }],
+      'icon-home',
+      true,
+      'Android',
+      false,
+      true
+    );
+
+    expect(node.exportSettings[0].suffix).toBe('/drawable-xhdpi/icon-home');
+    expect(figmaMock.notify).toHaveBeenCalledWith('✅ Export settings applied to 1 node(s)');
+    expect(figmaMock.ui.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('advanced Web (no platform branch) applies the raw suffix', () => {
+    const node = createMockNode();
+    // Web is not iOS/Android, so the advanced directory branch does not rewrite the suffix.
+    applyExportSettings([node], [{ format: 'SVG', suffix: '' }], undefined, true, 'Web');
+    expect(node.exportSettings[0].suffix).toBe('');
+    expect(figmaMock.notify).toHaveBeenCalledWith('✅ Export settings applied to 1 node(s)');
   });
 });
 
-describe('iOS Metadata Generation', () => {
-  it('should generate valid Contents.json structure', () => {
-    const assetName = 'icon-home';
-    
-    const contentsJSON = JSON.stringify(
-      {
-        images: [
-          {
-            filename: `${assetName}@1x.png`,
-            idiom: 'universal',
-            scale: '1x',
-          },
-          {
-            filename: `${assetName}@2x.png`,
-            idiom: 'universal',
-            scale: '2x',
-          },
-          {
-            filename: `${assetName}@3x.png`,
-            idiom: 'universal',
-            scale: '3x',
-          },
-        ],
-        info: {
-          author: 'Lazy Export',
-          version: 1,
-        },
-      },
-      null,
-      2
-    );
+describe('clearExportSettings', () => {
+  let figmaMock: FigmaMock;
 
-    const parsed = JSON.parse(contentsJSON);
-    
-    expect(parsed.images).toBeDefined();
-    expect(parsed.images.length).toBe(3);
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+  });
+
+  it('notifies when no nodes are selected', () => {
+    clearExportSettings([]);
+    expect(figmaMock.notify).toHaveBeenCalledWith('⚠️ No nodes selected');
+  });
+
+  it('clears export settings and notifies', () => {
+    const node = createMockNode();
+    node.exportSettings = [{ format: 'PNG', suffix: '@2x' }];
+    clearExportSettings([node]);
+    expect(node.exportSettings).toHaveLength(0);
+    expect(figmaMock.notify).toHaveBeenCalledWith('🗑️ Export settings cleared from 1 node(s)');
+  });
+});
+
+describe('Apply PDF quick-action', () => {
+  let figmaMock: ReturnType<typeof installFigmaMock>;
+
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+  });
+
+  it('resolves the pdf preset from DEFAULT_PRESETS', () => {
+    const preset = DEFAULT_PRESETS.find((p) => p.id === 'pdf');
+    expect(preset).toBeDefined();
+    expect(preset?.platform).toBe('PDF');
+    expect(preset?.settings).toEqual([{ format: 'PDF', suffix: '' }]);
+  });
+
+  it('applies the pdf preset settings to the selection via applyExportSettings', () => {
+    const preset = DEFAULT_PRESETS.find((p) => p.id === 'pdf');
+    expect(preset).toBeDefined();
+
+    const node = createMockNode();
+    applyExportSettings([node], preset!.settings, undefined, false);
+
+    expect(node.exportSettings.length).toBe(1);
+    expect(node.exportSettings[0].format).toBe('PDF');
+    expect(node.exportSettings[0].suffix).toBe('');
+    expect(figmaMock.notify).toHaveBeenCalledWith(expect.stringContaining('1 node'));
+  });
+});
+
+describe('applyExportSettings — per-preset flag precedence', () => {
+  let figmaMock: FigmaMock;
+
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+  });
+
+  function contentsJsonPosted(): boolean {
+    return figmaMock.ui.postMessage.mock.calls.some((call) => {
+      const msg = call[0] as Record<string, unknown>;
+      if (!msg || typeof msg !== 'object') return false;
+      if (msg['type'] !== 'export-success') return false;
+      const metadata = msg['metadata'] as Record<string, unknown> | undefined;
+      return typeof metadata?.['iosContentsJson'] === 'string';
+    });
+  }
+
+  const iosSettings = [{ format: 'PNG' as const, suffix: '@1x' }];
+
+  it('advanced ON + generateMetadata OFF ⇒ no Contents.json message', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, 'asset', true, 'iOS', false, true);
+    expect(contentsJsonPosted()).toBe(false);
+  });
+
+  it('advanced ON + generateMetadata ON (iOS) ⇒ Contents.json message posted', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, 'asset', true, 'iOS', true, true);
+    expect(contentsJsonPosted()).toBe(true);
+  });
+
+  it('advanced ON + directoryStructure OFF ⇒ plain custom-name suffix', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, 'asset', true, 'iOS', false, false);
+    const applied = node.exportSettings[0];
+    expect(applied.suffix).toBe('/asset@1x');
+    expect(applied.suffix).not.toContain('.imageset');
+  });
+
+  it('advanced ON + directoryStructure ON (iOS) ⇒ .imageset folder path', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, 'asset', true, 'iOS', false, true);
+    const applied = node.exportSettings[0];
+    expect(applied.suffix).toBe('/asset.imageset/asset@1x');
+  });
+
+  it('both ON (iOS) ⇒ Contents.json message AND .imageset path', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, 'asset', true, 'iOS', true, true);
+    expect(contentsJsonPosted()).toBe(true);
+    expect(node.exportSettings[0].suffix).toBe('/asset.imageset/asset@1x');
+  });
+
+  it('advanced OFF ⇒ flags ignored, no Contents.json (default-preset behavior unchanged)', () => {
+    const node = createMockNode();
+    applyExportSettings([node], iosSettings, undefined, false, 'iOS');
+    expect(contentsJsonPosted()).toBe(false);
+    expect(node.exportSettings[0].suffix).toBe('@1x');
+  });
+});
+
+describe('validateIOSMetadataSettings', () => {
+  it('returns null for a valid single-scale PNG preset', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+      ])
+    ).toBeNull();
+  });
+
+  it('returns null for a valid multi-scale PNG preset (1x + 2x)', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+      ])
+    ).toBeNull();
+  });
+
+  it('returns null for the full 1x/2x/3x set', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+        { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
+      ])
+    ).toBeNull();
+  });
+
+  it('rejects an empty settings array', () => {
+    expect(validateIOSMetadataSettings([])).toMatch(/PNG/);
+  });
+
+  it('rejects a JPG entry', () => {
+    expect(
+      validateIOSMetadataSettings([{ format: 'JPG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } }])
+    ).toMatch(/PNG/);
+  });
+
+  it('rejects a mixed PNG + SVG array', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+        { format: 'SVG', suffix: '' },
+      ])
+    ).toMatch(/PNG/);
+  });
+
+  it('rejects a PNG entry missing a constraint', () => {
+    expect(validateIOSMetadataSettings([{ format: 'PNG', suffix: '@2x' }])).toMatch(/SCALE/);
+  });
+
+  it('rejects a PNG entry with a WIDTH constraint', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'WIDTH', value: 64 } },
+      ])
+    ).toMatch(/SCALE/);
+  });
+
+  it('rejects an unsupported scale (e.g. 4×)', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@4x', constraint: { type: 'SCALE', value: 4 } },
+      ])
+    ).toMatch(/4/);
+  });
+
+  it('rejects duplicate scale values', () => {
+    expect(
+      validateIOSMetadataSettings([
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+      ])
+    ).toMatch(/duplicate/i);
+  });
+});
+
+describe('generateIOSContentsJSON', () => {
+  it('produces a single-entry Contents.json for a 2× preset', () => {
+    const parsed = JSON.parse(
+      generateIOSContentsJSON('icon-home', [
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+      ])
+    );
+    expect(parsed.images).toHaveLength(1);
+    expect(parsed.images[0]).toEqual({ filename: 'icon-home@2x.png', idiom: 'universal', scale: '2x' });
+    expect(parsed.info).toEqual({ author: 'Lazy Export', version: 1 });
+  });
+
+  it('produces a two-entry Contents.json for 1× + 3× settings', () => {
+    const parsed = JSON.parse(
+      generateIOSContentsJSON('logo', [
+        { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+        { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
+      ])
+    );
+    expect(parsed.images).toHaveLength(2);
+    expect(parsed.images[0].filename).toBe('logo@1x.png');
+    expect(parsed.images[0].scale).toBe('1x');
+    expect(parsed.images[1].filename).toBe('logo@3x.png');
+    expect(parsed.images[1].scale).toBe('3x');
+  });
+
+  it('skips non-PNG entries silently (they were already rejected by validate)', () => {
+    const parsed = JSON.parse(
+      generateIOSContentsJSON('icon', [
+        { format: 'SVG', suffix: '' },
+        { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+      ])
+    );
+    expect(parsed.images).toHaveLength(1);
+    expect(parsed.images[0].filename).toBe('icon@1x.png');
+  });
+
+  it('produces the @1x/@2x/@3x structure with explicit default settings', () => {
+    const parsed = JSON.parse(
+      generateIOSContentsJSON('icon-home', [
+        { format: 'PNG', suffix: '@1x', constraint: { type: 'SCALE', value: 1 } },
+        { format: 'PNG', suffix: '@2x', constraint: { type: 'SCALE', value: 2 } },
+        { format: 'PNG', suffix: '@3x', constraint: { type: 'SCALE', value: 3 } },
+      ])
+    );
+    expect(parsed.images).toHaveLength(3);
     expect(parsed.images[0].filename).toBe('icon-home@1x.png');
     expect(parsed.images[1].filename).toBe('icon-home@2x.png');
     expect(parsed.images[2].filename).toBe('icon-home@3x.png');
-    expect(parsed.info.author).toBe('Lazy Export');
-    expect(parsed.info.version).toBe(1);
-  });
-});
-
-describe('Suffix and Path Formatting', () => {
-  it('should format iOS advanced mode paths correctly', () => {
-    const assetName = 'icon-home';
-    const suffix = '@2x';
-    const expectedPath = `/${assetName}.imageset/${assetName}${suffix}`;
-    
-    expect(expectedPath).toBe('/icon-home.imageset/icon-home@2x');
-  });
-
-  it('should format Android advanced mode paths correctly', () => {
-    const assetName = 'icon-home';
-    const density = 'drawable-xhdpi';
-    const expectedPath = `/${density}/${assetName}`;
-    
-    expect(expectedPath).toBe('/drawable-xhdpi/icon-home');
-  });
-
-  it('should format simple mode paths with custom name', () => {
-    const assetName = 'icon-home';
-    const suffix = '@2x';
-    const expectedPath = `/${assetName}${suffix}`;
-    
-    expect(expectedPath).toBe('/icon-home@2x');
   });
 });

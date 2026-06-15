@@ -7,10 +7,10 @@ This file helps AI coding assistants (Cursor, GitHub Copilot, Claude, etc.) unde
 **Name:** Lazy Export
 **Type:** Figma Plugin
 **Version:** 2.0.0
-**Stack:** React 18 + TypeScript 5 + Vite 5 + Figma Plugin API v1.0.0
+**Stack:** React 18 + TypeScript 5 + Vite 7 + Figma Plugin API v1.0.0
 
 **Purpose:**
-A Figma plugin that allows users to quickly apply export settings to selected layers using preset configurations. Supports iOS, Android, Web, WebP, and PDF exports with custom preset creation.
+A Figma plugin that allows users to quickly apply export settings to selected layers using preset configurations. Supports iOS, Android, Web, and PDF exports with custom preset creation.
 
 ## Architecture Overview
 
@@ -62,7 +62,8 @@ src/
 │   ├── components/      # Reusable components
 │   └── styles/          # Global CSS
 ├── plugin/              # Plugin code (Figma context)
-│   └── main.ts          # Plugin entry point
+│   ├── core.ts          # Plugin logic, message handler (handleUIMessage)
+│   └── main.ts          # Thin entry point — calls initPlugin() from core.ts
 └── shared/              # Shared between UI and plugin
     ├── types.ts         # TypeScript definitions
     └── presets.ts       # Default preset configs
@@ -87,7 +88,7 @@ const handleAction = () => {
 };
 ```
 
-3. Handle in plugin (`src/plugin/main.ts`):
+3. Handle in plugin (`src/plugin/core.ts`):
 ```typescript
 figma.ui.onmessage = (msg: UIMessage) => {
   if (msg.type === 'new-action') {
@@ -157,7 +158,7 @@ export const DEFAULT_PRESETS: PresetConfig[] = [
 | File | Purpose | Can Access |
 |------|---------|------------|
 | `src/ui/App.tsx` | Main React component, state management | DOM, React, postMessage |
-| `src/plugin/main.ts` | Plugin logic, Figma API interactions | Figma API, clientStorage |
+| `src/plugin/core.ts` | Plugin logic, Figma API interactions | Figma API, clientStorage |
 | `src/shared/types.ts` | TypeScript definitions for entire project | Both contexts |
 | `src/shared/presets.ts` | Default preset configurations | Both contexts |
 | `vite.config.ts` | UI build configuration | N/A (build time) |
@@ -246,7 +247,7 @@ function calculate(x: number): number {
 - **Use useMemo** for derived state
 - **Use useCallback** for event handlers passed to children
 - **Avoid inline object creation** in render (causes re-renders)
-- **Keep bundle size under 200kb** (currently ~165kb)
+- **Keep bundle size under 200kb** (currently ~176kb)
 
 ## Security Reminders
 
@@ -294,7 +295,7 @@ For more details:
 ### Completed Features
 ✅ Modern tech stack (Vite + React + TypeScript)
 ✅ Figma UI3 design with Dark Mode
-✅ Default presets (iOS, Android, Web, WebP, PDF)
+✅ Default presets (iOS, Android, Web, PDF)
 ✅ Custom preset creation/editing/deletion
 ✅ Advanced directory mode with folder structures
 ✅ iOS Contents.json generation
@@ -306,7 +307,6 @@ For more details:
 ⏭️ Preset templates library
 ⏭️ Export history
 ⏭️ Keyboard shortcuts
-⏭️ Automated tests
 
 ## Questions to Ask Before Suggesting Code
 
@@ -345,7 +345,7 @@ interface PresetConfig {
 }
 ```
 
-2. **Update plugin** (`src/plugin/main.ts`):
+2. **Update plugin** (`src/plugin/core.ts`):
 ```typescript
 const applyPreset = (preset: PresetConfig) => {
   // ...existing logic

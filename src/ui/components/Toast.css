@@ -132,3 +132,9 @@
 .toast__action:active {
   background: var(--figma-color-bg-pressed);
 }
+
+.toast__status {
+  padding: 4px 12px 8px;
+  font-size: 11px;
+  color: var(--figma-color-text-secondary);
+}

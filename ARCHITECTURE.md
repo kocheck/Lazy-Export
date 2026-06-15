@@ -111,7 +111,7 @@ TypeScript → JavaScript (ES2020)
     ↓ (bundling)
 Single CommonJS file
     ↓
-dist/code.js (~5.5kb)
+dist/code.js (~15kb)
 ```
 
 **Key Config:** `build-plugin.js`
@@ -498,7 +498,7 @@ Benefits:
 
 **Current:**
 - UI: ~160kb (minified, gzipped ~50kb)
-- Plugin: ~5.5kb
+- Plugin: ~15kb
 
 **Optimizations:**
 - Single HTML file (no external requests)
@@ -590,14 +590,15 @@ const savePreset = (preset: CustomPreset) => {
 
 1. **Update types:**
    ```typescript
-   // src/shared/types.ts
-   export type ExportFormat = 'PNG' | 'JPG' | 'SVG' | 'PDF' | 'WEBP' | 'AVIF';
+   // src/shared/types.ts — current type is 'PNG' | 'JPG' | 'SVG' | 'PDF'
+   // add your new format to the union, e.g.:
+   export type ExportFormat = 'PNG' | 'JPG' | 'SVG' | 'PDF' | 'WEBP';
    ```
 
 2. **Update UI form:**
    ```typescript
    // src/ui/components/PresetCreator.tsx
-   const FORMATS = ['PNG', 'JPG', 'SVG', 'PDF', 'WEBP', 'AVIF'] as const;
+   const FORMATS = ['PNG', 'JPG', 'SVG', 'PDF', 'WEBP'] as const;
    ```
 
 3. **Handle in plugin (if special logic needed):**
@@ -693,12 +694,13 @@ figma.ui.onmessage = (msg) => {
 
 See CONTRIBUTING.md for comprehensive checklist.
 
-### Future: Automated Testing
+### Automated Testing
 
-**Planned:**
+The plugin uses **Vitest** + **React Testing Library**. See `TESTING.md` for how to run and
+write tests. Representative examples:
 
 ```typescript
-// Unit tests (Jest)
+// Unit tests (Vitest)
 describe('applyExportSettings', () => {
   it('should apply settings to all nodes', () => {
     const nodes = [createMockNode(), createMockNode()];
@@ -713,7 +715,7 @@ describe('applyExportSettings', () => {
 // Component tests (React Testing Library)
 describe('PresetCard', () => {
   it('should call onClick when clicked', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     const { getByRole } = render(
       <PresetCard preset={mockPreset} onClick={handleClick} />
     );
@@ -758,5 +760,5 @@ describe('PresetCard', () => {
 
 ---
 
-**Last Updated:** 2025-12-21
+**Last Updated:** 2026-06-14
 **Version:** 2.0.0

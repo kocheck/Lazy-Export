@@ -4,9 +4,9 @@
  * Displays non-fatal error messages with option to report bugs
  */
 
-import React from 'react';
-import { sanitizeLog, formatLogForGitHub } from '../../shared/sanitizeLog';
+import React, { useState } from 'react';
 import { copyToClipboard } from '../utils/clipboard';
+import { buildBugReportMarkdown, BUG_REPORT_ISSUE_URL, COPY_SUCCESS_MSG, COPY_FAILURE_MSG } from '../utils/bugReporting';
 import './Toast.css';
 
 export interface ToastProps {
@@ -18,30 +18,33 @@ export interface ToastProps {
 }
 
 export const Toast: React.FC<ToastProps> = ({ message, type, error, metadata, onClose }) => {
+  const [status, setStatus] = useState<string | null>(null);
+
   const copyDebugInfo = () => {
     if (!error) return;
 
-    const sanitized = sanitizeLog({
-      error,
-      pluginVersion: '2.0.0',
-      figmaVersion: (window as any).figma?.version || 'Unknown',
-      timestamp: Date.now(),
-      additionalContext: {
-        component: 'Plugin',
-        message,
-      },
+    const markdown = buildBugReportMarkdown(error, {
+      component: 'Plugin',
+      message,
     });
 
-    const markdown = formatLogForGitHub(sanitized);
+    copyToClipboard(markdown)
+      .then(() => setStatus(COPY_SUCCESS_MSG))
+      .catch(() => setStatus(COPY_FAILURE_MSG));
+  };
 
-    copyToClipboard(markdown).then(() => {
-      alert('Debug info copied! You can paste it into a GitHub issue.');
-    });
+  const copyContents = () => {
+    if (!metadata?.iosContentsJson) return;
+    copyToClipboard(metadata.iosContentsJson)
+      .then(() => setStatus(COPY_SUCCESS_MSG))
+      .catch(() => setStatus(COPY_FAILURE_MSG));
   };
 
   const reportIssue = () => {
-    const issueUrl = 'https://github.com/kocheck/Lazy-Export/issues/new?title=%5BBug%5D%3A%20Runtime%20Error%20in%20v2.0';
-    window.open(issueUrl, '_blank');
+    parent.postMessage(
+      { pluginMessage: { type: 'open-external-url', url: BUG_REPORT_ISSUE_URL } },
+      '*'
+    );
   };
 
   return (
@@ -54,20 +57,14 @@ export const Toast: React.FC<ToastProps> = ({ message, type, error, metadata, on
         </div>
         <div className="toast__message">{message}</div>
         <button className="toast__close" onClick={onClose} aria-label="Close">
-        ×
-      </button>
-      {metadata?.iosContentsJson && (
-        <button
-          className="toast__action-btn"
-          onClick={() => {
-            copyToClipboard(metadata.iosContentsJson!);
-            alert('Contents.json copied to clipboard!');
-          }}
-        >
-          Copy Contents.json
+          ×
         </button>
-      )}
-    </div>
+        {metadata?.iosContentsJson && (
+          <button className="toast__action-btn" onClick={copyContents}>
+            Copy Contents.json
+          </button>
+        )}
+      </div>
       {type === 'error' && error && (
         <div className="toast__actions">
           <button className="toast__action" onClick={copyDebugInfo}>
@@ -76,6 +73,11 @@ export const Toast: React.FC<ToastProps> = ({ message, type, error, metadata, on
           <button className="toast__action" onClick={reportIssue}>
             🐛 Report Issue
           </button>
+        </div>
+      )}
+      {status && (
+        <div className="toast__status" role="status" aria-live="polite">
+          {status}
         </div>
       )}
     </div>

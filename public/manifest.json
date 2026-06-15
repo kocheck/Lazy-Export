@@ -8,11 +8,15 @@
     "figma"
   ],
   "ui": "index.html",
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  },
   "menu": [
     { "separator": true },
     { "name": "Apply IOS", "command": "applyIOS" },
     { "name": "Apply Android", "command": "applyAndroid" },
     { "name": "Apply Web", "command": "applyWeb" },
+    { "name": "Apply PDF", "command": "applyPDF" },
     { "separator": true },
     { "name": "Open Lazy Export", "command": "openPlugin" },
     { "name": "Clear Export", "command": "clearExport" }

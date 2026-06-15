@@ -6,8 +6,8 @@
  */
 
 import React, { Component, ReactNode } from 'react';
-import { sanitizeLog, formatLogForGitHub } from '../../shared/sanitizeLog';
 import { copyToClipboard } from '../utils/clipboard';
+import { buildBugReportMarkdown, BUG_REPORT_ISSUE_URL, COPY_SUCCESS_MSG, COPY_FAILURE_MSG } from '../utils/bugReporting';
 import './ErrorBoundary.css';
 
 interface Props {
@@ -18,6 +18,7 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: React.ErrorInfo | null;
+  copyStatus: string | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -27,10 +28,11 @@ export class ErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
+      copyStatus: null,
     };
   }
 
-  static getDerivedStateFromError(_error: Error): Partial<State> {
+  static getDerivedStateFromError(_: Error): Partial<State> {
     return { hasError: true };
   }
 
@@ -46,39 +48,21 @@ export class ErrorBoundary extends Component<Props, State> {
     const { error } = this.state;
     if (!error) return;
 
-    const sanitized = sanitizeLog({
-      error,
-      pluginVersion: '2.0.0',
-      figmaVersion: (window as any).figma?.version || 'Unknown',
-      userAgent: navigator.userAgent,
-      timestamp: Date.now(),
-      additionalContext: {
-        component: 'UI',
-        errorBoundary: true,
-      },
+    const markdown = buildBugReportMarkdown(error, {
+      component: 'UI',
+      errorBoundary: true,
     });
 
-    const markdown = formatLogForGitHub(sanitized);
-
-    // Copy to clipboard
-    copyToClipboard(markdown).then(() => {
-      alert('Debug info copied to clipboard! You can now paste it into a GitHub issue.');
-    }).catch((err) => {
-      console.error('Failed to copy:', err);
-      // Fallback: show in a text area
-      const textarea = document.createElement('textarea');
-      textarea.value = markdown;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      alert('Debug info copied to clipboard! You can now paste it into a GitHub issue.');
-    });
+    copyToClipboard(markdown)
+      .then(() => this.setState({ copyStatus: COPY_SUCCESS_MSG }))
+      .catch(() => this.setState({ copyStatus: COPY_FAILURE_MSG }));
   };
 
   reportIssue = () => {
-    const issueUrl = 'https://github.com/kocheck/Lazy-Export/issues/new?title=%5BBug%5D%3A%20Runtime%20Error%20in%20v2.0';
-    window.open(issueUrl, '_blank');
+    parent.postMessage(
+      { pluginMessage: { type: 'open-external-url', url: BUG_REPORT_ISSUE_URL } },
+      '*'
+    );
   };
 
   reload = () => {
@@ -116,6 +100,12 @@ export class ErrorBoundary extends Component<Props, State> {
                 🔄 Reload Plugin
               </button>
             </div>
+
+            {this.state.copyStatus && (
+              <div className="error-boundary__status" role="status" aria-live="polite">
+                {this.state.copyStatus}
+              </div>
+            )}
 
             {process.env.NODE_ENV === 'development' && (
               <details className="error-boundary__details">

@@ -1,12 +1,6 @@
 # Dependencies
 /node_modules/
 **/node_modules/
-package-lock.json
-
-# Legacy build artifacts
-/public/build/
-public/index.html
-src/build
 
 # Test coverage
 /coverage/
