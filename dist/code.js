@@ -1,5 +1,9 @@
 "use strict";
 
+// src/shared/types.ts
+var PLATFORMS = ["iOS", "Android", "Web", "PDF"];
+var EXPORT_FORMATS = ["PNG", "JPG", "SVG", "PDF"];
+
 // src/shared/presets.ts
 var DEFAULT_PRESETS = [
   {
@@ -132,6 +136,9 @@ function validateCustomName(raw) {
 
 // src/plugin/core.ts
 var VALID_IOS_SCALES = { "1": "1x", "2": "2x", "3": "3x" };
+function sendError(message) {
+  figma.ui.postMessage({ type: "error", message });
+}
 function iosScaleMarker(constraintValue) {
   return `@${constraintValue}x`;
 }
@@ -170,8 +177,9 @@ function generateIOSContentsJSON(assetName, settings) {
   });
   return JSON.stringify({ images, info: { author: "Lazy Export", version: 1 } }, null, 2);
 }
-var VALID_PLATFORMS = ["iOS", "Android", "Web", "PDF"];
 var MAX_PRESET_SETTINGS = 50;
+var VALID_CONSTRAINT_TYPES = ["SCALE", "WIDTH", "HEIGHT"];
+var SVG_FLAGS = ["svgOutlineText", "svgIdAttribute", "svgSimplifyStroke"];
 function validateCustomPreset(p) {
   if (typeof p !== "object" || p === null) return { valid: false, error: "Preset is not an object." };
   const preset = p;
@@ -179,34 +187,56 @@ function validateCustomPreset(p) {
     return { valid: false, error: "Preset id must be a non-empty string." };
   if (typeof preset.name !== "string" || preset.name.length === 0)
     return { valid: false, error: "Preset name must be a non-empty string." };
-  if (typeof preset.platform !== "string" || !VALID_PLATFORMS.includes(preset.platform))
+  if (typeof preset.platform !== "string" || !PLATFORMS.includes(preset.platform))
     return { valid: false, error: "Preset platform is invalid." };
   if (!Array.isArray(preset.settings) || preset.settings.length > MAX_PRESET_SETTINGS)
     return { valid: false, error: "Preset settings are invalid." };
-  const VALID_FORMATS = ["PNG", "JPG", "SVG", "PDF"];
-  const VALID_CONSTRAINT_TYPES = ["SCALE", "WIDTH", "HEIGHT"];
   for (const s of preset.settings) {
     if (typeof s !== "object" || s === null)
       return { valid: false, error: "Each setting must be an object." };
     const setting = s;
-    if (!VALID_FORMATS.includes(setting.format))
-      return { valid: false, error: `Setting format "${String(setting.format)}" is invalid.` };
+    const format = setting.format;
+    if (typeof format !== "string" || !EXPORT_FORMATS.includes(format))
+      return { valid: false, error: `Setting format "${String(format)}" is invalid.` };
+    if (setting.suffix !== void 0 && typeof setting.suffix !== "string")
+      return { valid: false, error: "Setting suffix must be a string." };
+    const isImage = format === "PNG" || format === "JPG";
+    const isSvg = format === "SVG";
     if (setting.constraint !== void 0) {
+      if (!isImage)
+        return { valid: false, error: `Setting format "${format}" does not support a constraint.` };
       if (typeof setting.constraint !== "object" || setting.constraint === null)
         return { valid: false, error: "Setting constraint must be an object." };
       const c = setting.constraint;
-      if (!VALID_CONSTRAINT_TYPES.includes(c.type))
+      if (typeof c.type !== "string" || !VALID_CONSTRAINT_TYPES.includes(c.type))
         return { valid: false, error: "Setting constraint type is invalid." };
-      if (typeof c.value !== "number")
-        return { valid: false, error: "Setting constraint value must be a number." };
+      if (typeof c.value !== "number" || !Number.isFinite(c.value) || c.value <= 0)
+        return { valid: false, error: "Setting constraint value must be a finite number greater than 0." };
+    }
+    for (const flag of SVG_FLAGS) {
+      if (setting[flag] === void 0) continue;
+      if (!isSvg)
+        return { valid: false, error: `Setting format "${format}" does not support ${flag}.` };
+      if (typeof setting[flag] !== "boolean")
+        return { valid: false, error: `Setting ${flag} must be a boolean.` };
     }
   }
   if (preset.isCustom !== true) return { valid: false, error: "Preset must be a custom preset." };
-  return { valid: true };
+  if (typeof preset.createdAt !== "number" || !Number.isFinite(preset.createdAt))
+    return { valid: false, error: "Preset createdAt must be a finite number." };
+  if (preset.icon !== void 0 && typeof preset.icon !== "string")
+    return { valid: false, error: "Preset icon must be a string." };
+  if (preset.generateMetadata !== void 0 && typeof preset.generateMetadata !== "boolean")
+    return { valid: false, error: "Preset generateMetadata must be a boolean." };
+  if (preset.directoryStructure !== void 0 && typeof preset.directoryStructure !== "boolean")
+    return { valid: false, error: "Preset directoryStructure must be a boolean." };
+  if (preset.generateMetadata === true && preset.platform === "iOS" && preset.directoryStructure !== true)
+    return { valid: false, error: 'iOS metadata (Contents.json) requires "Use Directory Structure" to be enabled.' };
+  return { valid: true, value: p };
 }
 var _prefQueue = Promise.resolve();
 function enqueuePrefMutation(fn) {
-  const next = _prefQueue.then(fn, fn);
+  const next = _prefQueue.then(() => fn(), () => fn());
   _prefQueue = next.then(
     () => void 0,
     () => void 0
@@ -237,45 +267,45 @@ async function savePreferences(preferences) {
   await figma.clientStorage.setAsync("preferences", preferences);
 }
 function applyExportSettings(nodes, settings, customName, advancedMode = false, platform, generateMetadata = false, directoryStructure = false) {
-  if (!nodes || nodes.length === 0) {
+  if (nodes.length === 0) {
     figma.notify("\u26A0\uFE0F No nodes selected");
     return;
   }
   const assetName = customName || "asset";
-  nodes.forEach((node) => {
-    const exportSettings = settings.map((setting) => {
-      let suffix = setting.suffix || "";
-      if (advancedMode && directoryStructure && platform) {
-        if (platform === "iOS") {
-          const scale = setting.constraint?.type === "SCALE" ? iosScaleMarker(setting.constraint.value) : setting.suffix || "@1x";
-          suffix = `/${assetName}.imageset/${assetName}${scale}`;
-        } else if (platform === "Android") {
-          const density = setting.suffix || "drawable-mdpi";
-          suffix = `/${density}/${assetName}`;
-        }
-      } else if (customName && setting.suffix) {
-        suffix = `/${assetName}${setting.suffix}`;
+  const exportSettings = settings.map((setting) => {
+    let suffix = setting.suffix || "";
+    if (advancedMode && directoryStructure && platform) {
+      if (platform === "iOS") {
+        const scale = (setting.format === "PNG" || setting.format === "JPG") && setting.constraint?.type === "SCALE" ? iosScaleMarker(setting.constraint.value) : setting.suffix || "@1x";
+        suffix = `/${assetName}.imageset/${assetName}${scale}`;
+      } else if (platform === "Android") {
+        const density = setting.suffix || "drawable-mdpi";
+        suffix = `/${density}/${assetName}`;
       }
-      if (setting.format === "SVG") {
-        return {
-          format: "SVG",
-          suffix,
-          ...setting.svgOutlineText !== void 0 && { svgOutlineText: setting.svgOutlineText },
-          ...setting.svgIdAttribute !== void 0 && { svgIdAttribute: setting.svgIdAttribute },
-          ...setting.svgSimplifyStroke !== void 0 && {
-            svgSimplifyStroke: setting.svgSimplifyStroke
-          }
-        };
-      }
-      if (setting.format === "PDF") {
-        return { format: "PDF", suffix };
-      }
+    } else if (customName && setting.suffix) {
+      suffix = `/${assetName}${setting.suffix}`;
+    }
+    if (setting.format === "SVG") {
       return {
-        format: setting.format,
+        format: "SVG",
         suffix,
-        ...setting.constraint && { constraint: setting.constraint }
+        ...setting.svgOutlineText !== void 0 && { svgOutlineText: setting.svgOutlineText },
+        ...setting.svgIdAttribute !== void 0 && { svgIdAttribute: setting.svgIdAttribute },
+        ...setting.svgSimplifyStroke !== void 0 && {
+          svgSimplifyStroke: setting.svgSimplifyStroke
+        }
       };
-    });
+    }
+    if (setting.format === "PDF") {
+      return { format: "PDF", suffix };
+    }
+    return {
+      format: setting.format,
+      suffix,
+      ...setting.constraint && { constraint: setting.constraint }
+    };
+  });
+  nodes.forEach((node) => {
     node.exportSettings = exportSettings;
   });
   if (advancedMode && generateMetadata && platform === "iOS") {
@@ -291,7 +321,7 @@ function applyExportSettings(nodes, settings, customName, advancedMode = false, 
   }
 }
 function clearExportSettings(nodes) {
-  if (!nodes || nodes.length === 0) {
+  if (nodes.length === 0) {
     figma.notify("\u26A0\uFE0F No nodes selected");
     return;
   }
@@ -324,17 +354,12 @@ async function handleUIMessage(msg) {
         }
         if (preset.generateMetadata && preset.platform === "iOS") {
           if (!(preset.directoryStructure ?? false)) {
-            const rejection = {
-              type: "error",
-              message: 'iOS metadata (Contents.json) requires "Use Directory Structure" to be enabled.'
-            };
-            figma.ui.postMessage(rejection);
+            sendError('iOS metadata (Contents.json) requires "Use Directory Structure" to be enabled.');
             break;
           }
           const metaErr = validateIOSMetadataSettings(preset.settings);
           if (metaErr) {
-            const rejection = { type: "error", message: metaErr };
-            figma.ui.postMessage(rejection);
+            sendError(metaErr);
             break;
           }
         }
@@ -347,23 +372,21 @@ async function handleUIMessage(msg) {
           preset.generateMetadata ?? false,
           preset.directoryStructure ?? false
         );
+        figma.ui.postMessage({ type: "apply-complete" });
         break;
       }
       case "clear-export": {
         clearExportSettings(figma.currentPage.selection);
+        figma.ui.postMessage({ type: "clear-complete" });
         break;
       }
       case "save-preset": {
-        const preset = msg.preset;
-        const validation = validateCustomPreset(preset);
-        if (!validation.valid) {
-          const rejection = {
-            type: "error",
-            message: validation.error ?? "Invalid preset"
-          };
-          figma.ui.postMessage(rejection);
+        const result = validateCustomPreset(msg.preset);
+        if (!result.valid) {
+          sendError(result.error);
           break;
         }
+        const preset = result.value;
         await enqueuePrefMutation(async () => {
           const preferences = await loadPreferences();
           const existingIndex = preferences.customPresets.findIndex((p) => p.id === preset.id);
@@ -417,6 +440,13 @@ async function handleUIMessage(msg) {
           });
         } catch (err) {
           console.warn("record-preset-usage: failed to persist", err);
+          try {
+            const preferences = await loadPreferences();
+            const reload = { type: "preferences-loaded", preferences };
+            figma.ui.postMessage(reload);
+          } catch (reloadErr) {
+            console.warn("record-preset-usage: failed to reload preferences", reloadErr);
+          }
         }
         break;
       }
@@ -425,17 +455,17 @@ async function handleUIMessage(msg) {
         try {
           const scheme = new URL(msg.url).protocol;
           allowed = scheme === "http:" || scheme === "https:";
-        } catch {
+        } catch (e) {
+          console.warn("open-external-url: failed to parse URL", {
+            url: String(msg.url).slice(0, 60),
+            error: e
+          });
           allowed = false;
         }
         if (allowed) {
           figma.openExternal(msg.url);
         } else {
-          const rejection = {
-            type: "error",
-            message: "Refused to open a non-web URL."
-          };
-          figma.ui.postMessage(rejection);
+          sendError("Refused to open a non-web URL.");
         }
         break;
       }
@@ -443,47 +473,26 @@ async function handleUIMessage(msg) {
         console.warn("Unknown message type:", msg);
     }
   } catch (error) {
-    const errorMessage = {
-      type: "error",
-      message: error instanceof Error ? error.message : "An error occurred"
-    };
-    figma.ui.postMessage(errorMessage);
+    sendError(error instanceof Error ? error.message : "An error occurred");
   }
 }
+var QUICK_APPLY_MAP = {
+  applyIOS: "ios",
+  applyAndroid: "android",
+  applyWeb: "web",
+  applyPDF: "pdf"
+};
 async function runCommand() {
+  const quickPresetId = QUICK_APPLY_MAP[figma.command];
+  if (quickPresetId !== void 0) {
+    const preset = DEFAULT_PRESETS.find((p) => p.id === quickPresetId);
+    if (preset) {
+      applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
+    }
+    figma.closePlugin();
+    return;
+  }
   switch (figma.command) {
-    case "applyIOS": {
-      const preset = DEFAULT_PRESETS.find((p) => p.id === "ios");
-      if (preset) {
-        applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
-      }
-      figma.closePlugin();
-      break;
-    }
-    case "applyAndroid": {
-      const preset = DEFAULT_PRESETS.find((p) => p.id === "android");
-      if (preset) {
-        applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
-      }
-      figma.closePlugin();
-      break;
-    }
-    case "applyWeb": {
-      const preset = DEFAULT_PRESETS.find((p) => p.id === "web");
-      if (preset) {
-        applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
-      }
-      figma.closePlugin();
-      break;
-    }
-    case "applyPDF": {
-      const preset = DEFAULT_PRESETS.find((p) => p.id === "pdf");
-      if (preset) {
-        applyExportSettings(figma.currentPage.selection, preset.settings, void 0, false);
-      }
-      figma.closePlugin();
-      break;
-    }
     case "clearExport": {
       clearExportSettings(figma.currentPage.selection);
       figma.closePlugin();

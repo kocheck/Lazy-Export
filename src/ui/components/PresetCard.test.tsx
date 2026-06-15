@@ -87,4 +87,31 @@ describe('PresetCard', () => {
     render(<PresetCard preset={mockPreset} onClick={onClick} />);
     expect(screen.queryByText(/Last used/i)).not.toBeInTheDocument();
   });
+
+  it('folds "(last used)" into the accessible name when isLastUsed (#15)', () => {
+    render(<PresetCard preset={mockPreset} onClick={vi.fn()} isLastUsed />);
+    expect(
+      screen.getByRole('button', { name: 'Apply Test Preset export preset (last used)' })
+    ).toBeInTheDocument();
+  });
+
+  it('omits "(last used)" from the accessible name by default', () => {
+    render(<PresetCard preset={mockPreset} onClick={vi.fn()} />);
+    expect(
+      screen.getByRole('button', { name: 'Apply Test Preset export preset' })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /\(last used\)/i })).not.toBeInTheDocument();
+  });
+
+  it('sets aria-busy when busy and omits it otherwise', () => {
+    const { rerender } = render(<PresetCard preset={mockPreset} onClick={vi.fn()} busy />);
+    expect(screen.getByRole('button', { name: /Apply Test Preset/i })).toHaveAttribute(
+      'aria-busy',
+      'true'
+    );
+    rerender(<PresetCard preset={mockPreset} onClick={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /Apply Test Preset/i })).not.toHaveAttribute(
+      'aria-busy'
+    );
+  });
 });

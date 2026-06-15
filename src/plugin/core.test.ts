@@ -339,7 +339,7 @@ describe('validateCustomPreset', () => {
   };
 
   it('accepts a valid CustomPreset', () => {
-    expect(validateCustomPreset(validPreset)).toEqual({ valid: true });
+    expect(validateCustomPreset(validPreset)).toEqual({ valid: true, value: validPreset });
   });
 
   it('rejects null / non-object', () => {
@@ -382,6 +382,96 @@ describe('validateCustomPreset', () => {
     for (const platform of ['iOS', 'Android', 'Web', 'PDF']) {
       expect(validateCustomPreset({ ...validPreset, platform }).valid).toBe(true);
     }
+  });
+
+  // iOS cross-field rule (#6)
+  it('rejects iOS + generateMetadata without directoryStructure', () => {
+    expect(
+      validateCustomPreset({ ...validPreset, generateMetadata: true, directoryStructure: false }).valid
+    ).toBe(false);
+  });
+  it('accepts iOS + generateMetadata WITH directoryStructure', () => {
+    expect(
+      validateCustomPreset({ ...validPreset, generateMetadata: true, directoryStructure: true }).valid
+    ).toBe(true);
+  });
+  it('accepts Android + generateMetadata without directoryStructure (cross-field is iOS-only)', () => {
+    expect(
+      validateCustomPreset({
+        ...validPreset,
+        platform: 'Android',
+        generateMetadata: true,
+        directoryStructure: false,
+      }).valid
+    ).toBe(true);
+  });
+
+  // Per-format completeness (F6) — illegal field/format combinations
+  it('rejects a constraint on SVG or PDF', () => {
+    expect(
+      validateCustomPreset({
+        ...validPreset,
+        settings: [{ format: 'SVG', constraint: { type: 'SCALE', value: 1 } }],
+      }).valid
+    ).toBe(false);
+    expect(
+      validateCustomPreset({
+        ...validPreset,
+        settings: [{ format: 'PDF', constraint: { type: 'SCALE', value: 1 } }],
+      }).valid
+    ).toBe(false);
+  });
+  it('rejects an svg* flag on a non-SVG setting', () => {
+    expect(
+      validateCustomPreset({ ...validPreset, settings: [{ format: 'PNG', svgOutlineText: true }] }).valid
+    ).toBe(false);
+    expect(
+      validateCustomPreset({ ...validPreset, settings: [{ format: 'PDF', svgIdAttribute: true }] }).valid
+    ).toBe(false);
+  });
+  it('rejects a non-string suffix', () => {
+    expect(
+      validateCustomPreset({ ...validPreset, settings: [{ format: 'PNG', suffix: 123 }] }).valid
+    ).toBe(false);
+  });
+  it('rejects a non-boolean svg flag value', () => {
+    expect(
+      validateCustomPreset({ ...validPreset, settings: [{ format: 'SVG', svgOutlineText: 'yes' }] }).valid
+    ).toBe(false);
+  });
+  it('rejects a non-finite or non-positive constraint value (I4)', () => {
+    for (const value of [NaN, Infinity, 0, -1]) {
+      expect(
+        validateCustomPreset({
+          ...validPreset,
+          settings: [{ format: 'PNG', constraint: { type: 'SCALE', value } }],
+        }).valid
+      ).toBe(false);
+    }
+  });
+  it('accepts a constraint-less PNG (constraint optional on image, F12)', () => {
+    expect(
+      validateCustomPreset({ ...validPreset, settings: [{ format: 'PNG', suffix: '@1x' }] }).valid
+    ).toBe(true);
+  });
+
+  // F2 fields
+  it('rejects missing or non-finite createdAt', () => {
+    expect(validateCustomPreset({ ...validPreset, createdAt: undefined }).valid).toBe(false);
+    expect(validateCustomPreset({ ...validPreset, createdAt: NaN }).valid).toBe(false);
+    expect(validateCustomPreset({ ...validPreset, createdAt: 'soon' }).valid).toBe(false);
+  });
+  it('rejects a non-string icon', () => {
+    expect(validateCustomPreset({ ...validPreset, icon: 42 }).valid).toBe(false);
+  });
+  it('rejects non-boolean metadata flags', () => {
+    expect(validateCustomPreset({ ...validPreset, generateMetadata: 'true' }).valid).toBe(false);
+    expect(validateCustomPreset({ ...validPreset, directoryStructure: 1 }).valid).toBe(false);
+  });
+  it('returns the validated value on success', () => {
+    const result = validateCustomPreset(validPreset);
+    expect(result.valid).toBe(true);
+    if (result.valid) expect(result.value).toEqual(validPreset);
   });
 });
 
@@ -446,6 +536,87 @@ describe('save-preset with validateCustomPreset guard', () => {
     expect(figmaMock.ui.postMessage).toHaveBeenCalledWith({
       type: 'success',
       message: 'Preset saved successfully',
+    });
+  });
+});
+
+describe('apply/clear completion acks (busy-state protocol)', () => {
+  let figmaMock: FigmaMock;
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+  });
+
+  const webPreset: PresetConfig = {
+    id: 'web',
+    name: 'Web',
+    platform: 'Web',
+    settings: [{ format: 'PNG', suffix: '@2x' }],
+  };
+
+  it('apply-preset posts apply-complete on the success path', async () => {
+    figmaMock.currentPage.selection = [createMockNode()];
+    await handleUIMessage({ type: 'apply-preset', preset: webPreset, advancedMode: false });
+    expect(figmaMock.ui.postMessage).toHaveBeenCalledWith({ type: 'apply-complete' });
+  });
+
+  it('apply-preset posts apply-complete even with an empty selection', async () => {
+    figmaMock.currentPage.selection = [];
+    await handleUIMessage({ type: 'apply-preset', preset: webPreset, advancedMode: false });
+    expect(figmaMock.ui.postMessage).toHaveBeenCalledWith({ type: 'apply-complete' });
+  });
+
+  it('clear-export posts clear-complete', async () => {
+    figmaMock.currentPage.selection = [createMockNode()];
+    await handleUIMessage({ type: 'clear-export' });
+    expect(figmaMock.ui.postMessage).toHaveBeenCalledWith({ type: 'clear-complete' });
+  });
+});
+
+describe('record-preset-usage persistence failure (#8)', () => {
+  let figmaMock: FigmaMock;
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+  });
+
+  it('swallows a setAsync failure: no error toast, no throw, re-sends authoritative prefs', async () => {
+    figmaMock.ui.postMessage.mockClear();
+    // The lastUsedPreset bookkeeping write fails.
+    figmaMock.clientStorage.setAsync.mockRejectedValueOnce(new Error('quota exceeded'));
+
+    await expect(
+      handleUIMessage({ type: 'record-preset-usage', presetId: 'web' })
+    ).resolves.toBeUndefined();
+
+    const posted = figmaMock.ui.postMessage.mock.calls.map((c) => c[0] as { type: string });
+    expect(posted.some((m) => m.type === 'error')).toBe(false);
+    expect(posted.some((m) => m.type === 'preferences-loaded')).toBe(true);
+  });
+});
+
+describe('open-external-url parse failure (#9)', () => {
+  let figmaMock: FigmaMock;
+  const openExternalMock = vi.fn();
+
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+    (global as any).figma.openExternal = openExternalMock;
+    openExternalMock.mockReset();
+    figmaMock.ui.postMessage.mockReset();
+  });
+
+  it('accepts an http:// URL', async () => {
+    const url = 'http://example.com/';
+    await handleUIMessage({ type: 'open-external-url', url });
+    expect(openExternalMock).toHaveBeenCalledWith(url);
+    expect(figmaMock.ui.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unparseable URL (exercises the catch) and posts an error', async () => {
+    await handleUIMessage({ type: 'open-external-url', url: 'not a valid url' });
+    expect(openExternalMock).not.toHaveBeenCalled();
+    expect(figmaMock.ui.postMessage).toHaveBeenCalledWith({
+      type: 'error',
+      message: 'Refused to open a non-web URL.',
     });
   });
 });

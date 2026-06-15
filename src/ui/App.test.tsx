@@ -20,6 +20,22 @@ function postRaw(data: unknown) {
   });
 }
 
+/** Extract the pluginMessages sent to the parent from a postMessage spy. */
+function pluginMessages(
+  spy: ReturnType<typeof vi.spyOn>
+): Array<{ type: string; [k: string]: unknown }> {
+  return spy.mock.calls
+    .map(
+      (call: [unknown, ...unknown[]]) =>
+        (call[0] as { pluginMessage?: { type: string } } | undefined)?.pluginMessage
+    )
+    .filter(
+      (m: { type: string } | undefined): m is { type: string; [k: string]: unknown } => Boolean(m)
+    );
+}
+
+const clearBtn = () => screen.getByText('Clear Export Settings').closest('button')!;
+
 describe('App window message handling (F3)', () => {
   let postSpy: ReturnType<typeof vi.spyOn>;
 
@@ -311,5 +327,273 @@ describe('App optimistic CRUD', () => {
       (c: [unknown, ...unknown[]]) => (c[0] as { pluginMessage: UIMessage }).pluginMessage.type === 'delete-preset'
     );
     expect(deletes).toHaveLength(0);
+  });
+});
+
+describe('App busy-state acks (F4)', () => {
+  beforeEach(() => {
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    window.onmessage = null;
+  });
+
+  it('apply: marks the clicked card busy, disables others, resets on apply-complete', () => {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+
+    fireEvent.click(screen.getByLabelText(/Apply iOS/i));
+
+    expect(screen.getByLabelText(/Apply iOS/i)).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByLabelText(/Apply Web/i)).toBeDisabled();
+    expect(clearBtn()).toBeDisabled();
+
+    postFromPlugin({ type: 'apply-complete' });
+
+    expect(screen.getByLabelText(/Apply iOS/i)).not.toHaveAttribute('aria-busy');
+    expect(screen.getByLabelText(/Apply Web/i)).not.toBeDisabled();
+    expect(clearBtn()).not.toBeDisabled();
+  });
+
+  it('apply: invalid-custom-name also clears the busy state', () => {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+    fireEvent.click(screen.getByLabelText(/Apply iOS/i));
+    expect(screen.getByLabelText(/Apply iOS/i)).toHaveAttribute('aria-busy', 'true');
+
+    postFromPlugin({ type: 'invalid-custom-name', message: 'bad name' });
+    expect(screen.getByLabelText(/Apply iOS/i)).not.toHaveAttribute('aria-busy');
+  });
+
+  it('clear: marks Clear busy + disabled, resets on clear-complete', () => {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+
+    fireEvent.click(clearBtn());
+    expect(clearBtn()).toHaveAttribute('aria-busy', 'true');
+    expect(clearBtn()).toBeDisabled();
+    expect(screen.getByLabelText(/Apply iOS/i)).toBeDisabled();
+
+    postFromPlugin({ type: 'clear-complete' });
+    expect(clearBtn()).not.toHaveAttribute('aria-busy');
+    expect(screen.getByLabelText(/Apply iOS/i)).not.toBeDisabled();
+  });
+
+  it('delete: confirmed delete locks other controls until success', () => {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+    postFromPlugin({
+      type: 'preferences-loaded',
+      preferences: { customPresets: [examplePreset], advancedModeEnabled: false },
+    });
+
+    fireEvent.click(screen.getByTitle('Delete preset')); // arm
+    fireEvent.click(screen.getByTitle('Click again to confirm deletion')); // confirm
+
+    expect(screen.queryByText('My Custom Preset')).not.toBeInTheDocument(); // optimistic removal
+    expect(screen.getByLabelText(/Apply iOS/i)).toBeDisabled();
+    expect(clearBtn()).toBeDisabled();
+
+    postFromPlugin({ type: 'success', message: 'Preset deleted' });
+    expect(screen.getByLabelText(/Apply iOS/i)).not.toBeDisabled();
+  });
+
+  it('error clears the busy state for any in-flight op', () => {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+    fireEvent.click(clearBtn());
+    expect(clearBtn()).toBeDisabled();
+
+    postFromPlugin({ type: 'error', message: 'Something failed' });
+    expect(clearBtn()).not.toHaveAttribute('aria-busy');
+    expect(screen.getByLabelText(/Apply iOS/i)).not.toBeDisabled();
+  });
+});
+
+describe('App save lifecycle (F3)', () => {
+  let postSpy: ReturnType<typeof vi.spyOn>;
+  beforeEach(() => {
+    postSpy = vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+    window.onmessage = null;
+  });
+
+  function openCreatorAndSave(name: string) {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+    postFromPlugin({
+      type: 'preferences-loaded',
+      preferences: { customPresets: [], advancedModeEnabled: false },
+    });
+    fireEvent.click(screen.getByText('+ Create Custom Preset'));
+    fireEvent.change(screen.getByPlaceholderText(/My Custom Preset/i), { target: { value: name } });
+    fireEvent.click(screen.getByText('Save Preset'));
+  }
+
+  it('keeps the creator open and Save busy after posting save-preset', () => {
+    openCreatorAndSave('Brand New');
+
+    expect(pluginMessages(postSpy).some((m) => m.type === 'save-preset')).toBe(true);
+    expect(screen.getByText('Save Preset')).toBeInTheDocument(); // still open
+    expect(screen.getByText('Save Preset').closest('button')!).toHaveAttribute('aria-busy', 'true');
+  });
+
+  it('closes the creator and commits the optimistic preset on success', () => {
+    openCreatorAndSave('Brand New');
+    postFromPlugin({ type: 'success', message: 'Preset saved successfully' });
+
+    expect(screen.queryByText('Save Preset')).not.toBeInTheDocument(); // closed
+    expect(screen.getByText('Brand New')).toBeInTheDocument(); // committed
+  });
+
+  it('keeps the creator open and reloads authoritative data on error', () => {
+    openCreatorAndSave('Will Fail');
+    postSpy.mockClear();
+    postFromPlugin({ type: 'error', message: 'Save failed' });
+
+    expect(screen.getByText('Save Preset')).toBeInTheDocument(); // still open
+    expect(pluginMessages(postSpy).some((m) => m.type === 'get-preferences')).toBe(true);
+  });
+});
+
+describe('App delete confirmation lifecycle (#3)', () => {
+  beforeEach(() => {
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    window.onmessage = null;
+  });
+
+  function setupArmed() {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+    postFromPlugin({
+      type: 'preferences-loaded',
+      preferences: { customPresets: [examplePreset], advancedModeEnabled: false },
+    });
+    fireEvent.click(screen.getByTitle('Delete preset'));
+    expect(screen.getByTitle('Click again to confirm deletion')).toBeInTheDocument();
+  }
+
+  it('auto-disarms an armed delete after 3000ms', () => {
+    setupArmed();
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(screen.getByTitle('Delete preset')).toBeInTheDocument();
+    expect(screen.queryByTitle('Click again to confirm deletion')).not.toBeInTheDocument();
+  });
+
+  it('disarms an armed delete on Escape', () => {
+    setupArmed();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.getByTitle('Delete preset')).toBeInTheDocument();
+  });
+
+  it('disarms an armed delete on selection change', () => {
+    setupArmed();
+    postFromPlugin({ type: 'selection-changed', count: 2 });
+    expect(screen.getByTitle('Delete preset')).toBeInTheDocument();
+  });
+});
+
+describe('App toast timing (#7)', () => {
+  beforeEach(() => {
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    window.onmessage = null;
+  });
+
+  it('auto-dismisses a success toast after 3000ms', () => {
+    render(<App />);
+    postFromPlugin({ type: 'success', message: 'Saved!' });
+    expect(screen.getByText('Saved!')).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(screen.queryByText('Saved!')).not.toBeInTheDocument();
+  });
+
+  it('keeps an iOS-metadata export-success toast past 10000ms', () => {
+    render(<App />);
+    postFromPlugin({
+      type: 'export-success',
+      message: 'Applied! Copy Contents.json',
+      metadata: { iosContentsJson: '{"images":[]}' },
+    });
+    expect(screen.getByText('Applied! Copy Contents.json')).toBeInTheDocument();
+    act(() => {
+      vi.advanceTimersByTime(10000);
+    });
+    expect(screen.getByText('Applied! Copy Contents.json')).toBeInTheDocument();
+  });
+
+  it('a new toast cancels the previous auto-dismiss timer', () => {
+    render(<App />);
+    postFromPlugin({ type: 'success', message: 'First' });
+    act(() => {
+      vi.advanceTimersByTime(2999);
+    });
+    postFromPlugin({ type: 'success', message: 'Second' });
+    // If the first timer were still live, +1ms would fire it and clear the toast.
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(screen.getByText('Second')).toBeInTheDocument();
+    expect(screen.queryByText('First')).not.toBeInTheDocument();
+  });
+});
+
+describe('App accessibility announcements (#14)', () => {
+  beforeEach(() => {
+    vi.spyOn(window.parent, 'postMessage').mockImplementation(() => {});
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    window.onmessage = null;
+  });
+
+  it('announces the selection count in the live region (debounced ~300ms)', () => {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 2 });
+    expect(screen.getByRole('status')).not.toHaveTextContent('2 layers selected');
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(screen.getByRole('status')).toHaveTextContent('2 layers selected');
+  });
+
+  it('announces "No layers selected" when the selection is cleared', () => {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 0 });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(screen.getByRole('status')).toHaveTextContent('No layers selected');
+  });
+
+  it('announces the delete-arm confirmation', () => {
+    render(<App />);
+    postFromPlugin({ type: 'selection-changed', count: 1 });
+    postFromPlugin({
+      type: 'preferences-loaded',
+      preferences: { customPresets: [examplePreset], advancedModeEnabled: false },
+    });
+    fireEvent.click(screen.getByTitle('Delete preset'));
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Press delete again to confirm removing My Custom Preset.'
+    );
   });
 });

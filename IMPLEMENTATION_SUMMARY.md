@@ -107,7 +107,7 @@ ui/components/     |   92.15%|    90.32%|   94.73%|   95.91%
 
 #### Plugin Error Handling
 
-Updated `src/plugin/main.ts`:
+Updated `src/plugin/core.ts` (`handlePluginError`, and the try/catch in `handleUIMessage`):
 - Global error handler function
 - Try/catch around initialization
 - Try/catch around event listeners
@@ -209,7 +209,7 @@ Created comprehensive documentation:
 - `.gitignore` - Added coverage and node_modules exclusions
 - `package.json` - Added test scripts and dev dependencies
 - `vite.config.ts` - Added test configuration
-- `src/plugin/main.ts` - Added error handling
+- `src/plugin/core.ts` - Added error handling (`handlePluginError`)
 - `src/shared/types.ts` - Added stack to error message
 - `src/ui/App.tsx` - Added toast notifications
 - `src/ui/main.tsx` - Added ErrorBoundary
@@ -266,8 +266,8 @@ What users will copy when they click "Copy Debug Info":
 **Stack Trace:**
 ```
 TypeError: Cannot read property 'settings' of undefined
-    at applyPreset (src/plugin/main.ts:42:15)
-    at handleMessage (src/plugin/main.ts:89:7)
+    at applyPreset (src/plugin/core.ts:42:15)
+    at handleMessage (src/plugin/core.ts:89:7)
 ```
 
 **Additional Context:**

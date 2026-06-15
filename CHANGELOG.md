@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+- Serialized all preference writes through a write queue so concurrent read-modify-write operations can no longer clobber each other's data.
+- CI now fails when the committed `dist/` artifacts are out of date with source (dist-staleness check).
+
+### Security
+- Custom presets are now fully validated — every field, per export format — before any `clientStorage` write, hardening the untrusted-input boundary.
+
 ## [2.0.0] - 2026-06-14
 
 ### 🎉 Complete Rewrite

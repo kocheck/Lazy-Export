@@ -10,7 +10,16 @@
  * @see ARCHITECTURE.md for detailed technical documentation
  */
 
-import { UIMessage, PluginMessage, SavedPreferences, ExportSetting } from '../shared/types';
+import {
+  UIMessage,
+  PluginMessage,
+  SavedPreferences,
+  ExportSetting,
+  ImageExportSetting,
+  CustomPreset,
+  PLATFORMS,
+  EXPORT_FORMATS,
+} from '../shared/types';
 import { DEFAULT_PRESETS } from '../shared/presets';
 import { validateCustomName } from '../shared/customName';
 
@@ -19,6 +28,14 @@ import { validateCustomName } from '../shared/customName';
 // ---------------------------------------------------------------------------
 
 const VALID_IOS_SCALES: Record<string, string> = { '1': '1x', '2': '2x', '3': '3x' };
+
+// ---------------------------------------------------------------------------
+// Shared helpers
+// ---------------------------------------------------------------------------
+
+function sendError(message: string): void {
+  figma.ui.postMessage({ type: 'error', message } as PluginMessage);
+}
 
 /** Canonical iOS scale filename marker derived from a SCALE constraint value (e.g. 2 → "@2x"). */
 function iosScaleMarker(constraintValue: number): string {
@@ -30,7 +47,7 @@ function iosScaleMarker(constraintValue: number): string {
  * Returns `null` on success, or a user-facing error string on failure.
  */
 export function validateIOSMetadataSettings(settings: ExportSetting[]): string | null {
-  const png = settings.filter((s) => s.format === 'PNG');
+  const png = settings.filter((s): s is ImageExportSetting => s.format === 'PNG');
   if (png.length === 0) {
     return 'iOS metadata requires at least one PNG export setting.';
   }
@@ -63,7 +80,7 @@ export function validateIOSMetadataSettings(settings: ExportSetting[]): string |
  */
 export function generateIOSContentsJSON(assetName: string, settings: ExportSetting[]): string {
   const images = settings
-    .filter((s) => s.format === 'PNG' && s.constraint?.type === 'SCALE')
+    .filter((s): s is ImageExportSetting => s.format === 'PNG' && s.constraint?.type === 'SCALE')
     .map((s) => {
       const value = s.constraint!.value;
       return {
@@ -80,40 +97,87 @@ export function generateIOSContentsJSON(assetName: string, settings: ExportSetti
 // Preset validation
 // ---------------------------------------------------------------------------
 
-const VALID_PLATFORMS = ['iOS', 'Android', 'Web', 'PDF'];
 const MAX_PRESET_SETTINGS = 50;
+const VALID_CONSTRAINT_TYPES = ['SCALE', 'WIDTH', 'HEIGHT'];
+const SVG_FLAGS = ['svgOutlineText', 'svgIdAttribute', 'svgSimplifyStroke'] as const;
 
-export function validateCustomPreset(p: unknown): { valid: boolean; error?: string } {
+/**
+ * Sound validation result: a `true` result carries the narrowed value, so a
+ * caller that checks `result.valid` gets the typed `CustomPreset` with no cast.
+ * (Precedent for returning a result object: `CustomNameResult` in
+ * `src/shared/customName.ts` — this is a tighter, value-carrying variant.)
+ */
+export type ValidationResult<T> = { valid: true; value: T } | { valid: false; error: string };
+
+/**
+ * Validate untrusted preset input. Checks EVERY field the `CustomPreset`
+ * contract declares — the closing `p as CustomPreset` cast is sound only because
+ * each field is verified above it. Per-setting validation branches on `format`
+ * so illegal field/format combinations (constraint on SVG, `svg*` on PNG, …) are
+ * rejected rather than silently carried through.
+ */
+export function validateCustomPreset(p: unknown): ValidationResult<CustomPreset> {
   if (typeof p !== 'object' || p === null) return { valid: false, error: 'Preset is not an object.' };
   const preset = p as Record<string, unknown>;
   if (typeof preset.id !== 'string' || preset.id.length === 0)
     return { valid: false, error: 'Preset id must be a non-empty string.' };
   if (typeof preset.name !== 'string' || preset.name.length === 0)
     return { valid: false, error: 'Preset name must be a non-empty string.' };
-  if (typeof preset.platform !== 'string' || !VALID_PLATFORMS.includes(preset.platform))
+  if (typeof preset.platform !== 'string' || !(PLATFORMS as string[]).includes(preset.platform))
     return { valid: false, error: 'Preset platform is invalid.' };
   if (!Array.isArray(preset.settings) || preset.settings.length > MAX_PRESET_SETTINGS)
     return { valid: false, error: 'Preset settings are invalid.' };
-  const VALID_FORMATS = ['PNG', 'JPG', 'SVG', 'PDF'];
-  const VALID_CONSTRAINT_TYPES = ['SCALE', 'WIDTH', 'HEIGHT'];
+
   for (const s of preset.settings as unknown[]) {
     if (typeof s !== 'object' || s === null)
       return { valid: false, error: 'Each setting must be an object.' };
     const setting = s as Record<string, unknown>;
-    if (!VALID_FORMATS.includes(setting.format as string))
-      return { valid: false, error: `Setting format "${String(setting.format)}" is invalid.` };
+    const format = setting.format;
+    if (typeof format !== 'string' || !(EXPORT_FORMATS as string[]).includes(format))
+      return { valid: false, error: `Setting format "${String(format)}" is invalid.` };
+    if (setting.suffix !== undefined && typeof setting.suffix !== 'string')
+      return { valid: false, error: 'Setting suffix must be a string.' };
+
+    const isImage = format === 'PNG' || format === 'JPG';
+    const isSvg = format === 'SVG';
+
+    // `constraint` is valid ONLY on the image (PNG/JPG) variant, and is OPTIONAL
+    // there — a constraint-less PNG/JPG is valid. Validate the shape only when present.
     if (setting.constraint !== undefined) {
+      if (!isImage)
+        return { valid: false, error: `Setting format "${format}" does not support a constraint.` };
       if (typeof setting.constraint !== 'object' || setting.constraint === null)
         return { valid: false, error: 'Setting constraint must be an object.' };
       const c = setting.constraint as Record<string, unknown>;
-      if (!VALID_CONSTRAINT_TYPES.includes(c.type as string))
+      if (typeof c.type !== 'string' || !VALID_CONSTRAINT_TYPES.includes(c.type))
         return { valid: false, error: 'Setting constraint type is invalid.' };
-      if (typeof c.value !== 'number')
-        return { valid: false, error: 'Setting constraint value must be a number.' };
+      if (typeof c.value !== 'number' || !Number.isFinite(c.value) || c.value <= 0)
+        return { valid: false, error: 'Setting constraint value must be a finite number greater than 0.' };
+    }
+
+    // The `svg*` flags are valid ONLY on the SVG variant.
+    for (const flag of SVG_FLAGS) {
+      if (setting[flag] === undefined) continue;
+      if (!isSvg)
+        return { valid: false, error: `Setting format "${format}" does not support ${flag}.` };
+      if (typeof setting[flag] !== 'boolean')
+        return { valid: false, error: `Setting ${flag} must be a boolean.` };
     }
   }
+
   if (preset.isCustom !== true) return { valid: false, error: 'Preset must be a custom preset.' };
-  return { valid: true };
+  if (typeof preset.createdAt !== 'number' || !Number.isFinite(preset.createdAt))
+    return { valid: false, error: 'Preset createdAt must be a finite number.' };
+  if (preset.icon !== undefined && typeof preset.icon !== 'string')
+    return { valid: false, error: 'Preset icon must be a string.' };
+  if (preset.generateMetadata !== undefined && typeof preset.generateMetadata !== 'boolean')
+    return { valid: false, error: 'Preset generateMetadata must be a boolean.' };
+  if (preset.directoryStructure !== undefined && typeof preset.directoryStructure !== 'boolean')
+    return { valid: false, error: 'Preset directoryStructure must be a boolean.' };
+  if (preset.generateMetadata === true && preset.platform === 'iOS' && preset.directoryStructure !== true)
+    return { valid: false, error: 'iOS metadata (Contents.json) requires "Use Directory Structure" to be enabled.' };
+
+  return { valid: true, value: p as CustomPreset };
 }
 
 // ---------------------------------------------------------------------------
@@ -128,7 +192,7 @@ let _prefQueue: Promise<unknown> = Promise.resolve();
  * completes (or fails). A rejected `fn` does not poison later queue entries.
  */
 function enqueuePrefMutation<T>(fn: () => Promise<T>): Promise<T> {
-  const next = _prefQueue.then(fn, fn as () => Promise<T>);
+  const next = _prefQueue.then(() => fn(), () => fn());
   // Let the queue tail ignore errors so a later enqueue always proceeds.
   _prefQueue = next.then(
     () => undefined,
@@ -200,57 +264,57 @@ export function applyExportSettings(
   generateMetadata: boolean = false,
   directoryStructure: boolean = false
 ): void {
-  if (!nodes || nodes.length === 0) {
+  if (nodes.length === 0) {
     figma.notify('⚠️ No nodes selected');
     return;
   }
 
   const assetName = customName || 'asset';
 
-  nodes.forEach((node) => {
-    const exportSettings: ExportSettings[] = settings.map((setting): ExportSettings => {
-      let suffix = setting.suffix || '';
+  const exportSettings: ExportSettings[] = settings.map((setting): ExportSettings => {
+    let suffix = setting.suffix || '';
 
-      // Apply advanced directory structure (only when the preset opts in)
-      if (advancedMode && directoryStructure && platform) {
-        if (platform === 'iOS') {
-          const scale =
-            setting.constraint?.type === 'SCALE'
-              ? iosScaleMarker(setting.constraint.value)
-              : setting.suffix || '@1x';
-          suffix = `/${assetName}.imageset/${assetName}${scale}`;
-        } else if (platform === 'Android') {
-          const density = setting.suffix || 'drawable-mdpi';
-          suffix = `/${density}/${assetName}`;
-        }
-      } else if (customName && setting.suffix) {
-        suffix = `/${assetName}${setting.suffix}`;
+    // Apply advanced directory structure (only when the preset opts in)
+    if (advancedMode && directoryStructure && platform) {
+      if (platform === 'iOS') {
+        const scale =
+          (setting.format === 'PNG' || setting.format === 'JPG') && setting.constraint?.type === 'SCALE'
+            ? iosScaleMarker(setting.constraint.value)
+            : setting.suffix || '@1x';
+        suffix = `/${assetName}.imageset/${assetName}${scale}`;
+      } else if (platform === 'Android') {
+        const density = setting.suffix || 'drawable-mdpi';
+        suffix = `/${density}/${assetName}`;
       }
+    } else if (customName && setting.suffix) {
+      suffix = `/${assetName}${setting.suffix}`;
+    }
 
-      if (setting.format === 'SVG') {
-        return {
-          format: 'SVG',
-          suffix,
-          ...(setting.svgOutlineText !== undefined && { svgOutlineText: setting.svgOutlineText }),
-          ...(setting.svgIdAttribute !== undefined && { svgIdAttribute: setting.svgIdAttribute }),
-          ...(setting.svgSimplifyStroke !== undefined && {
-            svgSimplifyStroke: setting.svgSimplifyStroke,
-          }),
-        };
-      }
-
-      if (setting.format === 'PDF') {
-        return { format: 'PDF', suffix };
-      }
-
-      // PNG | JPG → image variant (the only variant that accepts `constraint`)
+    if (setting.format === 'SVG') {
       return {
-        format: setting.format,
+        format: 'SVG',
         suffix,
-        ...(setting.constraint && { constraint: setting.constraint }),
+        ...(setting.svgOutlineText !== undefined && { svgOutlineText: setting.svgOutlineText }),
+        ...(setting.svgIdAttribute !== undefined && { svgIdAttribute: setting.svgIdAttribute }),
+        ...(setting.svgSimplifyStroke !== undefined && {
+          svgSimplifyStroke: setting.svgSimplifyStroke,
+        }),
       };
-    });
+    }
 
+    if (setting.format === 'PDF') {
+      return { format: 'PDF', suffix };
+    }
+
+    // PNG | JPG → image variant (the only variant that accepts `constraint`)
+    return {
+      format: setting.format,
+      suffix,
+      ...(setting.constraint && { constraint: setting.constraint }),
+    };
+  });
+
+  nodes.forEach((node) => {
     node.exportSettings = exportSettings;
   });
 
@@ -272,7 +336,7 @@ export function applyExportSettings(
  * Clear export settings from selected nodes.
  */
 export function clearExportSettings(nodes: readonly SceneNode[]): void {
-  if (!nodes || nodes.length === 0) {
+  if (nodes.length === 0) {
     figma.notify('⚠️ No nodes selected');
     return;
   }
@@ -322,17 +386,12 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
         if (preset.generateMetadata && preset.platform === 'iOS') {
           // Contents.json filenames derive from the imageset path — only valid with directory structure.
           if (!(preset.directoryStructure ?? false)) {
-            const rejection: PluginMessage = {
-              type: 'error',
-              message: 'iOS metadata (Contents.json) requires "Use Directory Structure" to be enabled.',
-            };
-            figma.ui.postMessage(rejection);
+            sendError('iOS metadata (Contents.json) requires "Use Directory Structure" to be enabled.');
             break;
           }
           const metaErr = validateIOSMetadataSettings(preset.settings);
           if (metaErr) {
-            const rejection: PluginMessage = { type: 'error', message: metaErr };
-            figma.ui.postMessage(rejection);
+            sendError(metaErr);
             break;
           }
         }
@@ -346,25 +405,25 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
           preset.generateMetadata ?? false,
           preset.directoryStructure ?? false
         );
+        // Only the success path reaches here — the early breaks (invalid-custom-name,
+        // iOS-metadata errors) and the outer catch each post their own terminal message.
+        figma.ui.postMessage({ type: 'apply-complete' } as PluginMessage);
         break;
       }
 
       case 'clear-export': {
         clearExportSettings(figma.currentPage.selection);
+        figma.ui.postMessage({ type: 'clear-complete' } as PluginMessage);
         break;
       }
 
       case 'save-preset': {
-        const preset = msg.preset;
-        const validation = validateCustomPreset(preset);
-        if (!validation.valid) {
-          const rejection: PluginMessage = {
-            type: 'error',
-            message: validation.error ?? 'Invalid preset',
-          };
-          figma.ui.postMessage(rejection);
+        const result = validateCustomPreset(msg.preset);
+        if (!result.valid) {
+          sendError(result.error);
           break;
         }
+        const preset = result.value;
         await enqueuePrefMutation(async () => {
           const preferences = await loadPreferences();
           const existingIndex = preferences.customPresets.findIndex((p) => p.id === preset.id);
@@ -424,6 +483,16 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
           });
         } catch (err) {
           console.warn('record-preset-usage: failed to persist', err);
+          // The UI optimistically set `lastUsedPreset` (App.tsx) — the write failed,
+          // so re-send the authoritative (unmutated) prefs to snap it back. Best-effort;
+          // never escalate a bookkeeping failure into a user-facing error toast.
+          try {
+            const preferences = await loadPreferences();
+            const reload: PluginMessage = { type: 'preferences-loaded', preferences };
+            figma.ui.postMessage(reload);
+          } catch (reloadErr) {
+            console.warn('record-preset-usage: failed to reload preferences', reloadErr);
+          }
         }
         break;
       }
@@ -433,17 +502,19 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
         try {
           const scheme = new URL(msg.url).protocol;
           allowed = scheme === 'http:' || scheme === 'https:';
-        } catch {
+        } catch (e) {
+          // Log the failure for debugging, but cap the URL — it may carry sensitive
+          // pasted content (cf. src/shared/sanitizeLog.ts hygiene).
+          console.warn('open-external-url: failed to parse URL', {
+            url: String(msg.url).slice(0, 60),
+            error: e,
+          });
           allowed = false;
         }
         if (allowed) {
           figma.openExternal(msg.url);
         } else {
-          const rejection: PluginMessage = {
-            type: 'error',
-            message: 'Refused to open a non-web URL.',
-          };
-          figma.ui.postMessage(rejection);
+          sendError('Refused to open a non-web URL.');
         }
         break;
       }
@@ -452,11 +523,7 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
         console.warn('Unknown message type:', msg);
     }
   } catch (error) {
-    const errorMessage: PluginMessage = {
-      type: 'error',
-      message: error instanceof Error ? error.message : 'An error occurred',
-    };
-    figma.ui.postMessage(errorMessage);
+    sendError(error instanceof Error ? error.message : 'An error occurred');
   }
 }
 
@@ -464,44 +531,25 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
  * Run the plugin's command switch for one invocation.
  * Adapted from the previous init IIFE; `applyPDF` is new (plan 009).
  */
+const QUICK_APPLY_MAP: Record<string, string> = {
+  applyIOS: 'ios',
+  applyAndroid: 'android',
+  applyWeb: 'web',
+  applyPDF: 'pdf',
+};
+
 async function runCommand(): Promise<void> {
+  const quickPresetId = QUICK_APPLY_MAP[figma.command];
+  if (quickPresetId !== undefined) {
+    const preset = DEFAULT_PRESETS.find((p) => p.id === quickPresetId);
+    if (preset) {
+      applyExportSettings(figma.currentPage.selection, preset.settings, undefined, false);
+    }
+    figma.closePlugin();
+    return;
+  }
+
   switch (figma.command) {
-    case 'applyIOS': {
-      const preset = DEFAULT_PRESETS.find((p) => p.id === 'ios');
-      if (preset) {
-        applyExportSettings(figma.currentPage.selection, preset.settings, undefined, false);
-      }
-      figma.closePlugin();
-      break;
-    }
-
-    case 'applyAndroid': {
-      const preset = DEFAULT_PRESETS.find((p) => p.id === 'android');
-      if (preset) {
-        applyExportSettings(figma.currentPage.selection, preset.settings, undefined, false);
-      }
-      figma.closePlugin();
-      break;
-    }
-
-    case 'applyWeb': {
-      const preset = DEFAULT_PRESETS.find((p) => p.id === 'web');
-      if (preset) {
-        applyExportSettings(figma.currentPage.selection, preset.settings, undefined, false);
-      }
-      figma.closePlugin();
-      break;
-    }
-
-    case 'applyPDF': {
-      const preset = DEFAULT_PRESETS.find((p) => p.id === 'pdf');
-      if (preset) {
-        applyExportSettings(figma.currentPage.selection, preset.settings, undefined, false);
-      }
-      figma.closePlugin();
-      break;
-    }
-
     case 'clearExport': {
       clearExportSettings(figma.currentPage.selection);
       figma.closePlugin();

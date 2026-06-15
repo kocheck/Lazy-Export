@@ -22,7 +22,7 @@ The exported file is a JSON text string with the following top-level shape:
   "format": "lazy-export-presets",   // magic string — import rejects unrelated JSON
   "version": 1,                       // schema version; bump on breaking changes
   "exportedAt": 1718323200000,        // epoch ms, informational only
-  "presets": [                        // array of CustomPreset (exactly the stored shape)
+  "presets": [                        // array of PresetV1 (frozen v1 wire shape)
     {
       "id": "custom-1718000000000",
       "name": "My iOS set",
@@ -42,7 +42,7 @@ The exported file is a JSON text string with the following top-level shape:
 - `format` (required): the magic string `"lazy-export-presets"`. Import must reject any blob where `format` is absent or does not match this exact string.
 - `version` (required): integer schema version, starting at `1`. See forward-compat rule below.
 - `exportedAt` (informational): `Date.now()` at export time. Not used during import; helpful for debugging.
-- `presets[]` (required): each entry is exactly a `CustomPreset` (`src/shared/types.ts`), with no extra wrapping. This keeps the serialization trivial: `JSON.stringify({ format, version, exportedAt, presets })`.
+- `presets[]` (required): each entry is a `PresetV1` (`src/shared/types.ts`) — a frozen wire type that is intentionally **not** aliased to the runtime `CustomPreset`, so a future change to `CustomPreset`/`ExportSetting` cannot silently mutate the v1 on-disk contract (a new runtime shape gets a `PresetV2`). At v1 the two shapes are field-for-field identical, so serialization stays trivial: `JSON.stringify({ format, version, exportedAt, presets })`.
 
 **Forward-compatibility rule:** An importer built against `version: 1` that receives a blob with `version: 2` (or any unknown version) must refuse with a clear, user-facing error message:
 
@@ -50,7 +50,7 @@ The exported file is a JSON text string with the following top-level shape:
 
 It must not silently drop unrecognised fields or partially import. When `version: 2` exists, a migration function should be placed alongside the import handler in `src/plugin/core.ts` and called before validation.
 
-The export file shape is captured as the `PresetExportFile` type in `src/shared/types.ts`.
+The export file shape is captured as the `PresetExportFile` type in `src/shared/types.ts`, whose `presets` field is `PresetV1[]` (the decoupled wire types `PresetV1`/`PresetV1Setting` live in the same file).
 
 ## 3. Conflict / merge rules on import
 
@@ -116,7 +116,7 @@ The following new message variants would be added by plan 012 (they are describe
 | Copy via `execCommand` | UI |
 | Post raw text to plugin | UI |
 
-**Plumbing note for plan 012:** Each new message variant must be added to the `UIMessage` / `PluginMessage` discriminated unions in `src/shared/types.ts` **and** get a matching `case` block in `handleUIMessage()` in `src/plugin/core.ts` (not `main.ts` — Plan 008 moved the message switch into `core.ts`'s `handleUIMessage` function, following the same pattern as the existing `save-preset` and `delete-preset` cases around lines 329–365 of `core.ts`).
+**Plumbing note for plan 012:** Each new message variant must be added to the `UIMessage` / `PluginMessage` discriminated unions in `src/shared/types.ts` **and** get a matching `case` block in `handleUIMessage()` in `src/plugin/core.ts` (not `main.ts` — Plan 008 moved the message switch into `core.ts`'s `handleUIMessage` function, following the same pattern as the existing `save-preset` and `delete-preset` cases in `core.ts`'s `handleUIMessage` switch).
 
 ## 5. Download / upload UX inside Figma's iframe
 
