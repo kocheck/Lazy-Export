@@ -45,14 +45,14 @@ This version is a complete modernization of the plugin from the ground up.
 - **Framework**: Svelte 3 → React 18
 - **TypeScript**: ES6 → ES2020 with strict mode
 - **UI Pattern**: Dropdown menus → Direct preset cards
-- **Interaction Model**: Menu commands removed (UI-only now)
+- **Interaction Model**: Dropdown menus → Direct preset cards (menu commands retained and extended)
 - **Project Structure**: Organized into `ui/`, `plugin/`, `shared/` folders
 - **Export Naming**: Smarter suffix handling with advanced mode
 - **Bundle Output**: `public/` → `dist/`
 
 ### Removed
 
-- **Deprecated `figma.command` pattern** - No longer uses menu commands
+- **Legacy dropdown UI** - Replaced by direct-click preset cards; `figma.command` menu commands are retained and extended (applyIOS, applyAndroid, applyWeb, applyPDF, clearExport)
 - **Svelte Dependencies** - Fully migrated to React
 - **Rollup Build System** - Replaced with Vite
 - **Legacy Component Library** - Custom UI3 components instead
@@ -93,7 +93,7 @@ This was the original version built with Svelte and Rollup. See git history for 
 ### For Users
 
 **Breaking Changes:**
-- Menu commands are removed. The plugin now works entirely through the UI panel.
+- The dropdown-based UI is replaced by direct-click preset cards. Menu commands (iOS, Android, Web, PDF, Clear) are still present in the manifest.
 - You'll need to re-import the plugin manifest from the new `dist/` folder.
 
 **New Workflow:**

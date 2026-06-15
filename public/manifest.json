@@ -8,6 +8,9 @@
     "figma"
   ],
   "ui": "index.html",
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  },
   "menu": [
     { "separator": true },
     { "name": "Apply IOS", "command": "applyIOS" },

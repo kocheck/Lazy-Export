@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PresetCard } from './components/PresetCard';
 import { Input } from './components/Input';
 import { Toggle } from './components/Toggle';
@@ -29,6 +29,7 @@ const App: React.FC = () => {
   const [editingPreset, setEditingPreset] = useState<CustomPreset | undefined>();
   const [toast, setToast] = useState<ToastState | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // All presets (default + custom)
   const customPresets = preferences?.customPresets || [];
@@ -60,27 +61,44 @@ const App: React.FC = () => {
 
         case 'success':
           console.log('✅', msg.message);
+          if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
           setToast({ message: msg.message, type: 'success' });
-          setTimeout(() => setToast(null), 3000);
+          toastTimerRef.current = setTimeout(() => setToast(null), 3000);
           break;
 
         case 'export-success':
+          if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
           setToast({
             message: msg.message,
             type: 'success',
             metadata: msg.metadata,
           });
-          // Clear toast after 5 seconds
-          setTimeout(() => setToast(null), 5000);
+          // Only auto-dismiss when there is no Contents.json to copy; otherwise the
+          // user must close it manually (it carries the only copy action).
+          if (!msg.metadata?.iosContentsJson) {
+            toastTimerRef.current = setTimeout(() => setToast(null), 5000);
+          }
           break;
 
         case 'error': {
           console.error('❌', msg.message);
+          if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
           const error = new Error(msg.message);
           if (msg.stack) {
             error.stack = msg.stack;
           }
           setToast({ message: msg.message, type: 'error', error });
+          // Reload authoritative persisted state to snap back any unpersisted optimistic change.
+          parent.postMessage({ pluginMessage: { type: 'get-preferences' } }, '*');
+          break;
+        }
+
+        default: {
+          console.warn('Unknown plugin message type:', (msg as { type: string }).type);
+          // Exhaustiveness guard: TypeScript will flag this if a new PluginMessage variant
+          // is added to the discriminated union without a matching case here.
+          const _exhaustive: never = msg;
+          void _exhaustive;
           break;
         }
       }
@@ -107,6 +125,7 @@ const App: React.FC = () => {
       presetId: preset.id,
     };
     parent.postMessage({ pluginMessage: usageMessage }, '*');
+    setPreferences((prev) => prev && { ...prev, lastUsedPreset: preset.id });
   };
 
   const handleAdvancedModeChange = (enabled: boolean) => {

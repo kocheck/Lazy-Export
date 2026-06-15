@@ -237,6 +237,22 @@ describe('App message routing', () => {
     postFromPlugin({ type: 'error', message: 'Something failed' });
     expect(screen.getByText('Something failed')).toBeInTheDocument();
   });
+
+  it('export-success with iosContentsJson metadata surfaces the Copy Contents.json button', () => {
+    render(<App />);
+    postFromPlugin({
+      type: 'export-success',
+      message: '✅ Applied! Copy Contents.json required for Xcode.',
+      metadata: { iosContentsJson: '{"images":[],"info":{"author":"Lazy Export","version":1}}' },
+    });
+    expect(screen.getByText('Copy Contents.json')).toBeInTheDocument();
+  });
+
+  it('export-success without metadata does not surface the Copy Contents.json button', () => {
+    render(<App />);
+    postFromPlugin({ type: 'export-success', message: '✅ Applied!' });
+    expect(screen.queryByText('Copy Contents.json')).not.toBeInTheDocument();
+  });
 });
 
 describe('App optimistic CRUD', () => {

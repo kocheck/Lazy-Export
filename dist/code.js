@@ -183,6 +183,24 @@ function validateCustomPreset(p) {
     return { valid: false, error: "Preset platform is invalid." };
   if (!Array.isArray(preset.settings) || preset.settings.length > MAX_PRESET_SETTINGS)
     return { valid: false, error: "Preset settings are invalid." };
+  const VALID_FORMATS = ["PNG", "JPG", "SVG", "PDF"];
+  const VALID_CONSTRAINT_TYPES = ["SCALE", "WIDTH", "HEIGHT"];
+  for (const s of preset.settings) {
+    if (typeof s !== "object" || s === null)
+      return { valid: false, error: "Each setting must be an object." };
+    const setting = s;
+    if (!VALID_FORMATS.includes(setting.format))
+      return { valid: false, error: `Setting format "${String(setting.format)}" is invalid.` };
+    if (setting.constraint !== void 0) {
+      if (typeof setting.constraint !== "object" || setting.constraint === null)
+        return { valid: false, error: "Setting constraint must be an object." };
+      const c = setting.constraint;
+      if (!VALID_CONSTRAINT_TYPES.includes(c.type))
+        return { valid: false, error: "Setting constraint type is invalid." };
+      if (typeof c.value !== "number")
+        return { valid: false, error: "Setting constraint value must be a number." };
+    }
+  }
   if (preset.isCustom !== true) return { valid: false, error: "Preset must be a custom preset." };
   return { valid: true };
 }
@@ -305,6 +323,14 @@ async function handleUIMessage(msg) {
           break;
         }
         if (preset.generateMetadata && preset.platform === "iOS") {
+          if (!(preset.directoryStructure ?? false)) {
+            const rejection = {
+              type: "error",
+              message: 'iOS metadata (Contents.json) requires "Use Directory Structure" to be enabled.'
+            };
+            figma.ui.postMessage(rejection);
+            break;
+          }
           const metaErr = validateIOSMetadataSettings(preset.settings);
           if (metaErr) {
             const rejection = { type: "error", message: metaErr };
@@ -383,11 +409,15 @@ async function handleUIMessage(msg) {
       }
       case "record-preset-usage": {
         const presetId = msg.presetId;
-        await enqueuePrefMutation(async () => {
-          const preferences = await loadPreferences();
-          preferences.lastUsedPreset = presetId;
-          await savePreferences(preferences);
-        });
+        try {
+          await enqueuePrefMutation(async () => {
+            const preferences = await loadPreferences();
+            preferences.lastUsedPreset = presetId;
+            await savePreferences(preferences);
+          });
+        } catch (err) {
+          console.warn("record-preset-usage: failed to persist", err);
+        }
         break;
       }
       case "open-external-url": {

@@ -116,7 +116,7 @@ The following new message variants would be added by plan 012 (they are describe
 | Copy via `execCommand` | UI |
 | Post raw text to plugin | UI |
 
-**Plumbing note for plan 012:** Each new message variant must be added to the `UIMessage` / `PluginMessage` discriminated unions in `src/shared/types.ts` **and** get a matching `case` block in `handleUIMessage()` in `src/plugin/core.ts` (not `main.ts` — Plan 008 moved the message switch into `core.ts`'s `handleUIMessage` function, following the same pattern as the existing `save-preset` and `delete-preset` cases around lines 242–285 of `core.ts`).
+**Plumbing note for plan 012:** Each new message variant must be added to the `UIMessage` / `PluginMessage` discriminated unions in `src/shared/types.ts` **and** get a matching `case` block in `handleUIMessage()` in `src/plugin/core.ts` (not `main.ts` — Plan 008 moved the message switch into `core.ts`'s `handleUIMessage` function, following the same pattern as the existing `save-preset` and `delete-preset` cases around lines 329–365 of `core.ts`).
 
 ## 5. Download / upload UX inside Figma's iframe
 

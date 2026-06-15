@@ -152,12 +152,27 @@ describe('PresetCreator metadata toggles', () => {
     fireEvent.change(screen.getByPlaceholderText(/My Custom Preset/i), {
       target: { value: 'Toggled Preset' },
     });
+    // For iOS, enabling Generate Metadata auto-enables Use Directory Structure.
     fireEvent.click(screen.getByLabelText('Generate Metadata'));
-    fireEvent.click(screen.getByLabelText('Use Directory Structure'));
     fireEvent.click(screen.getByText('Save Preset'));
 
     const saved = onSave.mock.calls[0][0] as CustomPreset;
     expect(saved.generateMetadata).toBe(true);
     expect(saved.directoryStructure).toBe(true);
+  });
+
+  it('enabling Use Directory Structure independently still works', () => {
+    const onSave = vi.fn();
+    render(<PresetCreator onSave={onSave} onCancel={vi.fn()} />);
+
+    fireEvent.change(screen.getByPlaceholderText(/My Custom Preset/i), {
+      target: { value: 'Dir Only Preset' },
+    });
+    fireEvent.click(screen.getByLabelText('Use Directory Structure'));
+    fireEvent.click(screen.getByText('Save Preset'));
+
+    const saved = onSave.mock.calls[0][0] as CustomPreset;
+    expect(saved.directoryStructure).toBe(true);
+    expect(saved.generateMetadata).toBe(false);
   });
 });

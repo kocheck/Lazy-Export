@@ -385,6 +385,40 @@ describe('validateCustomPreset', () => {
   });
 });
 
+describe('record-preset-usage and save-preferences handlers', () => {
+  let figmaMock: FigmaMock;
+
+  beforeEach(() => {
+    figmaMock = installFigmaMock();
+  });
+
+  it('record-preset-usage persists lastUsedPreset without clobbering customPresets', async () => {
+    await handleUIMessage({ type: 'save-preset', preset: makeCustomPreset({ id: 'custom-1' }) });
+    figmaMock.ui.postMessage.mockClear();
+
+    await handleUIMessage({ type: 'record-preset-usage', presetId: 'web' });
+    await handleUIMessage({ type: 'get-preferences' });
+
+    const prefsMsg = (figmaMock.ui.postMessage.mock.calls.map((c) => c[0]) as Array<{ type: string; preferences?: SavedPreferences }>)
+      .find((m) => m.type === 'preferences-loaded');
+    expect(prefsMsg?.preferences?.lastUsedPreset).toBe('web');
+    expect(prefsMsg?.preferences?.customPresets).toHaveLength(1);
+  });
+
+  it('save-preferences persists advancedModeEnabled without clobbering customPresets', async () => {
+    await handleUIMessage({ type: 'save-preset', preset: makeCustomPreset({ id: 'custom-1' }) });
+    figmaMock.ui.postMessage.mockClear();
+
+    await handleUIMessage({ type: 'save-preferences', advancedModeEnabled: true });
+    await handleUIMessage({ type: 'get-preferences' });
+
+    const prefsMsg = (figmaMock.ui.postMessage.mock.calls.map((c) => c[0]) as Array<{ type: string; preferences?: SavedPreferences }>)
+      .find((m) => m.type === 'preferences-loaded');
+    expect(prefsMsg?.preferences?.advancedModeEnabled).toBe(true);
+    expect(prefsMsg?.preferences?.customPresets).toHaveLength(1);
+  });
+});
+
 describe('save-preset with validateCustomPreset guard', () => {
   let figmaMock: FigmaMock;
 

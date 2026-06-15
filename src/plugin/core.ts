@@ -94,6 +94,24 @@ export function validateCustomPreset(p: unknown): { valid: boolean; error?: stri
     return { valid: false, error: 'Preset platform is invalid.' };
   if (!Array.isArray(preset.settings) || preset.settings.length > MAX_PRESET_SETTINGS)
     return { valid: false, error: 'Preset settings are invalid.' };
+  const VALID_FORMATS = ['PNG', 'JPG', 'SVG', 'PDF'];
+  const VALID_CONSTRAINT_TYPES = ['SCALE', 'WIDTH', 'HEIGHT'];
+  for (const s of preset.settings as unknown[]) {
+    if (typeof s !== 'object' || s === null)
+      return { valid: false, error: 'Each setting must be an object.' };
+    const setting = s as Record<string, unknown>;
+    if (!VALID_FORMATS.includes(setting.format as string))
+      return { valid: false, error: `Setting format "${String(setting.format)}" is invalid.` };
+    if (setting.constraint !== undefined) {
+      if (typeof setting.constraint !== 'object' || setting.constraint === null)
+        return { valid: false, error: 'Setting constraint must be an object.' };
+      const c = setting.constraint as Record<string, unknown>;
+      if (!VALID_CONSTRAINT_TYPES.includes(c.type as string))
+        return { valid: false, error: 'Setting constraint type is invalid.' };
+      if (typeof c.value !== 'number')
+        return { valid: false, error: 'Setting constraint value must be a number.' };
+    }
+  }
   if (preset.isCustom !== true) return { valid: false, error: 'Preset must be a custom preset.' };
   return { valid: true };
 }
@@ -280,8 +298,9 @@ export function updateSelectionCount(): void {
 
 /**
  * Dispatch a single message received from the UI.
- * (Lifted verbatim from the previous `figma.ui.onmessage` body so behavior is
- * identical; now importable and individually testable.)
+ * Adapted from the previous `figma.ui.onmessage` body and extended with
+ * custom-name validation, iOS-metadata validation, the preference write queue,
+ * and new cases: `save-preferences`, `record-preset-usage`, `open-external-url`.
  */
 export async function handleUIMessage(msg: UIMessage): Promise<void> {
   try {
@@ -301,6 +320,15 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
 
         // Validate iOS metadata settings before touching any node.
         if (preset.generateMetadata && preset.platform === 'iOS') {
+          // Contents.json filenames derive from the imageset path — only valid with directory structure.
+          if (!(preset.directoryStructure ?? false)) {
+            const rejection: PluginMessage = {
+              type: 'error',
+              message: 'iOS metadata (Contents.json) requires "Use Directory Structure" to be enabled.',
+            };
+            figma.ui.postMessage(rejection);
+            break;
+          }
           const metaErr = validateIOSMetadataSettings(preset.settings);
           if (metaErr) {
             const rejection: PluginMessage = { type: 'error', message: metaErr };
@@ -386,11 +414,17 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
 
       case 'record-preset-usage': {
         const presetId = msg.presetId;
-        await enqueuePrefMutation(async () => {
-          const preferences = await loadPreferences();
-          preferences.lastUsedPreset = presetId;
-          await savePreferences(preferences);
-        });
+        // Wrap in its own try/catch so a bookkeeping write failure never posts an
+        // error toast after a successful apply.
+        try {
+          await enqueuePrefMutation(async () => {
+            const preferences = await loadPreferences();
+            preferences.lastUsedPreset = presetId;
+            await savePreferences(preferences);
+          });
+        } catch (err) {
+          console.warn('record-preset-usage: failed to persist', err);
+        }
         break;
       }
 
@@ -428,7 +462,7 @@ export async function handleUIMessage(msg: UIMessage): Promise<void> {
 
 /**
  * Run the plugin's command switch for one invocation.
- * (Lifted verbatim from the previous init IIFE.)
+ * Adapted from the previous init IIFE; `applyPDF` is new (plan 009).
  */
 async function runCommand(): Promise<void> {
   switch (figma.command) {

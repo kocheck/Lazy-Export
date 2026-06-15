@@ -111,7 +111,7 @@ TypeScript → JavaScript (ES2020)
     ↓ (bundling)
 Single CommonJS file
     ↓
-dist/code.js (~5.5kb)
+dist/code.js (~15kb)
 ```
 
 **Key Config:** `build-plugin.js`
@@ -498,7 +498,7 @@ Benefits:
 
 **Current:**
 - UI: ~160kb (minified, gzipped ~50kb)
-- Plugin: ~5.5kb
+- Plugin: ~15kb
 
 **Optimizations:**
 - Single HTML file (no external requests)

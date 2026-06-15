@@ -164,7 +164,11 @@ export const PresetCreator: React.FC<PresetCreatorProps> = ({
       <div className="preset-creator__field">
         <Toggle
           checked={generateMetadata}
-          onChange={setGenerateMetadata}
+          onChange={(enabled) => {
+            setGenerateMetadata(enabled);
+            // Contents.json filenames derive from the imageset path — only valid with directory structure.
+            if (platform === 'iOS' && enabled) setDirectoryStructure(true);
+          }}
           label="Generate Metadata"
         />
         <Toggle
