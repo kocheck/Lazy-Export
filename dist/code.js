@@ -1,4 +1,20 @@
 "use strict";
+var __defProp = Object.defineProperty;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
+  for (var prop in b || (b = {}))
+    if (__hasOwnProp.call(b, prop))
+      __defNormalProp(a, prop, b[prop]);
+  if (__getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    }
+  return a;
+};
 
 // src/shared/types.ts
 var PLATFORMS = ["iOS", "Android", "Web", "PDF"];
@@ -167,12 +183,16 @@ function validateIOSMetadataSettings(settings) {
   return null;
 }
 function generateIOSContentsJSON(assetName, settings) {
-  const images = settings.filter((s) => s.format === "PNG" && s.constraint?.type === "SCALE").map((s) => {
+  const images = settings.filter((s) => {
+    var _a;
+    return s.format === "PNG" && ((_a = s.constraint) == null ? void 0 : _a.type) === "SCALE";
+  }).map((s) => {
+    var _a;
     const value = s.constraint.value;
     return {
       filename: `${assetName}${iosScaleMarker(value)}.png`,
       idiom: "universal",
-      scale: VALID_IOS_SCALES[String(value)] ?? `${value}x`
+      scale: (_a = VALID_IOS_SCALES[String(value)]) != null ? _a : `${value}x`
     };
   });
   return JSON.stringify({ images, info: { author: "Lazy Export", version: 1 } }, null, 2);
@@ -273,10 +293,11 @@ function applyExportSettings(nodes, settings, customName, advancedMode = false, 
   }
   const assetName = customName || "asset";
   const exportSettings = settings.map((setting) => {
+    var _a;
     let suffix = setting.suffix || "";
     if (advancedMode && directoryStructure && platform) {
       if (platform === "iOS") {
-        const scale = (setting.format === "PNG" || setting.format === "JPG") && setting.constraint?.type === "SCALE" ? iosScaleMarker(setting.constraint.value) : setting.suffix || "@1x";
+        const scale = (setting.format === "PNG" || setting.format === "JPG") && ((_a = setting.constraint) == null ? void 0 : _a.type) === "SCALE" ? iosScaleMarker(setting.constraint.value) : setting.suffix || "@1x";
         suffix = `/${assetName}.imageset/${assetName}${scale}`;
       } else if (platform === "Android") {
         const density = setting.suffix || "drawable-mdpi";
@@ -286,24 +307,20 @@ function applyExportSettings(nodes, settings, customName, advancedMode = false, 
       suffix = `/${assetName}${setting.suffix}`;
     }
     if (setting.format === "SVG") {
-      return {
+      return __spreadValues(__spreadValues(__spreadValues({
         format: "SVG",
-        suffix,
-        ...setting.svgOutlineText !== void 0 && { svgOutlineText: setting.svgOutlineText },
-        ...setting.svgIdAttribute !== void 0 && { svgIdAttribute: setting.svgIdAttribute },
-        ...setting.svgSimplifyStroke !== void 0 && {
-          svgSimplifyStroke: setting.svgSimplifyStroke
-        }
-      };
+        suffix
+      }, setting.svgOutlineText !== void 0 && { svgOutlineText: setting.svgOutlineText }), setting.svgIdAttribute !== void 0 && { svgIdAttribute: setting.svgIdAttribute }), setting.svgSimplifyStroke !== void 0 && {
+        svgSimplifyStroke: setting.svgSimplifyStroke
+      });
     }
     if (setting.format === "PDF") {
       return { format: "PDF", suffix };
     }
-    return {
+    return __spreadValues({
       format: setting.format,
-      suffix,
-      ...setting.constraint && { constraint: setting.constraint }
-    };
+      suffix
+    }, setting.constraint && { constraint: setting.constraint });
   });
   nodes.forEach((node) => {
     node.exportSettings = exportSettings;
@@ -339,21 +356,22 @@ function updateSelectionCount() {
   figma.ui.postMessage(message);
 }
 async function handleUIMessage(msg) {
+  var _a, _b, _c, _d;
   try {
     switch (msg.type) {
       case "apply-preset": {
         const { preset, customName, advancedMode } = msg;
-        const nameResult = validateCustomName(customName ?? "");
+        const nameResult = validateCustomName(customName != null ? customName : "");
         if (!nameResult.valid) {
           const rejection = {
             type: "invalid-custom-name",
-            message: nameResult.error ?? "Invalid custom name"
+            message: (_a = nameResult.error) != null ? _a : "Invalid custom name"
           };
           figma.ui.postMessage(rejection);
           break;
         }
         if (preset.generateMetadata && preset.platform === "iOS") {
-          if (!(preset.directoryStructure ?? false)) {
+          if (!((_b = preset.directoryStructure) != null ? _b : false)) {
             sendError('iOS metadata (Contents.json) requires "Use Directory Structure" to be enabled.');
             break;
           }
@@ -369,8 +387,8 @@ async function handleUIMessage(msg) {
           nameResult.value,
           advancedMode,
           preset.platform,
-          preset.generateMetadata ?? false,
-          preset.directoryStructure ?? false
+          (_c = preset.generateMetadata) != null ? _c : false,
+          (_d = preset.directoryStructure) != null ? _d : false
         );
         figma.ui.postMessage({ type: "apply-complete" });
         break;
